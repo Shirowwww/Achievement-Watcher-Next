@@ -21,6 +21,8 @@ const {
   planRuntimeInstall,
   repairAchievementData,
   installEmulatorRuntime,
+  captureLegacyDlcConfig,
+  migrateDlcConfig,
 } = require(path.join(appDir, 'util', 'gameHealthRepair.js'));
 
 function tempDir(prefix) {
@@ -115,6 +117,46 @@ test('the runtime plan announces the arch-correct file and its .bak', () => {
   // An unknown arch must still produce a usable plan rather than an undefined filename.
   const odd = planRuntimeInstall({ gbeInstaller: stub, gameDir: 'C:/Jeux/Test', arch: 'arm64' });
   assert.equal(odd.file, 'steam_api64.dll');
+});
+
+test('a switch captures legacy DLC settings before the loader is sidelined', (t) => {
+  const dir = tempDir('aw-legacy-dlc-');
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.writeFileSync(
+    path.join(dir, 'steam_emu.ini'),
+    '[DLC]\nDLCUnlockall=0\n3559220=Mask of Idris\n3559230=Costume Set\n'
+  );
+
+  assert.deepEqual(captureLegacyDlcConfig({ dirs: [dir] }), {
+    dlcs: [
+      { appid: '3559220', name: 'Mask of Idris' },
+      { appid: '3559230', name: 'Costume Set' },
+    ],
+    unlockAll: false,
+    source: path.join(dir, 'steam_emu.ini'),
+  });
+});
+
+test('a switch migrates legacy DLC settings into the supported emulator format', (t) => {
+  const dir = tempDir('aw-migrate-dlc-');
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const steamSettings = path.join(dir, 'steam_settings');
+  const legacy = { source: path.join(dir, 'steam_emu.ini'), unlockAll: false, dlcs: [{ appid: '3559220', name: 'Mask of Idris' }] };
+  const calls = [];
+  const goldbergStub = {
+    dlcConfigMode: (text) => (text ? 'explicit' : 'none'),
+    writeDlcConfig: (args) => {
+      calls.push(args);
+      fs.mkdirSync(steamSettings, { recursive: true });
+      fs.writeFileSync(path.join(steamSettings, 'configs.app.ini'), '[app::dlcs]\nunlock_all=0\n3559220=Mask of Idris\n');
+      return { file: path.join(steamSettings, 'configs.app.ini'), count: args.dlcs.length, unlockAll: args.unlockAll };
+    },
+  };
+
+  const result = migrateDlcConfig({ goldberg: goldbergStub, steamSettings, legacy });
+  assert.equal(result.migrated, true);
+  assert.equal(calls[0].unlockAll, false);
+  assert.deepEqual(calls[0].dlcs, legacy.dlcs);
 });
 
 test('the runtime install refuses to run without a target directory', async () => {

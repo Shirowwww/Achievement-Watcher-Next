@@ -2203,6 +2203,8 @@ async function runGameHealthAction(appid, action, button) {
       panel's own diagnosis, the achievement-data repair - deliberately skips such a folder. The
       swap would otherwise install a runtime nothing would ever configure.
     */
+    const runtimeDirs = [game.gameDir, ...plan.dirs];
+    const legacyDlc = switching ? gameHealthRepair.captureLegacyDlcConfig({ dirs: runtimeDirs }) : null;
     setGameHealthProgress({ phase: 'runtime' });
     let summary;
     let dlls;
@@ -2240,6 +2242,7 @@ async function runGameHealthAction(appid, action, button) {
             schema: game,
             reference,
             dlls,
+            legacyDlc,
             log: debug,
             sideline: () => {
               sidelined = crackLoaderDetect.disableLoaderMarkers([game.gameDir, ...plan.dirs]);
@@ -2255,6 +2258,8 @@ async function runGameHealthAction(appid, action, button) {
           steamSettings,
           log: debug,
           dlls,
+          goldberg,
+          legacyDlc,
         });
       });
     } finally {
@@ -2273,8 +2278,8 @@ async function runGameHealthAction(appid, action, button) {
         sidelined.length > 0
           ? t(
               'gh-runtime-switched-ready',
-              'The previous crack’s configuration was renamed to .bak and the achievement data was written. Launch the game once.',
-              'La configuration du crack précédent a été renommée en .bak et les données de succès ont été écrites. Lance le jeu une fois.'
+              'The previous crack’s configuration was renamed to .bak and the achievement data was written. Any DLC settings found there were migrated. Launch the game once.',
+              'La configuration du crack précédent a été renommée en .bak et les données de succès ont été écrites. Les réglages de DLC trouvés ont été migrés. Lance le jeu une fois.'
             )
           : '',
       ]

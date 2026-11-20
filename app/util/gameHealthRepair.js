@@ -112,6 +112,67 @@ function planRuntimeInstall({ gbeInstaller, gameDir, exePath = null, steamSettin
   return { dirs, arch, native, file, backup: `${file}.bak` };
 }
 
+const LEGACY_DLC_CONFIG_FILES = ['steam_emu.ini', 'steam_api.ini', 'cpy.ini'];
+
+function parseLegacyDlcConfig(text) {
+  let inDlc = false;
+  let unlockAll = false;
+  const dlcs = [];
+  for (const raw of String(text || '').split(/\r?\n/)) {
+    const line = raw.trim();
+    const section = line.match(/^\[([^\]]+)\]$/);
+    if (section) {
+      inDlc = section[1].toLowerCase() === 'dlc';
+      continue;
+    }
+    if (!inDlc || line.startsWith(';') || line.startsWith('#')) continue;
+    const unlock = line.match(/^dlcunlockall\s*=\s*([01])\s*$/i);
+    if (unlock) {
+      unlockAll = unlock[1] === '1';
+      continue;
+    }
+    const entry = line.match(/^(\d+)\s*=\s*(.*?)\s*$/);
+    if (entry) dlcs.push({ appid: entry[1], name: entry[2] || `DLC ${entry[1]}` });
+  }
+  return unlockAll || dlcs.length > 0 ? { dlcs, unlockAll } : null;
+}
+
+function captureLegacyDlcConfig({ dirs = [] } = {}) {
+  for (const dir of dirs || []) {
+    for (const name of LEGACY_DLC_CONFIG_FILES) {
+      const file = path.join(dir, name);
+      try {
+        if (!fs.existsSync(file)) continue;
+        const parsed = parseLegacyDlcConfig(fs.readFileSync(file, 'utf8'));
+        if (parsed) return { ...parsed, source: file };
+      } catch {
+        // A malformed legacy config should not block the runtime switch.
+      }
+    }
+  }
+  return null;
+}
+
+function migrateDlcConfig({ goldberg, steamSettings, legacy = null } = {}) {
+  if (!legacy) return null;
+  if (!goldberg || typeof goldberg.writeDlcConfig !== 'function') {
+    throw new Error('migrateDlcConfig: Goldberg DLC writer is required');
+  }
+  const configFile = path.join(steamSettings, 'configs.app.ini');
+  const existing = fs.existsSync(configFile) ? fs.readFileSync(configFile, 'utf8') : '';
+  if (typeof goldberg.dlcConfigMode === 'function' && goldberg.dlcConfigMode(existing) !== 'none') {
+    return { migrated: false, reason: 'existing-config', source: legacy.source };
+  }
+  const backupDir = typeof goldberg.backupDirFor === 'function' ? goldberg.backupDirFor(steamSettings) : null;
+  const result = goldberg.writeDlcConfig({
+    steamSettings,
+    dlcs: legacy.dlcs,
+    unlockAll: legacy.unlockAll,
+    backupDir,
+  });
+  return { migrated: true, source: legacy.source, ...result };
+}
+
 /*
   Write the achievement schema, icons and GBE config files for one game. `schema` is the AW game
   object; every other argument is passed straight through to goldberg.repair(), including the
@@ -164,7 +225,16 @@ async function repairAchievementData({
   complete steam_settings with no steam_api dll beside it. steam_interfaces.txt is regenerated
   when the original dll is still recoverable; that step is best-effort and never fails the install.
 */
-async function installEmulatorRuntime({ gbeInstaller, plan, cacheDir, steamSettings = null, log, dlls: staged = null } = {}) {
+async function installEmulatorRuntime({
+  gbeInstaller,
+  plan,
+  cacheDir,
+  steamSettings = null,
+  log,
+  dlls: staged = null,
+  goldberg = null,
+  legacyDlc = null,
+} = {}) {
   if (!plan || !Array.isArray(plan.dirs) || plan.dirs.length === 0) {
     throw new Error('installEmulatorRuntime: no target directory resolved');
   }
@@ -199,7 +269,8 @@ async function installEmulatorRuntime({ gbeInstaller, plan, cacheDir, steamSetti
     }
   }
 
-  return { ...summary, interfaces };
+  const dlc = migrateDlcConfig({ goldberg, steamSettings, legacy: legacyDlc });
+  return { ...summary, interfaces, dlc };
 }
 
 /*
@@ -209,12 +280,32 @@ async function installEmulatorRuntime({ gbeInstaller, plan, cacheDir, steamSetti
   one repairJournal record, so a failure anywhere puts every file back. Downloads (`dlls`, the
   reference) happen before: nothing here waits on the network.
 */
-async function switchToSupportedRuntime({ gbeInstaller, goldberg, plan, steamSettings = null, appid, schema, reference = {}, dlls, sideline = () => [], log } = {}) {
+async function switchToSupportedRuntime({
+  gbeInstaller,
+  goldberg,
+  plan,
+  steamSettings = null,
+  appid,
+  schema,
+  reference = {},
+  dlls,
+  legacyDlc = null,
+  sideline = () => [],
+  log,
+} = {}) {
   if (!/^[0-9]+$/.test(String(appid || ''))) throw new Error('switchToSupportedRuntime: GBE needs a Steam appid, none is known for this game');
   if (!plan || !Array.isArray(plan.dirs) || plan.dirs.length === 0) throw new Error('switchToSupportedRuntime: no target directory resolved');
   const target = steamSettings || path.join(plan.dirs[0], 'steam_settings');
   const sidelined = sideline() || [];
-  const summary = await installEmulatorRuntime({ gbeInstaller, plan, steamSettings: target, dlls, log });
+  const summary = await installEmulatorRuntime({
+    gbeInstaller,
+    plan,
+    steamSettings: target,
+    dlls,
+    goldberg,
+    legacyDlc,
+    log,
+  });
   // Only when absent: an appid the release already names is not this step's to change.
   if (!fs.existsSync(path.join(target, 'steam_appid.txt'))) goldberg.writeSteamAppId({ steamSettings: target, appid });
   // No icon download here: that is network, and a missing icon is offered by the rewrite later.
@@ -254,4 +345,6 @@ module.exports = {
   installEmulatorRuntime,
   switchToSupportedRuntime,
   switchInterfacesReady,
+  captureLegacyDlcConfig,
+  migrateDlcConfig,
 };
