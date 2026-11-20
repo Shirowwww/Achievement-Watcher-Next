@@ -184,6 +184,7 @@ const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
 const libraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
 const libraryFilter = require(path.join(appPath, 'util/libraryFilter.js'));
 const intlFormat = require(path.join(appPath, 'util/intlFormat.js'));
+const { parseUnlockTimeSeconds } = require(path.join(appPath, 'util/unlockTime.js'));
 const counterUnit = require(path.join(appPath, 'util/counterUnit.js'));
 const links = require(path.join(appPath, 'util/links.js'));
 const { localeText } = require(path.join(appPath, 'locale/t.js'));
@@ -1910,11 +1911,12 @@ function countTo(node, to, format, animate) {
 
 const countText = (value) => formatCount(Math.round(value));
 
+// A stamp no Date can hold leaves the line empty instead of breaking the whole tile (#212).
 function libraryRelativeTime(timestamp) {
-  const seconds = Number(timestamp);
-  if (!Number.isFinite(seconds) || seconds <= 0) return '';
-  const lang = uiLang();
+  const seconds = parseUnlockTimeSeconds(timestamp);
   const date = new Date(seconds * 1000);
+  if (seconds <= 0 || Number.isNaN(date.getTime())) return '';
+  const lang = uiLang();
   const relative = intlFormat.formatRelativeTime(seconds, lang);
   const exact = intlFormat.formatDateTime(seconds, lang, { dateStyle: 'full', timeStyle: 'short' });
   return `<time class="library-scroll-text" datetime="${date.toISOString()}" title="${escapeHtml(

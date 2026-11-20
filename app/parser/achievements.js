@@ -168,6 +168,9 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
 // One raw save entry reduced to { Achieved, CurProgress, MaxProgress?, UnlockTime }, by the rule the
 // Watchdog shares (parser/emuSave.js).
 const { normalizeSaveEntry } = require(path.join(appPath, 'emuSave.js'));
+const { parseUnlockTimeSeconds, MILLISECOND_THRESHOLD } = require('../util/unlockTime.js');
+// A millisecond stamp past this is the year 2286 too: what is left is not a time in any unit we read.
+const UNREADABLE_TIME = MILLISECOND_THRESHOLD * 1000;
 
 // Steam shows an archived achievement only to players who earned it; it no longer counts for others.
 function withoutUnearnedArchived(achievement) {
@@ -4764,6 +4767,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       // every entry, and logging each one writes hundreds of identical lines per game per scan -
       // enough to churn the 2 MB parser.log rotation on its own. The aggregate carries the same signal.
       let schemaMissCount = 0;
+      let badTimeLogged = false;
       for (let i in root) {
         if (Object.prototype.hasOwnProperty.call(root, i)) {
           try {
@@ -4771,6 +4775,14 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             if (!achievement) throw 'ACH_NOT_FOUND_IN_SCHEMA';
 
             let parsed = normalizeSaveEntry(root[i], game.source);
+            // Epoch seconds from here on; a stamp past milliseconds is a broken save, named once (#212).
+            const rawTime = Number(parsed.UnlockTime);
+            parsed.UnlockTime = parseUnlockTimeSeconds(Number.isFinite(rawTime) ? rawTime : parsed.UnlockTime);
+            if (rawTime >= UNREADABLE_TIME && !badTimeLogged) {
+              badTimeLogged = true;
+              const readAs = parsed.UnlockTime > 0 ? `read as ${new Date(parsed.UnlockTime * 1000).toISOString()}` : 'left undated';
+              debug.warn(`[${appid.appid}] "${game.name}" (${game.source}): ${i} unlock time ${rawTime} is not in seconds or milliseconds, ${readAs}`);
+            }
 
             if (isDuplicate) {
               if (parsed.Achieved && !achievement.Achieved) {

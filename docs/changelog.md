@@ -83,6 +83,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A broken unlock date no longer breaks a library tile (#212).** A save holding a date in
+  microseconds or beyond threw "Invalid time value" while the library was drawn. Such dates are read
+  back as seconds, and parser.log names the game, its source and the achievement once.
 - **Steam games played through an emulator stay with official Steam games off (#211).** A game
   installed by Steam was hidden even when its Goldberg or GBE save held unlocks. Only a save with
   nothing earned in it is still left out.
