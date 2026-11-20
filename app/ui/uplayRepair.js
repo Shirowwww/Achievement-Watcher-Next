@@ -392,6 +392,9 @@ async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactiv
       if (!cache) return null;
       installPlan = uplayR2Installer.planInstall({ gameDir, dlls: cache, loaderPaths: emu.dll, exePath: detectedExe, trustedInstall });
     }
+    if (installPlan.issues.some((issue) => issue.code === 'LOADER_SIGNATURE_CHECKED')) {
+      throw new Error('This game checks the signature of its Uplay loader and refuses any emulator in its place, so its files were left untouched');
+    }
     if (!installPlan.safe) throw new Error(`No safe Uplay R1/R2 loader target: ${installPlan.issues.map((issue) => issue.code).join(', ')}`);
   } else if (!installed.supportsAchRedirect) {
     try {

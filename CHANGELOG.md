@@ -79,6 +79,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A broken unlock date no longer breaks a library tile (#212).** A save holding a date in
   microseconds or beyond threw "Invalid time value" while the library was drawn. Such dates are read
   back as seconds, and parser.log names the game, its source and the achievement once.
+- **The Ubisoft fix leaves Watch_Dogs alone (#213).** Some Ubisoft games check the signature of
+  their Uplay loader and stop with "Error 0 checking DLL signature!" once any emulator replaces it,
+  even with a cracked executable. The fix now recognises those games and changes nothing in them.
 - **Steam games played through an emulator stay with official Steam games off (#211).** A game
   installed by Steam was hidden even when its Goldberg or GBE save held unlocks. Only a save with
   nothing earned in it is still left out.

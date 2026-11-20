@@ -339,6 +339,42 @@ test('a user-confirmed mapping validates a new catalog entry before it is persis
   assert.equal(result.validation[0].issues.some((issue) => issue.code === 'NO_STEAM_MAPPING'), false);
 });
 
+/*
+  #213: Watch_Dogs checks the signature of its Uplay loader ("Error 0 checking DLL signature!"), with
+  the original executable and with a cracked one. No emulator loader passes, so the swap is refused
+  before any file changes, whether the message sits in an engine module or the title is a known one.
+*/
+test('a game that verifies its loader signature is never given an emulator loader', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-uplay-signature-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const cache = (await installer.importPackage({ packagePath: packageDir(root), cacheDir: path.join(root, 'cache') })).cache;
+  const game = (name, { exe = 'game.exe', module = null } = {}) => {
+    const bin = path.join(root, name, 'bin');
+    writePe(path.join(bin, exe), 'x64', 'a game');
+    const loader = path.join(bin, 'uplay_r2_loader64.dll');
+    fs.writeFileSync(loader, fakePe('x64', 'the release loader'));
+    if (module) fs.writeFileSync(path.join(bin, 'engine_b64.dll'), Buffer.concat([fakePe('x64', ''), module]));
+    const gameDir = path.join(root, name);
+    const before = fs.readFileSync(loader);
+    return { plan: installer.planInstall({ gameDir, dlls: cache, loaderPaths: [loader], trustedInstall: true }), loader, before };
+  };
+
+  const wide = game('wide', { module: Buffer.from('Error %d checking DLL signature!', 'utf16le') });
+  assert.equal(wide.plan.safe, false, 'the message in UTF-16 in an engine module refuses the swap');
+  assert.ok(wide.plan.issues.some((issue) => issue.code === 'LOADER_SIGNATURE_CHECKED'));
+  assert.throws(() => installer.installDlls({ plan: wide.plan }), /LOADER_SIGNATURE_CHECKED/);
+  assert.deepEqual(fs.readFileSync(wide.loader), wide.before, 'the release loader is left as it was');
+
+  const narrow = game('narrow', { module: Buffer.from('Error %d checking DLL signature!', 'ascii') });
+  assert.ok(narrow.plan.issues.some((issue) => issue.code === 'LOADER_SIGNATURE_CHECKED'), 'and in ASCII');
+
+  const named = game('named', { exe: 'Watch_Dogs.exe' });
+  assert.ok(named.plan.issues.some((issue) => issue.code === 'LOADER_SIGNATURE_CHECKED'), 'a reported title is refused by its executable name');
+
+  const plain = game('plain');
+  assert.equal(plain.plan.safe, true, 'a game without the check is still repaired');
+});
+
 test('a replaced loader restores exactly and backup DLLs are never detected as runtimes', async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-uplay-replace-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

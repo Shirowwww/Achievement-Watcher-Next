@@ -617,6 +617,58 @@ function loaderNamesFromExecutableStrings(exe, flavour) {
   return loaderNamesFor(flavour).filter((name) => found.has(name));
 }
 
+/*
+  Some Ubisoft titles verify the Authenticode signature of the loader they open and stop with
+  "Error 0 checking DLL signature!" (Watch_Dogs, #213), even when a crack patched the first check:
+  no emulator loader can pass, so the swap only breaks a game that ran. The message sits in the
+  executable or in an engine module beside the loader, as ASCII or UTF-16, so only that folder is
+  read, largest files first, and the verdict is kept until the folder changes: an automatic scan
+  retries a refused plan every time. The executable name is the reported title, for a build that
+  keeps the text elsewhere.
+*/
+const SIGNATURE_CHECK_TEXT = 'checking DLL signature';
+const SIGNATURE_CHECK_LITERALS = Object.freeze([SIGNATURE_CHECK_TEXT, [...SIGNATURE_CHECK_TEXT].join('\u0000')]);
+const SIGNATURE_CHECKED_EXES = new Set(['watch_dogs.exe']);
+const MAX_SCANNED_MODULES = 24;
+const signatureVerdicts = new Map();
+
+// [{ file, name, size, mtimeMs }] of the executables and modules beside a loader, the loaders left out.
+function moduleFiles(dir) {
+  let entries = [];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return []; // a folder we cannot list holds no evidence
+  }
+  const files = [];
+  for (const entry of entries) {
+    const name = entry.name.toLowerCase();
+    if (!entry.isFile() || !/\.(dll|exe)$/.test(name) || LOADER[name]) continue;
+    try {
+      const stat = fs.statSync(path.join(dir, entry.name));
+      files.push({ file: path.join(dir, entry.name), name, size: stat.size, mtimeMs: stat.mtimeMs });
+    } catch {
+      /* gone between the listing and the stat */
+    }
+  }
+  return files.sort((a, b) => b.size - a.size).slice(0, MAX_SCANNED_MODULES);
+}
+
+function folderVerifiesSignature(dir) {
+  const files = moduleFiles(dir);
+  const key = `${path.resolve(dir).toLowerCase()}|${files.map((f) => `${f.name}:${f.size}:${f.mtimeMs}`).join('|')}`;
+  if (signatureVerdicts.has(key)) return signatureVerdicts.get(key);
+  const verdict =
+    files.some((f) => SIGNATURE_CHECKED_EXES.has(f.name)) || files.some((f) => scanFileForLiterals(f.file, SIGNATURE_CHECK_LITERALS).size > 0);
+  signatureVerdicts.set(key, verdict);
+  return verdict;
+}
+
+function verifiesLoaderSignature(targets, exePath = '') {
+  if (exePath && SIGNATURE_CHECKED_EXES.has(path.basename(exePath).toLowerCase())) return true;
+  return [...new Set(targets.map((target) => target.dir))].some(folderVerifiesSignature);
+}
+
 function executableCandidates(gameDir, exePath) {
   const files = [];
   const add = (file) => {
@@ -808,7 +860,11 @@ function planInstall({ gameDir, dlls, loaderPaths = [], exePath = '', trustedIns
   }
 
   if (targets.length === 0 && issues.length === 0) issues.push({ code: 'NO_RUNTIME_TARGET' });
+  if (targets.length > 0 && verifiesLoaderSignature(targets, exePath)) {
+    issues.push({ code: 'LOADER_SIGNATURE_CHECKED' });
+  }
   const fatal = new Set([
+    'LOADER_SIGNATURE_CHECKED',
     'PACKAGE_MISSING_LOADER',
     'PACKAGE_INVALID_LOADER',
     'NOT_PE',
