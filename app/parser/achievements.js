@@ -3685,9 +3685,11 @@ const SOURCE_READERS = {
     unlocks: (appid, { game }) => rockstarOfficial.getAchievements(appid, game, { invoke: ipcInvoke, steam }),
   },
   gogOfficial: { schema: (appid) => gogOfficial.getGameData(appid), unlocks: (appid) => gogOfficial.getAchievements(appid) },
-  // A GOG install repaired with UniverseLAN: unlock state is the Achievements.ini it writes itself.
+  // A GOG install repaired with UniverseLAN: unlock state is the Achievements.ini it writes itself,
+  // the list the Steam release's when there is one.
   gogUniverseLan: {
-    schema: (appid) => gogUniverseLan.getGameData(appid),
+    schema: (appid, ctx) =>
+      gogUniverseLan.getSchema(appid, { steamIdForGogId: gog.steamIdForGogId, readSteamSchema: (record) => readSteamSchema(record, ctx), log: debug }),
     unlocks: (appid) => gogUniverseLan.readAchievements({ localAppData: appid.data.localAppData, gogAppId: appid.data.gogAppId }) || {},
   },
   ubisoftOfficial: {

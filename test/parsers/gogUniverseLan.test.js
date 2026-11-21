@@ -307,6 +307,85 @@ test('getGameData builds a schema from Achievements.ini and falls back to "GOG <
   assert.equal(visible.hidden, 0);
 });
 
+function writeDishonoredSave(t) {
+  const root = tmpDir(t);
+  const localAppData = path.join(root, 'LocalAppData');
+  const gogAppId = '1701063787';
+  const iniPath = gogUniverseLan.achievementsIniPath({ localAppData, gogAppId });
+  fs.mkdirSync(path.dirname(iniPath), { recursive: true });
+  // What UniverseLAN holds after one unlock: its template's example entry and the unlock, no names.
+  fs.writeFileSync(
+    iniPath,
+    ['[ExampleAchievement001Name]', 'Description = Describes the achievement nr 1', 'Unlocked = 0', '', '[ACHIEVEMENT_23]', 'Unlocked = 1', 'UnlockTime = 1763722320'].join('\n')
+  );
+  return { appid: gogAppId, data: { type: 'gogUniverseLan', title: 'Dishonored: Definitive Edition', gogAppId, localAppData, gameDir: root } };
+}
+
+const steamDishonored = {
+  appid: '217980',
+  name: 'Dishonored',
+  img: { header: 'header.jpg' },
+  achievement: {
+    total: 2,
+    list: [
+      { name: 'ACHIEVEMENT_23', displayName: 'Ghost', description: 'Complete the game without being detected', icon: 'a.jpg', icongray: 'b.jpg' },
+      { name: 'ACHIEVEMENT_24', displayName: 'Clean Hands', description: 'Complete the game without killing anyone', icon: 'c.jpg', icongray: 'd.jpg' },
+    ],
+  },
+};
+
+test('getSchema takes the Steam release schema of a repaired GOG game, under its GOG id and title', async (t) => {
+  const record = writeDishonoredSave(t);
+  let asked;
+  const game = await gogUniverseLan.getSchema(record, {
+    steamIdForGogId: async (gogId) => (gogId === '1701063787' ? '217980' : undefined),
+    readSteamSchema: async (steamRecord) => {
+      asked = steamRecord;
+      return steamDishonored;
+    },
+  });
+  assert.equal(asked.appid, '217980');
+  assert.equal(game.appid, '1701063787', 'the tile stays the GOG game');
+  assert.equal(game.name, 'Dishonored: Definitive Edition');
+  assert.equal(game.steamappid, '217980');
+  assert.deepEqual(
+    game.achievement.list.map((a) => a.displayName),
+    ['Ghost', 'Clean Hands']
+  );
+});
+
+test('getSchema keeps the Achievements.ini list for a GOG-only game or an unreadable Steam schema', async (t) => {
+  const record = writeDishonoredSave(t);
+  const gogOnly = await gogUniverseLan.getSchema(record, { steamIdForGogId: async () => undefined, readSteamSchema: async () => steamDishonored });
+  assert.deepEqual(
+    gogOnly.achievement.list.map((a) => a.name),
+    ['ACHIEVEMENT_23']
+  );
+  const offline = await gogUniverseLan.getSchema(record, {
+    steamIdForGogId: async () => '217980',
+    readSteamSchema: async () => {
+      throw new Error('offline');
+    },
+  });
+  assert.equal(offline.achievement.total, 1);
+  const lookupFailed = await gogUniverseLan.getSchema(record, {
+    steamIdForGogId: async () => {
+      throw new Error('gamesdb down');
+    },
+    readSteamSchema: async () => steamDishonored,
+  });
+  assert.equal(lookupFailed.achievement.total, 1);
+});
+
+test('getGameData leaves out the example entry of UniverseLAN template', (t) => {
+  const record = writeDishonoredSave(t);
+  const game = gogUniverseLan.getGameData(record);
+  assert.deepEqual(
+    game.achievement.list.map((a) => a.name),
+    ['ACHIEVEMENT_23']
+  );
+});
+
 test('getGameData throws when no UniverseLAN save exists yet', () => {
   assert.throws(() => gogUniverseLan.getGameData({ appid: '1', data: { gogAppId: '1', localAppData: 'C:\\nope' } }));
 });

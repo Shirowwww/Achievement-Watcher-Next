@@ -79,6 +79,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A GOG game fixed with UniverseLAN lists all its achievements.** Its page only showed the ones
+  already unlocked, under their raw names, plus an example entry from UniverseLAN. A game also on
+  Steam now shows the Steam release's list with names and icons, as its notifications already did.
 - **Linux software clips keep their seconds before the unlock.** The recorder only held the seconds
   before the unlock when it cut the clip, once the seconds after were in, so every clip lost its
   start. It now holds the whole clip.

@@ -575,6 +575,9 @@ function scan({ userDataPath, localAppData = null }) {
   return out;
 }
 
+// The entry UniverseLAN's template ships in Achievements.ini, copied in by mergeDataFolders: not the game's.
+const TEMPLATE_ACHIEVEMENT = /^ExampleAchievement\d+Name$/i;
+
 // Schema for one game: achievement names/descriptions come from UniverseLAN's own Achievements.ini
 // (Description only - no separate display name or icon in that format), unlock state layered on top
 // so a fresh scan does not show every achievement as locked before getAchievements runs.
@@ -584,7 +587,8 @@ function getGameData(appid) {
   if (!fs.existsSync(iniFile)) throw `No UniverseLAN achievement data yet for ${appid.appid}`;
   const doc = emuIni.parseIni(fs.readFileSync(iniFile, 'utf8'));
 
-  const list = doc.sections.map((section) => {
+  const sections = doc.sections.filter((section) => !TEMPLATE_ACHIEVEMENT.test(section.header.replace(/^\[|\]$/g, '')));
+  const list = sections.map((section) => {
     const key = section.header.replace(/^\[|\]$/g, '');
     const values = emuIni.readIniSectionValues(doc, key);
     return {
@@ -603,6 +607,34 @@ function getGameData(appid) {
     img: { header: null, background: null, portrait: null, icon: null },
     achievement: { total: list.length, list },
   };
+}
+
+/*
+  The schema the library shows. Achievements.ini only holds what the game has written so far, with no
+  names or icons, so a game also sold on Steam takes that release's schema, the one its notifications
+  already use. A GOG-only game, or one whose Steam schema cannot be read now, keeps the ini's list.
+  `readSteamSchema` reads a Steam record; `steamIdForGogId` is gog.js's mapping.
+*/
+async function getSchema(appid, { steamIdForGogId, readSteamSchema, log = noopLog }) {
+  const data = appid.data || {};
+  const gogAppId = String(data.gogAppId || appid.appid);
+  let steamid;
+  try {
+    steamid = await steamIdForGogId(gogAppId);
+  } catch (err) {
+    log.log(`[gog-universelan] no Steam release looked up for GOG id ${gogAppId}: ${err.message || err}`);
+  }
+  if (steamid) {
+    try {
+      const game = await readSteamSchema({ ...appid, appid: String(steamid) });
+      if (game && game.achievement && game.achievement.total > 0) {
+        return { ...game, appid: appid.appid, name: data.title || game.name, steamappid: String(steamid) };
+      }
+    } catch (err) {
+      log.log(`[gog-universelan] the Steam schema of ${steamid} could not be read for GOG id ${gogAppId}: ${err.message || err}`);
+    }
+  }
+  return getGameData(appid);
 }
 
 module.exports = {
@@ -634,4 +666,5 @@ module.exports = {
   readInstalls,
   scan,
   getGameData,
+  getSchema,
 };
