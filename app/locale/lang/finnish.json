@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Ilmoitukset",
     "gh-value-missing": "ei löytynyt",
     "gh-value-none-yet": "ei vielä merkintöjä",
+    "gh-value-no-record": "ei tallenna saavutuksia",
+    "gh-why-crack-keeps-no-record": "{servedBy} ajaa tätä peliä, mutta ei kirjaa koskaan yhtään saavutusta, joten mikään tällä tietokoneella ei voi näyttää niitä. Jos haluat seurata saavutuksia, määritä peli käyttämään Goldberg Steam -emulaattoria (gbe_fork).",
     "gh-value-muted": "edistyminen mykistetty",
     "gh-value-achievements": "{total} saavutusta",
     "gh-value-unlocked": "{unlocked} avattu",

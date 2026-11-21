@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Powiadomienia",
     "gh-value-missing": "nie znaleziono",
     "gh-value-none-yet": "nic jeszcze nie zapisano",
+    "gh-value-no-record": "nie zapisuje osiągnięć",
+    "gh-why-crack-keeps-no-record": "{servedBy} uruchamia tę grę, ale nigdy nie zapisuje żadnego osiągnięcia, więc nic na tym komputerze nie może ich pokazać. Aby je śledzić, skonfiguruj grę z emulatorem Steam Goldberg (gbe_fork).",
     "gh-value-muted": "postęp wyciszony",
     "gh-value-achievements": "{total} osiągnięć",
     "gh-value-unlocked": "odblokowano: {unlocked}",

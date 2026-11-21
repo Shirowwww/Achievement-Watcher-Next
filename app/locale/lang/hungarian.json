@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Értesítések",
     "gh-value-missing": "nem található",
     "gh-value-none-yet": "még nincs rögzítve semmi",
+    "gh-value-no-record": "nem rögzít eredményeket",
+    "gh-why-crack-keeps-no-record": "A(z) {servedBy} futtatja ezt a játékot, de soha nem jegyez fel egyetlen teljesítményt sem, így ezen a gépen semmi sem tud megjeleníteni ilyet. A követésükhöz állítsd be a játékot a Goldberg Steam emulátorral (gbe_fork).",
     "gh-value-muted": "haladás némítva",
     "gh-value-achievements": "{total} teljesítmény",
     "gh-value-unlocked": "{unlocked} feloldva",

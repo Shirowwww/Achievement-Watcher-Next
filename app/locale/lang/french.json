@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Notifications",
     "gh-value-missing": "introuvable",
     "gh-value-none-yet": "rien d’enregistré pour l’instant",
+    "gh-value-no-record": "n’enregistre aucun succès",
+    "gh-why-crack-keeps-no-record": "{servedBy} fait tourner ce jeu mais n’enregistre jamais un succès, donc rien sur ce PC ne peut en montrer. Pour les suivre, configure le jeu avec l’émulateur Steam Goldberg (gbe_fork).",
     "gh-value-muted": "progression coupée",
     "gh-value-achievements": "{total} succès",
     "gh-value-unlocked": "{unlocked} débloqué(s)",

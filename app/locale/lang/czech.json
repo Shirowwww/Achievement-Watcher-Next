@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Oznámení",
     "gh-value-missing": "nenalezeno",
     "gh-value-none-yet": "zatím nic zaznamenáno",
+    "gh-value-no-record": "nezaznamenává žádné úspěchy",
+    "gh-why-crack-keeps-no-record": "{servedBy} tuto hru spouští, ale žádný úspěch nikdy nezapíše, takže na tomto počítači nelze žádný zobrazit. Pokud je chcete sledovat, nastavte hru s emulátorem Steam Goldberg (gbe_fork).",
     "gh-value-muted": "postup ztlumen",
     "gh-value-achievements": "{total} úspěchů",
     "gh-value-unlocked": "odemčeno: {unlocked}",

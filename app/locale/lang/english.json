@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Notifications",
     "gh-value-missing": "not found",
     "gh-value-none-yet": "nothing recorded yet",
+    "gh-value-no-record": "keeps no achievement record",
+    "gh-why-crack-keeps-no-record": "{servedBy} runs this game but never writes down an achievement, so nothing on this PC can show one. To track them, set the game up with the Goldberg Steam emulator (gbe_fork).",
     "gh-value-muted": "progress muted",
     "gh-value-achievements": "{total} achievements",
     "gh-value-unlocked": "{unlocked} unlocked",

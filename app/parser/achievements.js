@@ -2667,6 +2667,14 @@ async function discoverInScope(source, steamAccFilter, scope) {
   if (!scope && source.socialClub) {
     try {
       const scanned = (await Promise.all(socialclub.defaultRoots().map((root) => socialclub.scan(root)))).flat();
+      // A Razor1911 Rockstar profile stands in for the game only while nothing else reads it: once
+      // an emulator saves its unlocks (GSE Saves\12210), that entry is the game.
+      const steamAppids = new Set(data.map((game) => String(game.appid)));
+      const razor = socialclub
+        .razorRoots()
+        .flatMap((root) => socialclub.scanRazor(root))
+        .filter((game) => !steamAppids.has(String(game.data.steamappid)));
+      scanned.push(...razor);
       const extra = entriesNotIn(data, scanned);
       if (extra.length > 0) {
         data = data.concat(extra);

@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Ειδοποιήσεις",
     "gh-value-missing": "δεν βρέθηκε",
     "gh-value-none-yet": "δεν έχει καταγραφεί τίποτα ακόμη",
+    "gh-value-no-record": "δεν καταγράφει επιτεύγματα",
+    "gh-why-crack-keeps-no-record": "Το {servedBy} εκτελεί αυτό το παιχνίδι αλλά δεν καταγράφει ποτέ κανένα επίτευγμα, οπότε τίποτα σε αυτόν τον υπολογιστή δεν μπορεί να δείξει κάποιο. Για να τα παρακολουθείτε, ρυθμίστε το παιχνίδι με τον εξομοιωτή Steam Goldberg (gbe_fork).",
     "gh-value-muted": "η πρόοδος είναι σε σίγαση",
     "gh-value-achievements": "{total} επιτεύγματα",
     "gh-value-unlocked": "{unlocked} ξεκλειδωμένα",

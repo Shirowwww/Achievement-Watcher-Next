@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Meldingen",
     "gh-value-missing": "niet gevonden",
     "gh-value-none-yet": "nog niets vastgelegd",
+    "gh-value-no-record": "legt geen prestaties vast",
+    "gh-why-crack-keeps-no-record": "{servedBy} draait deze game, maar schrijft nooit een prestatie op, dus niets op deze pc kan er een tonen. Om ze bij te houden, stel je de game in met de Goldberg Steam-emulator (gbe_fork).",
     "gh-value-muted": "voortgang gedempt",
     "gh-value-achievements": "{total} prestaties",
     "gh-value-unlocked": "{unlocked} ontgrendeld",

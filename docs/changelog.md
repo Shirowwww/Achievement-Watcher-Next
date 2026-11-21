@@ -22,6 +22,10 @@ renamed in 3.9.0 and the history is kept under one file.
   so AW Next took them for genuine Epic installs and left them out. They now show with their Epic
   achievement list. Alan Wake 2's unlocks are read from the game's own save, without a date since
   it keeps none.
+- **GTA IV from Razor1911 is listed.** Its Complete Edition release keeps only your save and settings
+  in `%APPDATA%\.1911\GTA IV\profile`, so the game was missing. It now shows, and Game Health
+  explains that this crack never records an achievement and that the Goldberg Steam emulator is how
+  to track them. Once that emulator saves your unlocks, its entry takes over.
 - **Switching to the supported emulator keeps the DLC (#214).** The DLC list and unlock-all setting
   of the replaced crack's `steam_emu.ini`, `steam_api.ini` or `cpy.ini` move to the new emulator's
   settings when those have none of their own.

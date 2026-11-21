@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Сповіщення",
     "gh-value-missing": "не знайдено",
     "gh-value-none-yet": "поки нічого не записано",
+    "gh-value-no-record": "не зберігає досягнення",
+    "gh-why-crack-keeps-no-record": "{servedBy} запускає цю гру, але ніколи не записує досягнення, тому на цьому ПК нічого показати. Щоб відстежувати їх, налаштуйте гру з емулятором Steam Goldberg (gbe_fork).",
     "gh-value-muted": "прогрес вимкнено",
     "gh-value-achievements": "досягнень: {total}",
     "gh-value-unlocked": "відкрито: {unlocked}",

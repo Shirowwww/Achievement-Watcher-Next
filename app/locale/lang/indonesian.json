@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Notifikasi",
     "gh-value-missing": "tidak ditemukan",
     "gh-value-none-yet": "belum ada yang tercatat",
+    "gh-value-no-record": "tidak mencatat pencapaian",
+    "gh-why-crack-keeps-no-record": "{servedBy} menjalankan game ini tetapi tidak pernah mencatat pencapaian, jadi tidak ada apa pun di PC ini yang dapat menampilkannya. Untuk melacaknya, siapkan game dengan emulator Steam Goldberg (gbe_fork).",
     "gh-value-muted": "progres dibisukan",
     "gh-value-achievements": "{total} pencapaian",
     "gh-value-unlocked": "{unlocked} terbuka",

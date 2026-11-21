@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "通知",
     "gh-value-missing": "見つかりません",
     "gh-value-none-yet": "まだ記録なし",
+    "gh-value-no-record": "実績を記録しない",
+    "gh-why-crack-keeps-no-record": "{servedBy} はこのゲームを動かしますが、実績を一切記録しないため、このPCでは実績を表示できません。実績を追跡するには、Goldberg Steam エミュレーター (gbe_fork) でゲームを設定してください。",
     "gh-value-muted": "進捗通知はミュート",
     "gh-value-achievements": "実績 {total} 件",
     "gh-value-unlocked": "{unlocked} 件解除済み",

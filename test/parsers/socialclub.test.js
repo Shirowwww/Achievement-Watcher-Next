@@ -136,6 +136,36 @@ function writeRockstarProfileFixture() {
     assert.equal(direct.length, 1);
     assert.equal(direct[0].appid, 'socialclub-gta-v');
 
+    // Razor1911's GTA IV Complete Edition, as a player's own folder shows it: the profile holds the
+    // save, the controls and the settings, and nothing about achievements. The appid folders beside
+    // it are Razor1911's Steam releases, and a folder named after no Rockstar title is no game.
+    const razorRoot = path.join(tmp, '.1911');
+    const gta4Profile = path.join(razorRoot, 'GTA IV', 'profile');
+    fs.mkdirSync(gta4Profile, { recursive: true });
+    for (const file of ['ControlMap.dat', 'ProfileSettings', 'SGTA412']) fs.writeFileSync(path.join(gta4Profile, file), Buffer.from([0, 1, 2, 3]));
+    fs.mkdirSync(path.join(razorRoot, '1091500'), { recursive: true });
+    fs.writeFileSync(path.join(razorRoot, '1091500', 'achievement'), 'ACH_ONE 1 1742423507\n', 'utf8');
+    fs.mkdirSync(path.join(razorRoot, 'Some Tool', 'profile'), { recursive: true });
+    fs.writeFileSync(path.join(razorRoot, 'Some Tool', 'profile', 'SGTA412'), '', 'utf8');
+
+    // Elsewhere APPDATA comes from each Wine prefix, not from the environment.
+    if (process.platform === 'win32') assert.deepEqual(socialclub.razorRoots(), [razorRoot]);
+    const razor = socialclub.scanRazor(razorRoot);
+    assert.deepEqual(razor, [
+      {
+        appid: 'socialclub-gta-iv',
+        name: 'GTA IV',
+        source: socialclub.RAZOR_SOURCE,
+        data: { type: 'socialclub', path: path.join(razorRoot, 'GTA IV'), gameName: 'GTA IV', razor: true, steamappid: 12210 },
+      },
+    ]);
+    const gta4 = await socialclub.getGameData(razor[0], 'english', {});
+    assert.equal(gta4.source, socialclub.RAZOR_SOURCE);
+    assert.equal(gta4.steamappid, 12210);
+    assert.equal(gta4.noAchievementRecord, socialclub.RAZOR_SOURCE, 'Game Health says why nothing comes in');
+    assert.deepEqual(await socialclub.getAchievements(razor[0]), {});
+    assert.equal((await socialclub.getGameData(rdr, 'english', {})).noAchievementRecord, undefined, 'a Goldberg profile is not one');
+
     console.log('PASS: socialclub parser');
   } finally {
     process.env.APPDATA = originalAppData;

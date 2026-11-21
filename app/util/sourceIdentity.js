@@ -57,6 +57,8 @@ const SOURCE_ROWS = {
   'gog galaxy': { family: 'gog', icon: 'gog.svg', purchased: 'gog', rarity: 'cache-only' },
   'gog-official': { rarity: 'cache-only' },
   'goldberg socialclub': { family: 'socialclub', icon: 'socialclub.svg' },
+  // Razor1911's Rockstar releases (GTA IV Complete Edition): a Social Club crack, see socialclub.js.
+  'razor1911 (rockstar)': { family: 'socialclub', icon: 'socialclub.svg' },
   [SOURCE_LABEL.ROCKSTAR.toLowerCase()]: { family: 'socialclub', icon: 'socialclub.svg', purchased: 'rockstar' },
   ea: { family: 'ea', icon: 'ea.svg', purchased: 'ea', rarity: 'cache-only' },
   'anadius (ea)': { family: 'ea', icon: 'ea.svg' },

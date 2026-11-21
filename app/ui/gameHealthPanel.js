@@ -404,6 +404,8 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
     system,
     manual: !!game.manual,
     unconfigured: !!game.unconfigured,
+    // A crack that never writes down an unlock (Razor1911's GTA IV), named by the parser.
+    noAchievementRecord: game.noAchievementRecord || '',
     isUbisoft,
     installed: !!game.installed,
     gameDir,
@@ -636,6 +638,8 @@ function gameHealthExplanationText(report) {
         "Le dossier de ce jeu est configuré pour {servedBy}, mais son steam_api.dll a été remplacé par un autre programme ({replacedBy}), en général un mod ou un patch en ligne. Ce fichier n'enregistre pas les succès : aucun n'est sauvegardé tant qu'il est là. Remets le steam_api.dll d'origine pour les retrouver, et garde l'autre de côté pour revenir en arrière.",
         p
       );
+    case 'crack-keeps-no-record':
+      return t('gh-why-crack-keeps-no-record', '{servedBy} runs this game but never writes down an achievement, so nothing on this PC can show one. To track them, set the game up with the Goldberg Steam emulator (gbe_fork).', "{servedBy} fait tourner ce jeu mais n'enregistre jamais un succès, donc rien sur ce PC ne peut en montrer. Pour les suivre, configure le jeu avec l'émulateur Steam Goldberg (gbe_fork).", p);
     case 'crack-records-nothing':
       return p.canSwitch
         ? t('gh-why-crack-records-nothing', 'This game has run for over an hour with {servedBy} and not one achievement has been recorded. Some cracks never report achievements at all. AW Next can install the supported emulator over it - the current file is kept.', "Ce jeu a tourné plus d'une heure avec {servedBy} sans enregistrer un seul succès. Certains cracks ne signalent jamais les succès. AW Next peut installer l'émulateur pris en charge par-dessus, le fichier actuel étant conservé.", p)
@@ -742,7 +746,7 @@ function gameHealthSimpleCheckValue(entry) {
       if (p.noSource) return gameHealthNoSourceLabel();
       if (p.serverAwarded) return t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement');
       if (p.spacewar) return t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès');
-      if (p.oldSave || p.stalled || p.replacedBy || p.offline || p.coldClient || (p.servedBy && p.topics)) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
+      if (p.noRecord || p.oldSave || p.stalled || p.replacedBy || p.offline || p.coldClient || (p.servedBy && p.topics)) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
       if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       // Offline achievements were just switched on and the game has not run since: say so, or the
       // row goes green with a "turn it off" button beside it and no word about why.
@@ -942,6 +946,7 @@ function gameHealthCheckValue(entry, simple) {
       if (p.servedBy) {
         const servedBy = t('gh-value-served-by', 'served by {emulator}', 'pris en charge par {emulator}', { emulator: p.servedBy });
         if (p.serverAwarded) return `${servedBy} · ${t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement')}`;
+        if (p.noRecord) return `${servedBy} · ${t('gh-value-no-record', 'keeps no achievement record', 'n’enregistre aucun succès')}`;
         if (p.spacewar) return `${servedBy} · ${t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès')}`;
         if (p.coldClient) return `${servedBy} · ${gameHealthColdClientProblem(p.coldClient)}`;
         if (p.offline) return `${servedBy} · ${gameHealthIssueTopicLabel('offline')}`;

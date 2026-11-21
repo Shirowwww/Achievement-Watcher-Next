@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Varsler",
     "gh-value-missing": "ikke funnet",
     "gh-value-none-yet": "ingenting registrert ennå",
+    "gh-value-no-record": "registrerer ingen prestasjoner",
+    "gh-why-crack-keeps-no-record": "{servedBy} kjører dette spillet, men skriver aldri ned en prestasjon, så ingenting på denne PC-en kan vise noen. For å følge dem må spillet settes opp med Goldberg Steam-emulatoren (gbe_fork).",
     "gh-value-muted": "fremgangsvarsler er av",
     "gh-value-achievements": "{total} prestasjoner",
     "gh-value-unlocked": "{unlocked} låst opp",

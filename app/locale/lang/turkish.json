@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Bildirimler",
     "gh-value-missing": "bulunamadı",
     "gh-value-none-yet": "henüz kayıt yok",
+    "gh-value-no-record": "başarım kaydı tutmaz",
+    "gh-why-crack-keeps-no-record": "{servedBy} bu oyunu çalıştırır ama hiçbir başarımı kaydetmez, bu yüzden bu bilgisayarda hiçbir şey başarım gösteremez. Başarımları takip etmek için oyunu Goldberg Steam emülatörüyle (gbe_fork) kur.",
     "gh-value-muted": "ilerleme sessizde",
     "gh-value-achievements": "{total} başarım",
     "gh-value-unlocked": "{unlocked} açıldı",

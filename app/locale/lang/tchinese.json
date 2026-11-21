@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "通知",
     "gh-value-missing": "找不到",
     "gh-value-none-yet": "尚無任何紀錄",
+    "gh-value-no-record": "不記錄成就",
+    "gh-why-crack-keeps-no-record": "{servedBy} 可以執行這款遊戲，但從不記錄任何成就，因此這台電腦上沒有任何內容能顯示成就。若要追蹤成就，請使用 Goldberg Steam 模擬器 (gbe_fork) 來設定遊戲。",
     "gh-value-muted": "進度通知已關閉",
     "gh-value-achievements": "{total} 個成就",
     "gh-value-unlocked": "已解鎖 {unlocked} 個",

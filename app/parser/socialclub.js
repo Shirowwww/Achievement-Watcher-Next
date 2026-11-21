@@ -77,6 +77,37 @@ function defaultRoots() {
   return hostPaths('APPDATA', 'Goldberg SocialClub Emu Saves');
 }
 
+/*
+  Razor1911's Rockstar releases (GTA IV Complete Edition, v1.2.0.59) fake the Social Club inside the
+  game itself and keep its profile in %APPDATA%\.1911\<Game>\profile: saves and settings, and no
+  record of any achievement (checked on a real one, 21/11/2026). Listed so the game is not missing
+  and Game Health can say why nothing comes in. The numeric folders beside it are Razor1911's Steam
+  releases, which steam.js reads.
+*/
+const RAZOR_SOURCE = 'Razor1911 (Rockstar)';
+
+function razorRoots() {
+  return hostPaths('APPDATA', '.1911');
+}
+
+function scanRazor(root) {
+  const result = [];
+  for (const ent of safeReaddir(root)) {
+    if (!ent.isDirectory() || /^\d+$/.test(ent.name)) continue;
+    const steamappid = ROCKSTAR_STEAM_APPIDS.get(normalizeNameKey(ent.name));
+    const gameDir = path.join(root, ent.name);
+    if (!steamappid || !folderHasRockstarProfileData(path.join(gameDir, 'profile'))) continue;
+    result.push({
+      appid: socialClubAppId(ent.name),
+      name: ent.name,
+      source: RAZOR_SOURCE,
+      data: { type: 'socialclub', path: gameDir, gameName: ent.name, razor: true, steamappid },
+    });
+    debug.log(`[socialclub] ${ent.name}: Razor1911 Rockstar profile, which keeps no achievement record`);
+  }
+  return result;
+}
+
 function isSocialClubRootName(dir) {
   return ROOT_NAME_RE.test(path.basename(String(dir || '')));
 }
@@ -325,6 +356,8 @@ async function getGameData(appid, lang) {
     (appid && appid.data && appid.data.path ? path.basename(appid.data.path) : '') ||
     'Unknown';
   const steamAppId = await resolveSteamAppId(gameName);
+  const razor = !!(appid && appid.data && appid.data.razor);
+  const source = razor ? RAZOR_SOURCE : 'Goldberg SocialClub';
 
   let game = null;
   if (steamAppId) {
@@ -343,26 +376,31 @@ async function getGameData(appid, lang) {
       appid: appid.appid,
       name: gameName,
       steamappid: steamAppId || undefined,
-      source: 'Goldberg SocialClub',
+      source,
       img: {},
       achievement: { total: 0, unlocked: 0, list: [] },
       installed: true,
       socialClub: true,
+      ...(razor ? { noAchievementRecord: RAZOR_SOURCE } : {}),
     };
   }
 
   game.appid = appid.appid;
   game.name = game.name || gameName;
   game.steamappid = steamAppId;
-  game.source = 'Goldberg SocialClub';
+  game.source = source;
   game.socialClub = true;
   game.installed = true;
+  if (razor) game.noAchievementRecord = RAZOR_SOURCE;
   return game;
 }
 
 module.exports = {
   initDebug: module.exports.initDebug,
   defaultRoots,
+  razorRoots,
+  scanRazor,
+  RAZOR_SOURCE,
   isSocialClubPath,
   scan,
   getAchievements,

@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Aviseringar",
     "gh-value-missing": "hittades inte",
     "gh-value-none-yet": "inget registrerat än",
+    "gh-value-no-record": "registrerar inga prestationer",
+    "gh-why-crack-keeps-no-record": "{servedBy} kör det här spelet men skriver aldrig ner någon prestation, så ingenting på den här datorn kan visa någon. För att följa dem ska spelet ställas in med Goldberg Steam-emulatorn (gbe_fork).",
     "gh-value-muted": "framsteg tystade",
     "gh-value-achievements": "{total} prestationer",
     "gh-value-unlocked": "{unlocked} upplåsta",

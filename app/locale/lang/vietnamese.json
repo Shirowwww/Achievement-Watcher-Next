@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Thông báo",
     "gh-value-missing": "không tìm thấy",
     "gh-value-none-yet": "chưa ghi nhận được gì",
+    "gh-value-no-record": "không ghi lại thành tích",
+    "gh-why-crack-keeps-no-record": "{servedBy} chạy trò chơi này nhưng không bao giờ ghi lại thành tựu nào, nên không có gì trên máy tính này có thể hiển thị chúng. Để theo dõi, hãy thiết lập trò chơi với trình giả lập Steam Goldberg (gbe_fork).",
     "gh-value-muted": "đã tắt thông báo tiến độ",
     "gh-value-achievements": "{total} thành tựu",
     "gh-value-unlocked": "đã mở khóa {unlocked}",

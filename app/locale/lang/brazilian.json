@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "Notificações",
     "gh-value-missing": "não encontrado",
     "gh-value-none-yet": "nada registrado ainda",
+    "gh-value-no-record": "não registra conquistas",
+    "gh-why-crack-keeps-no-record": "{servedBy} executa este jogo, mas nunca registra uma conquista, então nada neste PC consegue mostrar alguma. Para acompanhá-las, configure o jogo com o emulador Steam Goldberg (gbe_fork).",
     "gh-value-muted": "progresso silenciado",
     "gh-value-achievements": "{total} conquistas",
     "gh-value-unlocked": "{unlocked} desbloqueadas",

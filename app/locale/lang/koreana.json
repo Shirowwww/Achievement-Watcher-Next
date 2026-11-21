@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "알림",
     "gh-value-missing": "찾을 수 없음",
     "gh-value-none-yet": "아직 기록 없음",
+    "gh-value-no-record": "업적을 기록하지 않음",
+    "gh-why-crack-keeps-no-record": "{servedBy}(은)는 이 게임을 실행하지만 도전 과제를 전혀 기록하지 않아, 이 PC에서는 어떤 것도 표시할 수 없습니다. 추적하려면 Goldberg Steam 에뮬레이터(gbe_fork)로 게임을 설정하세요.",
     "gh-value-muted": "진행도 음소거됨",
     "gh-value-achievements": "도전 과제 {total}개",
     "gh-value-unlocked": "{unlocked}개 달성",

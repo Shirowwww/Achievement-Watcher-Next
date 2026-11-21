@@ -464,6 +464,11 @@ function emulatorCheck(rawSignals) {
   if (hasNoAchievements(signals)) return null;
   // Said as a fact, not a fault: the emulator fix in the right-click menu is how to change it.
   if (noUnlockSource(signals)) return check('emulator', LEVEL.INFO, { params: { noSource: true } });
+  // The crack runs the game but keeps no record of an unlock: nothing on disk will ever say one
+  // happened, so the row names it rather than reporting a setup AW Next cannot see.
+  if (signals.noAchievementRecord) {
+    return check('emulator', LEVEL.FAIL, { blocking: true, params: { servedBy: String(signals.noAchievementRecord), noRecord: true } });
+  }
   const offlineServedBy = serverAwardedOffline(signals);
   if (offlineServedBy) {
     return check('emulator', LEVEL.FAIL, { blocking: true, params: { servedBy: offlineServedBy, serverAwarded: true } });
@@ -837,6 +842,7 @@ function explain(state, checks, signals) {
   // Nothing below can change it: the game never hands its unlocks to the emulator at all.
   if (emulator && emulator.params && emulator.params.serverAwarded) return { reason: 'server-awarded', params: emulator.params };
   if (emulator && emulator.params && emulator.params.spacewar) return { reason: 'spacewar', params: emulator.params };
+  if (emulator && emulator.params && emulator.params.noRecord) return { reason: 'crack-keeps-no-record', params: emulator.params };
   if (data && data.level === LEVEL.FAIL && data.blocking) return { reason: 'no-achievement-data', params: data.params };
   // Only a blocking emulator failure means "there is no emulator here"; a report that merely
   // carries schema or config errors is explained by the check that owns those instead.

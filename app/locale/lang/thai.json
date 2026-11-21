@@ -2856,6 +2856,8 @@
     "gh-check-notifications": "การแจ้งเตือน",
     "gh-value-missing": "ไม่พบ",
     "gh-value-none-yet": "ยังไม่มีการบันทึก",
+    "gh-value-no-record": "ไม่บันทึกความสำเร็จ",
+    "gh-why-crack-keeps-no-record": "{servedBy} รันเกมนี้ได้ แต่ไม่เคยบันทึกความสำเร็จเลย จึงไม่มีอะไรบนพีซีเครื่องนี้ที่แสดงความสำเร็จได้ หากต้องการติดตาม ให้ตั้งค่าเกมด้วยอีมูเลเตอร์ Steam Goldberg (gbe_fork)",
     "gh-value-muted": "ปิดเสียงความคืบหน้า",
     "gh-value-achievements": "ความสำเร็จ {total} รายการ",
     "gh-value-unlocked": "ปลดล็อกแล้ว {unlocked} รายการ",
