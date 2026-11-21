@@ -52,4 +52,13 @@ function readRemedyAlanWake2Unlocks({ files = remedyAchievementFiles() } = {}) {
   return earned;
 }
 
-module.exports = { readRemedyAlanWake2Unlocks, remedyAchievementFiles };
+// The Remedy save holds Alan Wake 2's unlocks only: another RUNE Epic game must never read it, since
+// Epic names some games' achievements with the same bare numbers.
+const ALAN_WAKE_2_TITLE = /alan\s*wake\s*2/i;
+const ALAN_WAKE_2_EXE = /(?:^|[\\/])alanwake2\.exe$/i;
+
+function isAlanWake2(data = {}) {
+  return ALAN_WAKE_2_TITLE.test(String(data.title || '')) || ALAN_WAKE_2_EXE.test(String(data.exe || ''));
+}
+
+module.exports = { readRemedyAlanWake2Unlocks, remedyAchievementFiles, isAlanWake2 };

@@ -30,6 +30,14 @@ test('Remedy Alan Wake 2 data.chunk marks state 1 achievements earned', () => {
   });
 });
 
+test('only Alan Wake 2 reads the Remedy save, by its title or its executable', () => {
+  assert.equal(remedy.isAlanWake2({ title: 'Alan Wake 2' }), true);
+  assert.equal(remedy.isAlanWake2({ title: 'Bluebird', exe: 'D:\\Games\\Alan Wake 2\\AlanWake2.exe' }), true);
+  assert.equal(remedy.isAlanWake2({ title: 'Alan Wake Remastered', exe: 'D:\\Games\\AWR\\AlanWake.exe' }), false);
+  assert.equal(remedy.isAlanWake2({ title: 'Hogwarts Legacy', exe: 'D:\\Games\\HL\\HogwartsLegacy.exe' }), false);
+  assert.equal(remedy.isAlanWake2(), false);
+});
+
 test('Remedy data.chunk rejects a short or unknown-format file', () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-remedy-invalid-'));
   const file = path.join(temp, 'data.chunk');

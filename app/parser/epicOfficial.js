@@ -727,7 +727,8 @@ module.exports.scanOwned = async (installedNamespaces = new Set()) => {
   two name their achievements differently; the titles are what they have in common.
 */
 module.exports.unlocksForSchema = async (appid, schemaList, lang, { forceRecheck = false } = {}) => {
-  const remedyEarned = appid?.data?.runeEpic ? remedyAchievements.readRemedyAlanWake2Unlocks() : {};
+  const data = appid?.data || {};
+  const remedyEarned = data.runeEpic && remedyAchievements.isAlanWake2(data) ? remedyAchievements.readRemedyAlanWake2Unlocks() : {};
   const unlocks = await module.exports.getAchievements(appid, { forceRecheck, lang });
   const earned = {};
   Object.assign(earned, remedyEarned);

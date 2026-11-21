@@ -18,9 +18,13 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
-- **Switching to the supported emulator migrates legacy DLC settings.** Game Health can now carry
-  supported DLC ownership and `unlock_all` state from older emulator files into GBE/Goldberg's.
-- **Alan Wake 2 RUNE/Epic support.** RUNE Epic installs are detected and resolved to their Epic achievement schema. Earned Alan Wake 2 achievements are shown without a date because no datastamp is saved.
+- **Games cracked with RUNE's Epic emulator are listed (#214).** They keep Epic's install folder,
+  so AW Next took them for genuine Epic installs and left them out. They now show with their Epic
+  achievement list. Alan Wake 2's unlocks are read from the game's own save, without a date since
+  it keeps none.
+- **Switching to the supported emulator keeps the DLC (#214).** The DLC list and unlock-all setting
+  of the replaced crack's `steam_emu.ini`, `steam_api.ini` or `cpy.ini` move to the new emulator's
+  settings when those have none of their own.
 - **Nightly builds.** **Settings > General > Update channel > Nightly** gets a build of every change
   as soon as it lands, with the list of changes, before it is tested in a release. Newer, but it can
   break: going back to **Stable** offers the latest release at once.

@@ -2278,8 +2278,8 @@ async function runGameHealthAction(appid, action, button) {
         sidelined.length > 0
           ? t(
               'gh-runtime-switched-ready',
-              'The previous crack’s configuration was renamed to .bak and the achievement data was written. Any DLC settings found there were migrated. Launch the game once.',
-              'La configuration du crack précédent a été renommée en .bak et les données de succès ont été écrites. Les réglages de DLC trouvés ont été migrés. Lance le jeu une fois.'
+              'The previous crack’s configuration was renamed to .bak and the achievement data was written. Launch the game once.',
+              'La configuration du crack précédent a été renommée en .bak et les données de succès ont été écrites. Lance le jeu une fois.'
             )
           : '',
       ]
