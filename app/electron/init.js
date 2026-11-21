@@ -663,7 +663,8 @@ async function checkPendingInstaller(file, expectedDigest) {
     file,
     publisherNames,
     expectedDigest,
-    verify: (names, target) => verifyUpdateCodeSignature(names, target, (message) => debug.log(message)),
+    // The channel the offer came from, as electron-updater's own check: a nightly is signed by the nightly key.
+    verify: (names, target) => verifyUpdateCodeSignature(names, target, (message) => debug.log(message), { channel: checkedUpdateChannel }),
   });
 }
 

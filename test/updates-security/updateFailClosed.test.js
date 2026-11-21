@@ -107,6 +107,15 @@ test('sha512OfFile hashes the real bytes', async () => {
   }
 });
 
+test('every signature check of an update trusts the keys of the channel it was offered on', () => {
+  // The re-check of the downloaded file once ran with the stable keys only, so every nightly refused
+  // the next one as "signed by an unknown certificate".
+  const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
+  const calls = [...init.matchAll(/(?<![.\w])verifyUpdateCodeSignature\(/g)].map((m) => init.slice(m.index, init.indexOf('\n', m.index)));
+  assert.equal(calls.length, 2, 'electron-updater\'s check and the pending installer re-check');
+  for (const call of calls) assert.match(call, /\{ channel: checkedUpdateChannel \}/);
+});
+
 test('the updater checks the cached installer on download and again right before it runs', () => {
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
   const downloaded = init.slice(init.indexOf("autoUpdater.on('update-downloaded'"));
