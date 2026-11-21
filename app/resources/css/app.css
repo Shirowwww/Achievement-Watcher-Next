@@ -9486,14 +9486,36 @@ body {
 }
 
 /*
-  A perfect game (Settings > Appearance > Library tiles) wears a soft platinum halo in every view. It
-  is static, so hovering still only moves the tile; a light sweeps across it once as the pointer
-  arrives, a transform alone, and not at all under reduced motion.
+  A perfect game (Settings > Appearance > Library tiles) wears a platinum halo in every view, its bar
+  turns platinum and its figure carries the platinum trophy: the halo alone was too faint to pick a
+  finished game out at a glance. It is static, so hovering still only moves the tile; a light sweeps
+  across it once as the pointer arrives, a transform alone, and not at all under reduced motion.
 */
 #game-list .game-box[data-perfect] {
-  border-color: color-mix(in srgb, var(--trophy-platinum) 55%, transparent);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--trophy-platinum) 30%, transparent), 0 12px 28px rgba(3, 9, 17, calc(0.28 * var(--shadow-scale))),
-    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  border-color: color-mix(in srgb, var(--trophy-platinum) 85%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--trophy-platinum) 45%, transparent), 0 0 22px color-mix(in srgb, var(--trophy-platinum) 42%, transparent),
+    0 12px 28px rgba(3, 9, 17, calc(0.28 * var(--shadow-scale))), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+#game-list .game-box[data-perfect] .info .progressBar {
+  --bar-label: 58px;
+}
+
+#game-list .game-box[data-perfect] .info .progressBar > .meter {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--trophy-platinum) 72%, black 10%), var(--trophy-platinum), color-mix(in srgb, var(--trophy-platinum) 55%, white 45%));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--trophy-platinum) 55%, transparent);
+}
+
+#game-list .game-box[data-perfect] .info .progressBar .progress-value {
+  gap: 4px;
+  color: var(--trophy-platinum);
+}
+
+#game-list .game-box[data-perfect] .info .progressBar .progress-value::before {
+  content: '\f091';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--trophy-platinum) 70%, transparent));
 }
 
 #game-list .game-box[data-perfect]::after {

@@ -28,10 +28,10 @@ renamed in 3.9.0 and the history is kept under one file.
   seconds apart, named after it, instead of one clip for all of them.
 - **The game page stays one click away when it is turned off (#189).** The tile's top-left button,
   which opens the achievements while the page is on, opens the page instead.
-- **Games at 100% stand out in the library.** Their tile wears a soft platinum halo, with a light
-  sweep on hover. **Settings > Appearance > Library tiles > Perfect games** counts the DLC or the
-  base game alone, or turns it off. It replaces the green edge the list and details views gave a
-  finished game.
+- **Games at 100% stand out in the library.** Their tile wears a platinum halo, a platinum bar and
+  the platinum trophy by its 100%, with a light sweep on hover. **Settings > Appearance > Library
+  tiles > Perfect games** counts the DLC or the base game alone, or turns it off. It replaces the
+  green edge the list and details views gave a finished game.
 - **Reset several games at once (#192).** Select games in the library with Ctrl+click, or
   Shift+click for a range, then right-click one of them to reset all their achievements. One
   confirmation lists them; each game is backed up first, and games whose platform keeps the unlocks

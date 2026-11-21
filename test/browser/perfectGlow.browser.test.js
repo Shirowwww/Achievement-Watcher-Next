@@ -1,9 +1,9 @@
 'use strict';
 
 /*
-  A game at 100% wears a soft platinum halo on its library tile, in every view, and a light sweeps
-  across it once as the pointer arrives (not under reduced motion). Run in Chromium against the
-  shipped app.css.
+  A game at 100% wears a platinum halo on its library tile, in every view, with a platinum bar and the
+  trophy by its figure, and a light sweeps across it once as the pointer arrives (not under reduced
+  motion). Run in Chromium against the shipped app.css.
 */
 
 const assert = require('node:assert/strict');
@@ -17,7 +17,7 @@ const css = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'u
 
 const tile = (name, perfect) => `<li><div class="game-box" data-progress="${perfect ? 100 : 40}"${perfect ? ' data-perfect' : ''}>
   <div class="header artwork-missing"></div>
-  <div class="info"><div class="info-head"><div class="title">${name}</div></div><div class="progressBar"><span class="meter"></span></div></div>
+  <div class="info"><div class="info-head"><div class="title">${name}</div></div><div class="progressBar"><span class="meter"></span><span class="progress-value"><span>${perfect ? 100 : 40} %</span></span></div></div>
 </div></li>`;
 
 const harness = (view) => `<!doctype html><html><head><meta charset="utf-8"><style>${css}</style></head><body>
@@ -60,6 +60,15 @@ const styleOf = (page, index, pseudo = null) =>
     pseudo
   );
 
+const barOf = (page, index) =>
+  page.evaluate((i) => {
+    const bar = document.querySelectorAll('#game-list .game-box .progressBar')[i];
+    return {
+      meter: getComputedStyle(bar.querySelector('.meter')).backgroundImage,
+      trophy: getComputedStyle(bar.querySelector('.progress-value'), '::before').content,
+    };
+  }, index);
+
 for (const view of ['view-default', 'view-portrait', 'view-list', 'view-details']) {
   test(`${view}: only the perfect tile wears the halo`, async (t) => {
     const page = await open(t, view);
@@ -67,9 +76,13 @@ for (const view of ['view-default', 'view-portrait', 'view-list', 'view-details'
     try {
       const [perfect, started] = [await styleOf(page, 0), await styleOf(page, 1)];
       assert.notEqual(perfect.boxShadow, started.boxShadow);
-      assert.match(perfect.boxShadow, /0px 0px 18px/, 'a soft glow around the tile');
-      assert.doesNotMatch(started.boxShadow, /0px 0px 18px/);
+      assert.match(perfect.boxShadow, /0px 0px 22px/, 'a glow around the tile');
+      assert.doesNotMatch(started.boxShadow, /0px 0px 22px/);
       assert.notEqual(perfect.borderColor, started.borderColor, 'the edge takes the platinum colour');
+      const [perfectBar, startedBar] = [await barOf(page, 0), await barOf(page, 1)];
+      assert.notEqual(perfectBar.meter, startedBar.meter, 'the bar turns platinum');
+      assert.equal(perfectBar.trophy, '""', 'the trophy stands by the figure');
+      assert.equal(startedBar.trophy, 'none');
     } finally {
       await page.close();
     }
