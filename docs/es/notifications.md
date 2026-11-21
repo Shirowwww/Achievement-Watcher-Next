@@ -340,6 +340,7 @@ comparten un clip.
 | Calidad | Baja, Media o Alta | Media |
 | Sonido | Solo el juego, o todo el PC | Solo el juego |
 | Zona grabada | La ventana del juego, o toda la pantalla | Ventana del juego |
+| Desbloqueos cercanos | Un clip para todos, o uno por logro, con su nombre | Un clip |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Ajustes, Notificación: la sección Videoclip con su interruptor de activado/desactivado" loading="lazy" decoding="async"></picture><br>

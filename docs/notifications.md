@@ -337,7 +337,8 @@ the last seconds of play are kept in memory, already compressed by the graphics 
 When an achievement pops, the stretch around it is saved as an MP4 in
 `<folder>\<game>\<achievement> - <date>.mp4`, with the unlock in the middle of it unless you move it. The folder is
 `Videos\Achievement Watcher Next` unless you pick another. Achievements unlocking close together
-share one clip.
+share one clip, unless **Unlocks close together** is set to **One per achievement**: each then gets
+its own clip, named after it. With gpu-screen-recorder on Linux, those are copies of the same clip.
 
 | Setting | Choices | Default |
 |---|---|---|
@@ -349,6 +350,7 @@ share one clip.
 | Quality | Low, Medium or High | Medium |
 | Sound | Game only, or the whole PC | Game only |
 | Recorded area | The game's window, or the whole screen | Game window |
+| Unlocks close together | One clip for all of them, or one per achievement | One clip |
 
 <div align="center">
 <picture><source srcset="assets/shot/video-clip-panel-800.webp 800w, assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/video-clip-panel.png" width="720" height="529" alt="Settings, Notification: the Video clip section with its on/off switch" loading="lazy" decoding="async"></picture><br>

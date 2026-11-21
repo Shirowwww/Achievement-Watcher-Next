@@ -351,6 +351,7 @@ współdzielą jeden klip.
 | Jakość | Niska, Średnia lub Wysoka | Średnia |
 | Dźwięk | Tylko gra albo cały komputer | Tylko gra |
 | Nagrywany obszar | Okno gry albo cały ekran | Okno gry |
+| Odblokowania blisko siebie | Jeden klip dla wszystkich albo jeden na osiągnięcie, nazwany od niego | Jeden klip |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Ustawienia, Powiadomienia: sekcja Klip wideo z przełącznikiem włącz/wyłącz" loading="lazy" decoding="async"></picture><br>

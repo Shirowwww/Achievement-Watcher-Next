@@ -345,6 +345,7 @@ Graphics Capture 捕获 FP16 帧，并把高光色调映射为 SDR/sRGB 的 PNG�
 | 画质 | 低、中或高 | 中 |
 | 声音 | 仅游戏，或整台电脑 | 仅游戏 |
 | 录制范围 | 游戏窗口，或整个屏幕 | 游戏窗口 |
+| 相近的解锁 | 全部合为单个剪辑，或每个成就一个并以其命名 | 单个剪辑 |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="设置，通知：带有开关的视频剪辑部分" loading="lazy" decoding="async"></picture><br>

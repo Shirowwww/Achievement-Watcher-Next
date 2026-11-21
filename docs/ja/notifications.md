@@ -342,6 +342,7 @@ Graphics Capture で FP16 のフレームをキャプチャし、ハイライト
 | 画質 | 低、中、高 | 中 |
 | サウンド | ゲームのみ、または PC 全体 | ゲームのみ |
 | 録画範囲 | ゲームのウィンドウ、または画面全体 | ゲームウィンドウ |
+| 近いタイミングの解除 | まとめて 1 つのクリップ、または実績ごとにその名前で 1 つ | 1つのクリップ |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="設定、通知：オン/オフのスイッチがあるビデオクリップのセクション" loading="lazy" decoding="async"></picture><br>

@@ -78,6 +78,8 @@ pub struct Config {
     // Skips desktop duplication; exists for testing the Windows Graphics Capture path without a
     // game in exclusive fullscreen.
     pub graphics_capture: bool,
+    // Each unlock gets a clip of its own instead of joining the one being recorded (`--clips separate`).
+    pub separate: bool,
     pub selftest: Option<(String, u64)>,
 }
 
@@ -145,6 +147,7 @@ fn parse_args(args: &[String]) -> Result<Config, String> {
         capture: CaptureMode::Game,
         crop: false,
         graphics_capture: false,
+        separate: false,
         selftest: None,
     };
     let mut i = 0;
@@ -183,6 +186,7 @@ fn parse_args(args: &[String]) -> Result<Config, String> {
                 config.crop = matches!(value.as_str(), "crop" | "crop-graphics");
                 config.graphics_capture = matches!(value.as_str(), "graphics" | "crop-graphics");
             }
+            "--clips" => config.separate = value == "separate",
             "--selftest" => {
                 let seconds = args.get(i + 2).and_then(|s| s.parse().ok()).unwrap_or(10);
                 config.selftest = Some((value.clone(), seconds));
@@ -337,7 +341,7 @@ fn main() {
         std::thread::spawn(move || read_commands(sender));
     }
 
-    let mut schedule = Schedule::new(LONGEST_CLIP);
+    let mut schedule = Schedule::new(LONGEST_CLIP, config.separate);
     let mut quitting: Option<Instant> = None;
     loop {
         match commands.recv_timeout(Duration::from_millis(100)) {
@@ -434,5 +438,14 @@ mod tests {
         assert_eq!(mode(&["--capture", "crop-graphics"]), (CaptureMode::Game, true, true));
         assert_eq!(mode(&["--capture", "whatever"]), (CaptureMode::Game, false, false), "an unknown value keeps the default");
         assert_eq!(parse(&["--capture", "screen", "--fps", "60"]).unwrap().fps, 60, "the argument after it is still read");
+    }
+
+    #[test]
+    fn unlocks_share_a_clip_unless_separate_clips_are_asked_for() {
+        assert!(!parse(&[]).unwrap().separate);
+        assert!(!parse(&["--clips", "join"]).unwrap().separate);
+        let config = parse(&["--clips", "separate", "--fps", "60"]).unwrap();
+        assert!(config.separate);
+        assert_eq!(config.fps, 60, "the argument after it is still read");
     }
 }

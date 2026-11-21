@@ -124,26 +124,31 @@ pub struct Job {
     pub path: String,
 }
 
-// Unlocks close together share one clip instead of writing near-identical copies.
+// Unlocks close together share one clip instead of writing near-identical copies, unless each is to
+// get its own (`separate`).
 pub struct Schedule {
     jobs: VecDeque<Job>,
     max_length: i64,
+    separate: bool,
 }
 
 impl Schedule {
-    pub fn new(max_length: i64) -> Self {
-        Self { jobs: VecDeque::new(), max_length }
+    pub fn new(max_length: i64, separate: bool) -> Self {
+        Self { jobs: VecDeque::new(), max_length, separate }
     }
 
     // Returns the clip an unlock was folded into, when it lands before that clip has ended.
     pub fn add(&mut self, anchor: i64, before: i64, after: i64, path: String) -> Option<String> {
         if let Some(last) = self.jobs.back_mut() {
-            if anchor <= last.end {
+            if !self.separate && anchor <= last.end {
                 last.end = last.end.max(anchor + after).min(last.start + self.max_length);
                 return Some(last.path.clone());
             }
         }
-        self.jobs.push_back(Job { start: anchor - before, end: anchor + after, path });
+        // Kept in the order they end, so none waits behind a later one while the ring drops its start.
+        let job = Job { start: anchor - before, end: anchor + after, path };
+        let at = self.jobs.iter().position(|queued| queued.end > job.end).unwrap_or(self.jobs.len());
+        self.jobs.insert(at, job);
         None
     }
 
@@ -254,7 +259,7 @@ mod tests {
 
     #[test]
     fn close_unlocks_share_one_clip_and_far_ones_get_their_own() {
-        let mut schedule = Schedule::new(60 * SECOND);
+        let mut schedule = Schedule::new(60 * SECOND, false);
         assert_eq!(schedule.add(100 * SECOND, 10 * SECOND, 10 * SECOND, "a".into()), None);
         assert_eq!(schedule.add(104 * SECOND, 10 * SECOND, 10 * SECOND, "b".into()), Some("a".into()));
         assert_eq!(schedule.jobs[0].end, 114 * SECOND);
@@ -266,8 +271,23 @@ mod tests {
     }
 
     #[test]
+    fn separate_clips_give_each_unlock_its_own_clip_around_it() {
+        let mut schedule = Schedule::new(60 * SECOND, true);
+        assert_eq!(schedule.add(100 * SECOND, 10 * SECOND, 10 * SECOND, "a".into()), None);
+        assert_eq!(schedule.add(104 * SECOND, 10 * SECOND, 10 * SECOND, "b".into()), None);
+        // Reported late: it ends before "b" and is written first.
+        assert_eq!(schedule.add(102 * SECOND, 10 * SECOND, 10 * SECOND, "c".into()), None);
+        let a = schedule.take_due(200 * SECOND).unwrap();
+        assert_eq!((a.path.as_str(), a.start, a.end), ("a", 90 * SECOND, 110 * SECOND));
+        assert_eq!(schedule.take_due(200 * SECOND).unwrap().path, "c");
+        let b = schedule.take_due(200 * SECOND).unwrap();
+        assert_eq!((b.path.as_str(), b.start, b.end), ("b", 94 * SECOND, 114 * SECOND));
+        assert!(schedule.is_empty());
+    }
+
+    #[test]
     fn a_shared_clip_never_grows_past_its_cap() {
-        let mut schedule = Schedule::new(30 * SECOND);
+        let mut schedule = Schedule::new(30 * SECOND, false);
         schedule.add(100 * SECOND, 10 * SECOND, 10 * SECOND, "a".into());
         for t in [105, 110, 115, 120, 125] {
             schedule.add(t * SECOND, 10 * SECOND, 10 * SECOND, "x".into());

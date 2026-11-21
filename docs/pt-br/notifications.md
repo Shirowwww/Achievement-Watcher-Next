@@ -350,6 +350,7 @@ compartilham um só clipe.
 | Qualidade | Baixa, Média ou Alta | Média |
 | Som | Somente o jogo, ou o PC inteiro | Somente o jogo |
 | Área gravada | A janela do jogo, ou a tela inteira | Janela do jogo |
+| Desbloqueios próximos | Um clipe para todas, ou um por conquista, com o nome dela | Um clipe |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Configurações, Notificação: a seção Videoclipe com o interruptor de ativar/desativar" loading="lazy" decoding="async"></picture><br>

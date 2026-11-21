@@ -351,6 +351,7 @@ Graphics Capture и преобразует его яркие участки в P
 | Качество | Низкое, Среднее или Высокое | Среднее |
 | Звук | Только игра или весь ПК | Только игра |
 | Область записи | Окно игры или весь экран | Окно игры |
+| Достижения подряд | Один клип на все или один на достижение, с его названием | Один клип |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Настройки, Уведомления: раздел «Видеоклип» с переключателем вкл./выкл." loading="lazy" decoding="async"></picture><br>

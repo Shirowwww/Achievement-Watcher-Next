@@ -42,7 +42,8 @@ function createClipRecorder({ BrowserWindow, session, desktopCapturer, screen, p
   let ring = null;
   let clip = null;
   let startedAt = 0;
-  let pending = null;
+  // Clips waiting for their last seconds: one, unless each unlock gets its own.
+  let pending = [];
   let cpu = { total: 0, samples: 0, timer: null };
 
   function streamNow() {
@@ -85,14 +86,13 @@ function createClipRecorder({ BrowserWindow, session, desktopCapturer, screen, p
   }
 
   // Waits until the recorder has delivered the seconds after the unlock, then writes the clip.
-  function finishPending() {
-    const job = pending;
-    if (!job) return;
+  function finishPending(job) {
+    if (!pending.includes(job)) return;
     if (ring && ring.newest() < job.toMs && Date.now() < job.deadline) {
-      job.timer = setTimeout(finishPending, 250);
+      job.timer = setTimeout(() => finishPending(job), 250);
       return;
     }
-    pending = null;
+    pending = pending.filter((other) => other !== job);
     writeClip(job.target, job.fromMs, job.toMs);
   }
 
@@ -125,21 +125,23 @@ function createClipRecorder({ BrowserWindow, session, desktopCapturer, screen, p
       log(`[clip] refused clip path ${JSON.stringify(target)}`);
       return null;
     }
-    if (pending) {
-      log(`[clip] unlock joined the clip ${pending.target}`);
-      return pending.target;
+    if (pending.length && clip.clipCombine !== 'separate') {
+      log(`[clip] unlock joined the clip ${pending[0].target}`);
+      return pending[0].target;
     }
     const { beforeMs, afterMs } = split(clip);
     const at = streamNow();
-    pending = { target, fromMs: at - beforeMs, toMs: at + afterMs, deadline: Date.now() + afterMs + DELIVERY_SLACK_MS, timer: null };
-    pending.timer = setTimeout(finishPending, afterMs);
+    const job = { target, fromMs: at - beforeMs, toMs: at + afterMs, deadline: Date.now() + afterMs + DELIVERY_SLACK_MS, timer: null };
+    pending = [...pending, job];
+    job.timer = setTimeout(() => finishPending(job), afterMs);
     return target;
   }
 
   function start(settings, app) {
     stop();
     clip = normalize(settings);
-    ring = createWebmRing({ keepMs: split(clip).beforeMs + 2 * KEYFRAME_MS });
+    // A clip is cut once its seconds after the unlock are in: the whole clip must still be held then.
+    ring = createWebmRing({ keepMs: clip.clipSeconds * 1000 + 2 * KEYFRAME_MS });
     const recorderSession = session.fromPartition('aw-clip-recorder');
     recorderSession.setDisplayMediaRequestHandler(async (_request, callback) => {
       try {
@@ -170,10 +172,10 @@ function createClipRecorder({ BrowserWindow, session, desktopCapturer, screen, p
 
   // A clip still waiting for its last seconds is written from what was recorded so far.
   function stop() {
-    if (pending) {
-      clearTimeout(pending.timer);
-      const job = pending;
-      pending = null;
+    const waiting = pending;
+    pending = [];
+    for (const job of waiting) {
+      clearTimeout(job.timer);
       writeClip(job.target, job.fromMs, job.toMs);
     }
     if (window && !window.isDestroyed()) window.destroy();

@@ -20,9 +20,12 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Dead Nation: Apocalypse Edition, the PS4 recompilation (#188).** Its 41 trophies show with their
   pictures, read from the save folder its setup uses. The port records no date, so an unlock gets
   the time AW Next sees it.
-- **Clips can film the game alone (#190).** **Settings > Notifications > Clips > Recorded area**
+- **Clips can film the game alone (#190).** **Settings > Notification > Video clip > Recorded area**
   films the game's window by default, without the desktop or other windows, or the whole screen as
   before. On Windows 10 the screen is cropped to the game's window.
+- **One clip per achievement, if you prefer (#215).** **Settings > Notification > Video clip >
+  Unlocks close together > One per achievement** saves a clip for each achievement unlocked a few
+  seconds apart, named after it, instead of one clip for all of them.
 - **The game page stays one click away when it is turned off (#189).** The tile's top-left button,
   which opens the achievements while the page is on, opens the page instead.
 - **Games at 100% stand out in the library.** Their tile wears a soft platinum halo, with a light
@@ -76,6 +79,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Linux software clips keep their seconds before the unlock.** The recorder only held the seconds
+  before the unlock when it cut the clip, once the seconds after were in, so every clip lost its
+  start. It now holds the whole clip.
 - **A game's own platinum pops after the achievement that earns it (#215).** When the last
   achievement and the game's "every achievement" one were saved together, the platinum could pop
   first. It now always comes last, as on PlayStation.

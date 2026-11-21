@@ -73,35 +73,57 @@ function moveFile(from, to) {
   }
 }
 
+// A copy of a saved clip under another unlock's name, in that unlock's folder.
+function copyFile(from, to) {
+  fs.mkdirSync(path.dirname(to), { recursive: true });
+  fs.copyFileSync(from, to);
+}
+
 /*
   One recorder per game. save() asks for the buffer `afterMs` later, so the unlock sits in the
-  middle of the saved seconds; an unlock arriving before that save joins it, like on Windows.
+  middle of the saved seconds; an unlock arriving before that save joins it, like on Windows. With
+  `separate`, that unlock still gets a file of its own: a copy of the same replay, as two replays
+  asked for close together could not both be saved.
 */
-function createRecorder({ child, afterMs, log, kill = (pid, signal) => process.kill(pid, signal) }) {
+function createRecorder({ child, afterMs, log, separate = false, kill = (pid, signal) => process.kill(pid, signal) }) {
   const waiting = [];
   let pending = null;
 
   readline.createInterface({ input: child.stdout }).on('line', (line) => {
     const saved = line.trim();
-    const target = waiting.shift();
-    if (!saved || !target) return;
+    const group = waiting.shift();
+    if (!saved || !group) return;
     try {
-      moveFile(saved, target);
-      log.log(`[clip] saved ${target}`);
+      moveFile(saved, group.target);
+      log.log(`[clip] saved ${group.target}`);
     } catch (err) {
-      log.warn(`[clip] could not move ${saved} to ${target}: ${err.message || err}`);
+      log.warn(`[clip] could not move ${saved} to ${group.target}: ${err.message || err}`);
+      return;
+    }
+    for (const copy of group.copies) {
+      try {
+        copyFile(group.target, copy);
+        log.log(`[clip] saved ${copy}`);
+      } catch (err) {
+        log.warn(`[clip] could not copy the clip to ${copy}: ${err.message || err}`);
+      }
     }
   });
 
   function save(target) {
-    if (pending) {
-      log.log(`[clip] unlock joined the clip ${pending}`);
-      return pending;
+    if (pending && separate) {
+      pending.copies.push(target);
+      return target;
     }
-    pending = target;
+    if (pending) {
+      log.log(`[clip] unlock joined the clip ${pending.target}`);
+      return pending.target;
+    }
+    const group = { target, copies: [] };
+    pending = group;
     const timer = setTimeout(() => {
       pending = null;
-      waiting.push(target);
+      waiting.push(group);
       try {
         kill(child.pid, 'SIGUSR1');
       } catch (err) {

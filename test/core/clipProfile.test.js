@@ -22,6 +22,7 @@ test('settings saved as text are read by value, and anything unknown falls back'
     clipAudio: 'game',
     clipEngine: 'gpu',
     clipCapture: 'game',
+    clipCombine: 'join',
     clipDir: '',
   });
   assert.equal(profile.normalize({ clipEngine: 'software' }).clipEngine, 'software');
@@ -58,6 +59,17 @@ test('the recorder films the game window unless the whole screen is chosen', () 
   assert.equal(capture({ clipCapture: 'screen' }), 'screen');
   assert.equal(capture({ clipCapture: 'graphics' }), 'game', 'development switches of the recorder are not settings');
   assert.equal(profile.normalize({ clipCapture: 'screen' }).clipCapture, 'screen');
+});
+
+// #215: achievements unlocked together, each with a video of its own named after it.
+test('separate clips are asked of the recorder only when chosen', () => {
+  assert.deepEqual(profile.COMBINE, ['join', 'separate']);
+  assert.equal(profile.normalize({ clipCombine: 'separate' }).clipCombine, 'separate');
+  assert.equal(profile.normalize({ clipCombine: 'apart' }).clipCombine, 'join');
+  const args = profile.recorderArgs({ clipCombine: 'separate' }, 7);
+  assert.equal(args[args.indexOf('--clips') + 1], 'separate');
+  // A recorder from before the setting refuses an argument it does not know.
+  assert.equal(profile.recorderArgs({}, 7).includes('--clips'), false, 'the default adds nothing');
   assert.equal(profile.normalize({ clipCapture: '' }).clipCapture, 'game');
 });
 

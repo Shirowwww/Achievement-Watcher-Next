@@ -351,6 +351,7 @@ condividono una sola clip.
 | Qualità | Bassa, Media o Alta | Media |
 | Audio | Solo il gioco, oppure l'intero PC | Solo il gioco |
 | Area registrata | La finestra del gioco, oppure l'intero schermo | Finestra del gioco |
+| Sblocchi ravvicinati | Una clip per tutti, oppure una per obiettivo, con il suo nome | Una clip |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Impostazioni, Notifiche: la sezione Clip video con il suo interruttore di attivazione" loading="lazy" decoding="async"></picture><br>

@@ -56,3 +56,38 @@ test('a saved replay is moved into a game folder that does not exist yet', async
 
   assert.equal(fs.readFileSync(target, 'utf8'), 'mp4', logs.join('\n'));
 });
+
+// #215: with one clip per achievement, an unlock that lands while a replay is pending gets its own
+// file, a copy of that replay, rather than joining it.
+test('separate clips give a close unlock its own copy of the replay', async (t) => {
+  const { PassThrough } = require('node:stream');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gsr-separate-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const replay = path.join(dir, 'replay.mp4');
+  fs.writeFileSync(replay, 'mp4');
+  const first = path.join(dir, 'Videos', 'Game', 'Last one.mp4');
+  const second = path.join(dir, 'Videos', 'Game', 'Platinum.mp4');
+  const stdout = new PassThrough();
+  const log = { log: () => {}, warn: () => {} };
+  let signals = 0;
+  const recorder = gsrClip.createRecorder({ child: { stdout, pid: 1 }, afterMs: 0, separate: true, log, kill: () => (signals += 1) });
+  const tick = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+  assert.equal(recorder.save(first), first);
+  assert.equal(recorder.save(second), second, 'the second unlock keeps its own name');
+  await tick();
+  assert.equal(signals, 1, 'one replay is asked for both');
+  stdout.write(replay + '\n');
+  await tick();
+
+  assert.equal(fs.readFileSync(first, 'utf8'), 'mp4');
+  assert.equal(fs.readFileSync(second, 'utf8'), 'mp4');
+  assert.equal(recorder.busy(), false);
+});
+
+test('without separate clips a close unlock still joins the pending replay', () => {
+  const { PassThrough } = require('node:stream');
+  const recorder = gsrClip.createRecorder({ child: { stdout: new PassThrough(), pid: 1 }, afterMs: 60000, log: { log: () => {}, warn: () => {} }, kill: () => {} });
+  assert.equal(recorder.save('/clips/a.mp4'), '/clips/a.mp4');
+  assert.equal(recorder.save('/clips/b.mp4'), '/clips/a.mp4');
+});

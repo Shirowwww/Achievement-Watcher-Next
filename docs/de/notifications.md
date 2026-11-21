@@ -340,6 +340,7 @@ teilen sich einen Clip.
 | Qualität | Niedrig, Mittel oder Hoch | Mittel |
 | Ton | Nur Spiel oder der gesamte PC | Nur Spiel |
 | Aufnahmebereich | Das Spielfenster oder der ganze Bildschirm | Spielfenster |
+| Kurz nacheinander freigeschaltet | Ein Clip für alle oder einer pro Erfolg, nach ihm benannt | Ein Clip |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Einstellungen, Benachrichtigung: der Abschnitt Videoclip mit seinem Ein-/Aus-Schalter" loading="lazy" decoding="async"></picture><br>

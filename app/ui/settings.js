@@ -904,6 +904,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_clipQuality').val(cfgClip.clipQuality).change();
       $('#option_clipAudio').val(cfgClip.clipAudio).change();
       $('#option_clipCapture').val(cfgClip.clipCapture === 'screen' ? 'screen' : 'game').change();
+      $('#option_clipCombine').val(cfgClip.clipCombine).change();
       if (process.platform === 'linux') {
         $('#option_clipEngine').val(cfgClip.clipEngine).change();
         showClipEngineStatus();
@@ -5297,6 +5298,7 @@ function readClipSettings() {
     clipQuality: $('#option_clipQuality').val(),
     clipAudio: $('#option_clipAudio').val(),
     clipCapture: $('#option_clipCapture').val(),
+    clipCombine: $('#option_clipCombine').val(),
     // Linux only; elsewhere the row is gone and the setting keeps its saved value.
     clipEngine: $('#option_clipEngine').length ? $('#option_clipEngine').val() : app.config.souvenir && app.config.souvenir.clipEngine,
     // Set by the folder picker, not by a control.

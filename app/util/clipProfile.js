@@ -15,6 +15,8 @@ const AUDIO = ['game', 'all'];
 const ENGINES = ['gpu', 'software'];
 // Windows only: the game's window alone, or the whole monitor showing it.
 const CAPTURES = ['game', 'screen'];
+// Unlocks close together: one clip holding them all, or a clip for each.
+const COMBINE = ['join', 'separate'];
 
 // Mirrors bitrate() in native/hdr-screenshot/src/bin/aw-next-clip/video.rs, which decides the real
 // rate from the size it actually records at.
@@ -49,6 +51,7 @@ function normalize(souvenir = {}) {
     clipAudio: pick(souvenir.clipAudio, AUDIO, 'game'),
     clipEngine: pick(souvenir.clipEngine, ENGINES, 'gpu'),
     clipCapture: pick(souvenir.clipCapture, CAPTURES, 'game'),
+    clipCombine: pick(souvenir.clipCombine, COMBINE, 'join'),
     // Empty means Videos\Achievement Watcher Next.
     clipDir: typeof souvenir.clipDir === 'string' ? souvenir.clipDir.trim() : '',
   };
@@ -78,6 +81,8 @@ function recorderArgs(souvenir = {}, pid = 0) {
     '--audio', clip.clipAudio,
     '--hdr', souvenir.hdr === 'off' ? 'off' : 'auto',
     '--capture', clip.clipCapture,
+    // Only when asked: a recorder from before this setting refuses an argument it does not know.
+    ...(clip.clipCombine === 'separate' ? ['--clips', 'separate'] : []),
   ];
 }
 
@@ -98,4 +103,4 @@ function estimateMegabytes(souvenir = {}, screen = { width: 1920, height: 1080 }
   return ((bits + AUDIO_BITS) * clip.clipSeconds) / 8 / 1e6;
 }
 
-module.exports = { SECONDS, CODECS, RESOLUTIONS, FRAME_RATES, QUALITIES, AUDIO, ENGINES, CAPTURES, normalize, split, recorderArgs, estimateMegabytes, fixedFps };
+module.exports = { SECONDS, CODECS, RESOLUTIONS, FRAME_RATES, QUALITIES, AUDIO, ENGINES, CAPTURES, COMBINE, normalize, split, recorderArgs, estimateMegabytes, fixedFps };

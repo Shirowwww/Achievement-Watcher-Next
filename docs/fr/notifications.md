@@ -340,6 +340,7 @@ partagent un même clip.
 | Qualité | Basse, Moyenne ou Haute | Moyenne |
 | Son | Jeu seulement, ou tout le PC | Jeu seulement |
 | Zone filmée | La fenêtre du jeu, ou tout l'écran | Fenêtre du jeu |
+| Succès rapprochés | Un seul clip pour tous, ou un par succès, à son nom | Un seul clip |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Paramètres, Notification : la section Clip vidéo avec son interrupteur" loading="lazy" decoding="async"></picture><br>

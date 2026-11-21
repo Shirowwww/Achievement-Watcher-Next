@@ -141,7 +141,7 @@ function launch(recorder) {
     os.setPriority(child.pid, os.constants.priority.PRIORITY_BELOW_NORMAL);
   } catch {}
   if (recorder.engine === 'gpu-screen-recorder') {
-    recorder.replay = gsrClip.createRecorder({ child, afterMs: recorder.afterMs, log: debug, kill: recorder.deps.kill });
+    recorder.replay = gsrClip.createRecorder({ child, afterMs: recorder.afterMs, separate: recorder.separate, log: debug, kill: recorder.deps.kill });
   } else {
     readline.createInterface({ input: child.stdout }).on('line', (line) => handleLine(line, recorder));
   }
@@ -306,7 +306,10 @@ function linuxRecorder(souvenir, deps) {
   const wayland = env.XDG_SESSION_TYPE === 'wayland';
   const tokenFile = path.join(deps.profileDir || os.homedir(), '.aw-next-gsr-portal-token');
   const args = [...found.prefix, ...gsrClip.replayArgs(clip, { outDir: deps.replayDir || gsrClip.replayDir(), tokenFile, wayland })];
-  return { engine: 'gpu-screen-recorder', key: [found.command, ...args].join(' '), command: found.command, args, ext: '.mp4', afterMs };
+  const separate = clip.clipCombine === 'separate';
+  // The key holds the choice too, so changing it restarts the recorder with it.
+  const key = [found.command, ...args, clip.clipCombine].join(' ');
+  return { engine: 'gpu-screen-recorder', key, command: found.command, args, ext: '.mp4', afterMs, separate };
 }
 
 // Brings the recorder in line with the settings and the game being played: started, restarted
