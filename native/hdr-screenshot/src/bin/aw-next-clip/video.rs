@@ -753,6 +753,9 @@ fn graphics_capture_can_replace(code: HRESULT) -> bool {
     code == DXGI_ERROR_UNSUPPORTED || code == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE
 }
 
+// The message of the error that ends a session after the recorder asked Windows for the screen's GPU.
+pub const GPU_MOVED: &str = "gpu-moved";
+
 // Windows Graphics Capture of one monitor or one window, polled like duplication: a free-threaded
 // pool needs no message loop. Without the pointer, as duplication gives it.
 struct GraphicsCapture {
@@ -901,10 +904,15 @@ fn screen_source(config: &Config, device: &ID3D11Device, output: &IDXGIOutput, m
     } else {
         unsafe { output.cast::<IDXGIOutput5>()?.DuplicateOutput1(device, 0, formats) }
     };
+    let display = unsafe { output.GetDesc() }.map(|desc| desc.DeviceName).unwrap_or_default();
     match duplicated {
         Ok(duplication) => {
             let mode = unsafe { duplication.GetDesc() }.ModeDesc;
             Ok((Source::Duplication(duplication), (mode.Width, mode.Height)))
+        }
+        Err(refused) if refused.code() == DXGI_ERROR_UNSUPPORTED && !config.graphics_capture && crate::gpu::follow_display(device, &display) => {
+            log("desktop duplication refused: the screen hangs off another GPU, the recorder asked Windows for that one and starts again");
+            Err(Error::new(refused.code(), GPU_MOVED))
         }
         Err(refused) if graphics_capture_can_replace(refused.code()) => match GraphicsCapture::monitor(device, monitor, hdr) {
             Ok(capture) => {
@@ -1393,6 +1401,11 @@ pub fn run(config: &Config, shared: &Shared) {
                 if error.message() == "no-encoder" {
                     crate::emit("error no-encoder neither a hardware nor the software H.264 encoder could be opened");
                     shared.unsupported.store(true, Ordering::Relaxed);
+                    shared.stop.store(true, Ordering::Relaxed);
+                    return;
+                }
+                if error.message() == GPU_MOVED {
+                    shared.gpu_moved.store(true, Ordering::Relaxed);
                     shared.stop.store(true, Ordering::Relaxed);
                     return;
                 }

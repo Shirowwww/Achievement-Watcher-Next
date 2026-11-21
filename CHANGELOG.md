@@ -86,6 +86,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **No more yellow frame around clips on laptops with two GPUs.** When Windows started the
+  recorder on the graphics card that does not drive the screen, it could not copy the screen and
+  fell back to a capture that draws a yellow frame on Windows 10. It now asks Windows to run it on
+  the screen's card and starts again, unless you already chose a card for it in Windows' graphics
+  settings.
 - **A GOG game fixed with UniverseLAN lists all its achievements.** Its page only showed the ones
   already unlocked, under their raw names, plus an example entry from UniverseLAN. A game also on
   Steam now shows the Steam release's list with names and icons, as its notifications already did.

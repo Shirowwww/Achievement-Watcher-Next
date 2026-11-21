@@ -2,6 +2,7 @@
 // The line protocol with the Watchdog is described in native/hdr-screenshot/README.md.
 mod audio;
 mod codec;
+mod gpu;
 mod mp4;
 mod mux;
 mod priority;
@@ -33,6 +34,9 @@ const HEARTBEAT: Duration = Duration::from_secs(5);
 pub const MAX_FPS: u32 = 480;
 // Exit code for a machine that cannot record at all, which the Watchdog does not restart.
 pub const EXIT_UNSUPPORTED: i32 = 4;
+// Exit code after asking Windows for the GPU that drives the screen, which only a new process gets:
+// the Watchdog starts the recorder again at once.
+pub const EXIT_GPU_MOVED: i32 = 5;
 
 // Force exists for testing the tone-mapping pass on an SDR desktop.
 #[derive(Clone, Copy, PartialEq)]
@@ -100,6 +104,8 @@ pub struct Shared {
     pub beat: AtomicU64,
     // Neither a hardware nor the software encoder could be opened.
     pub unsupported: AtomicBool,
+    // Windows was asked to start this executable on another GPU (gpu.rs).
+    pub gpu_moved: AtomicBool,
 }
 
 pub fn emit(line: &str) {
@@ -320,6 +326,7 @@ fn main() {
         fps: AtomicU32::new(config.fps),
         beat: AtomicU64::new(0),
         unsupported: AtomicBool::new(false),
+        gpu_moved: AtomicBool::new(false),
     });
 
     let mut workers = Vec::new();
@@ -386,6 +393,9 @@ fn main() {
     }
     if shared.unsupported.load(Ordering::Relaxed) {
         std::process::exit(EXIT_UNSUPPORTED);
+    }
+    if shared.gpu_moved.load(Ordering::Relaxed) {
+        std::process::exit(EXIT_GPU_MOVED);
     }
 }
 

@@ -121,6 +121,12 @@ Everything runs on parts of Windows, with no third-party media library:
   (`DXGI_ERROR_NOT_CURRENTLY_AVAILABLE`); the recorder then captures the same monitor with Windows
   Graphics Capture, which the screenshot helper already showed sees those games, without the pointer
   and without the border where Windows can turn it off (a `log desktop duplication refused` line).
+  Duplication also refuses a recorder running on another GPU than the one that drives the screen,
+  as on a laptop whose panel hangs off the integrated GPU while a driver profile starts apps on the
+  discrete one. When no choice is stored for `aw-next-clip.exe` in
+  `HKCU\Software\Microsoft\DirectX\UserGpuPreferences` (Settings > Display > Graphics), the recorder
+  stores the screen's GPU there (`gpu.rs`) and exits with code 5; Windows applies it to the next
+  process only, and the Watchdog starts that one at once.
   For development, `--capture graphics` takes that path on any desktop (whole monitor),
   `--capture crop` takes the Windows 10 cropping path on Windows 11, and `--capture crop-graphics`
   crops a Windows Graphics Capture of the monitor.
@@ -194,7 +200,8 @@ The Watchdog talks to it over stdin and stdout, one line per message:
 `stats` doubles as the heartbeat. It prints every five seconds while the capture loop turns and not at
 all when it hangs, which is what the Watchdog waits for (15 s, 30 s for the first one) before killing
 and restarting the recorder. Exit codes 2 (bad arguments), 3 (no Media Foundation) and 4 (no encoder at
-all, after `error no-encoder`) are not restarted.
+all, after `error no-encoder`) are not restarted; exit code 5 (moved to the screen's GPU) is restarted
+at once, once per game.
 
 A clip is written under `<path>.part` and renamed. If writing fails midway (a full disk), the file is
 written again as the longest clip that fits in the bytes the failed write managed, and kept under the

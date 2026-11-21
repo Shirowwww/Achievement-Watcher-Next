@@ -40,6 +40,9 @@ const STATS_LOG_MS = 60000;
 // Exit codes of aw-next-clip.exe that a restart cannot fix: bad arguments, no Media Foundation,
 // no usable encoder.
 const UNSUPPORTED_EXITS = [2, 3, 4];
+// Exit code of aw-next-clip.exe once it asked Windows for the GPU that drives the screen, which only
+// a new process gets: started again at once, one time per game.
+const GPU_MOVED_EXIT = 5;
 
 const state = {
   recorder: null,
@@ -199,6 +202,12 @@ function onExit(recorder, child, code) {
   if (!hung && UNSUPPORTED_EXITS.includes(code) && recorder.engine === 'aw-next-clip') {
     debug.warn(`[clip] recorder cannot run here (exit ${code}); not restarted until the settings change`);
     state.unsupportedKey = recorder.key;
+    return;
+  }
+  if (!hung && code === GPU_MOVED_EXIT && recorder.engine === 'aw-next-clip' && !recorder.gpuMoved) {
+    recorder.gpuMoved = true;
+    debug.log('[clip] recorder moved to the GPU that drives the screen, starting it again');
+    launch(recorder);
     return;
   }
   const what = hung ? 'was stuck' : `exited (${code})`;

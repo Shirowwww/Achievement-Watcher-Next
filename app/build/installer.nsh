@@ -718,6 +718,8 @@ Var unDeleteAppData   ; uninstaller: also delete the user data
     DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${APP_ID}"
     DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" "${APP_ID}"
     DeleteRegKey HKCU "Software\Classes\achievement-watcher"
+    ; The GPU the clip recorder stored for itself (gpu.rs in native/hdr-screenshot).
+    DeleteRegValue HKCU "Software\Microsoft\DirectX\UserGpuPreferences" "$INSTDIR\watchdog\native\aw-next-clip.exe"
     !ifdef APP_INSTALLER_STORE_FILE
       !searchparse /noerrors "${APP_INSTALLER_STORE_FILE}" "" AW_UPDATER_CACHE_DIR "\installer.exe"
       !ifdef AW_UPDATER_CACHE_DIR

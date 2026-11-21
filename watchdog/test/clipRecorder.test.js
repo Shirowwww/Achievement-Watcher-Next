@@ -322,6 +322,20 @@ test('a recorder that exits with the code of an unsupported machine is not resta
   assert.equal(spawner.children.length, 3, 'any other code is retried');
 });
 
+test('a recorder that moved to the screen GPU is started again at once, only once', (t) => {
+  const spawner = fakeSpawner();
+  const { deps: d, advance } = clockedDeps(t, spawner);
+  clip.sync(enabled, game, d);
+  spawner.children[0].emit('exit', 5);
+  assert.equal(spawner.children.length, 2, 'no restart delay');
+  assert.deepEqual(spawner.children[1].args, spawner.children[0].args);
+
+  spawner.children[1].emit('exit', 5);
+  assert.equal(spawner.children.length, 2, 'a second move is an ordinary death');
+  advance(5000);
+  assert.equal(spawner.children.length, 3);
+});
+
 test('the screen rate is passed to the recorder as a word', () => {
   const spawner = fakeSpawner();
   clip.sync({ ...enabled, clipFps: 'unlocked' }, game, deps(spawner));
