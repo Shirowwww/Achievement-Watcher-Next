@@ -209,6 +209,7 @@ const {
   seedPreviewNames,
   requiredCount,
   requiredUnlockedCount,
+  platinumLastOrder,
 } = require('./util/achievementIndex.js');
 const { createIndexedGameLookup } = require(sharedAppModulePath('util/indexedGameLookup.js'));
 const { runXboxPoll, matchesActiveXboxPoll } = require('./util/xboxPolling.js');
@@ -1330,7 +1331,8 @@ var app = {
             let j = 0;
             // Shown once the scan is done: a shared stat moves several achievements at once.
             const progressPopups = [];
-            for (let i in achievements) {
+            // The game's own platinum pops after the unlock that earns it, as on PlayStation (#215).
+            for (const i of platinumLastOrder(achievements, schemaIndex, [platinumLike, platinumTwin])) {
               if (Object.prototype.hasOwnProperty.call(achievements, i)) {
                 try {
                   let ach = findSchemaAchievement(schemaIndex, achievements[i]);

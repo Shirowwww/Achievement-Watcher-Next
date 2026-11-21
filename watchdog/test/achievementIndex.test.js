@@ -10,7 +10,19 @@ const {
   seedPreviewNames,
   requiredCount,
   requiredUnlockedCount,
+  platinumLastOrder,
 } = require('../util/achievementIndex.js');
+
+// On PlayStation the platinum pops after the trophy that earns it (#215): a game's own "every
+// achievement" one written in the same save as the last regular unlock pops after it, whatever the
+// save's order.
+test('platinum last order moves the platinum after the other unlocks of the read', () => {
+  const index = buildSchemaIndex([{ name: 'Alpha' }, { name: 'AllDone' }, { name: 'Beta' }]);
+  const read = [{ name: 'alpha' }, { name: 'ALLDONE' }, { name: 'beta' }];
+
+  assert.deepEqual(platinumLastOrder(read, index, ['AllDone']), [0, 2, 1]);
+  assert.deepEqual(platinumLastOrder(read, index, [null, '']), [0, 1, 2], 'no platinum keeps the save order');
+});
 
 test('schema index keeps the first case-insensitive name match, like Array.find', () => {
   const first = { name: 'Achievement_One' };

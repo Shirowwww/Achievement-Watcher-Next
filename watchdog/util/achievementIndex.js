@@ -81,6 +81,19 @@ function requiredUnlockedCount(entries, schemaIndex, inScope = null) {
   return count;
 }
 
+// The indexes of one read in the order to notify them: the save's own, with the game's platinum
+// (any of `lastNames`) moved after the rest, as PlayStation pops it after the trophy that earns it.
+function platinumLastOrder(entries, schemaIndex, lastNames) {
+  const last = new Set((lastNames || []).filter(Boolean).map(normalizeName));
+  const list = Array.isArray(entries) ? entries : [];
+  const isLast = (entry) => {
+    if (last.size === 0 || !entry) return false;
+    return last.has(normalizeName((findSchemaAchievement(schemaIndex, entry) || entry).name));
+  };
+  const order = list.map((_, i) => i);
+  return [...order.filter((i) => !isLast(list[i])), ...order.filter((i) => isLast(list[i]))];
+}
+
 module.exports = {
   buildSchemaIndex,
   findSchemaAchievement,
@@ -88,4 +101,5 @@ module.exports = {
   seedPreviewNames,
   requiredCount,
   requiredUnlockedCount,
+  platinumLastOrder,
 };

@@ -83,6 +83,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A game's own platinum pops after the achievement that earns it (#215).** When the last
+  achievement and the game's "every achievement" one were saved together, the platinum could pop
+  first. It now always comes last, as on PlayStation.
 - **A broken unlock date no longer breaks a library tile (#212).** A save holding a date in
   microseconds or beyond threw "Invalid time value" while the library was drawn. Such dates are read
   back as seconds, and parser.log names the game, its source and the achievement once.
