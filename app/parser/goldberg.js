@@ -888,7 +888,8 @@ function runtimeSaveFolders({ steamSettings, appid, types = ['gbe'] } = {}) {
 
 function seedRuntimeSave({ appid, schema, steamSettings, savesRoots = null, types = ['gbe'] } = {}) {
   const summary = { appid: appid != null ? String(appid) : null, entries: 0, roots: [], created: [], skipped: [] };
-  if (summary.appid == null) return summary;
+  // The emulator saves under a Steam appid; a hand-added game's library id (manual-...) is not one.
+  if (!/^[0-9]+$/.test(summary.appid || '')) return summary;
 
   const state = buildRuntimeAchievementsState({ schema, steamSettings });
   summary.entries = Object.keys(state).length;

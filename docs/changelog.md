@@ -22,7 +22,8 @@ renamed in 3.9.0 and the history is kept under one file.
   entry stayed next to the emulator's, because the emulator's save was read later in the scan.
 - **A game added by hand no longer gets a bogus ID in its emulator file.** Repairing or installing
   the emulator could write AW Next's own `manual-...` id into `steam_appid.txt`, so the game
-  announced the wrong ID; only a real Steam appid is written now.
+  announced the wrong ID, and its placeholder save landed in a `GSE Saves\manual-...` folder; only
+  a real Steam appid is used now.
 - **Game Health now offers to write a game's missing DLC access.** The note had no button unless
   Settings let AW Next manage DLC; Complete the emulator settings now covers it, after asking.
 

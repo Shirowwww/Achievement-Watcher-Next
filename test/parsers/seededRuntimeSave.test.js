@@ -237,3 +237,11 @@ test('a placeholder left under GSE Saves before the redirect was honoured is tak
   assert.equal(goldberg.forgetMisplacedSeeds({ appid: APPID, steamSettings: unredirected, savesRoots: plain.savesRoots }).length, 0);
   assert.equal(fs.existsSync(plain.file), true, 'without a redirect GSE Saves is the right place');
 });
+
+// The emulator names its save folder after a Steam appid; a hand-added game's library id is not one.
+test('no placeholder save is made under a library id that is not a Steam appid', () => {
+  const root = path.join(tmpdir('aw-seed-manual-'), 'GSE Saves');
+  const summary = goldberg.seedRuntimeSave({ appid: 'manual-1af86150bd02', schema: SCHEMA, steamSettings: null, savesRoots: [{ type: 'gbe', root }] });
+  assert.equal(summary.created.length, 0);
+  assert.equal(fs.existsSync(path.join(root, 'manual-1af86150bd02')), false);
+});
