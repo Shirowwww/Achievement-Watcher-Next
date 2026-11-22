@@ -2,7 +2,46 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { createPadPicker, isNeutralPad } = require('../../app/ui/controller.js');
+const { createPadPicker, isNeutralPad, createGamepadWatch } = require('../../app/ui/controller.js');
+
+function watchedWindow(pads = []) {
+  const listeners = new Map();
+  const calls = { getGamepads: 0, changes: [] };
+  const target = {
+    addEventListener: (name, fn) => listeners.set(name, fn),
+    removeEventListener: (name, fn) => listeners.get(name) === fn && listeners.delete(name),
+  };
+  const setActive = createGamepadWatch({
+    target,
+    gamepads: () => {
+      calls.getGamepads += 1;
+      return pads;
+    },
+    onChange: (connected) => calls.changes.push(connected),
+  });
+  return { listeners, calls, setActive };
+}
+
+test('with navigation by pad off, the Gamepad API is never touched (#217)', () => {
+  const { listeners, calls, setActive } = watchedWindow([pad(0)]);
+
+  setActive(false);
+
+  assert.equal(listeners.size, 0);
+  assert.equal(calls.getGamepads, 0);
+});
+
+test('turning navigation on reads the pads, and off lets go of them', () => {
+  const { listeners, calls, setActive } = watchedWindow([pad(0)]);
+
+  setActive(true);
+  assert.deepEqual([...listeners.keys()], ['gamepadconnected', 'gamepaddisconnected']);
+  assert.deepEqual(calls.changes, [true]);
+
+  setActive(false);
+  assert.equal(listeners.size, 0);
+  assert.deepEqual(calls.changes, [true, false]);
+});
 
 function pad(index, { id = `pad ${index}`, mapping = 'standard', pressed = [], axes = [0, 0, 0, 0] } = {}) {
   const buttons = Array.from({ length: 17 }, (_, i) => ({ pressed: pressed.includes(i), value: pressed.includes(i) ? 1 : 0 }));

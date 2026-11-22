@@ -92,6 +92,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **AW Next leaves your controller alone when navigation by controller is off (#217).** The main
+  window still listened for pads, which started Chromium's own controller reading each time it
+  showed. An Xbox controller on the Xbox Wireless Adapter could drop when the window came back, and
+  power off when it reconnected.
 - **No more yellow frame around clips on laptops with two GPUs.** When Windows started the
   recorder on the graphics card that does not drive the screen, it could not copy the screen and
   fell back to a capture that draws a yellow frame on Windows 10. It now asks Windows to run it on

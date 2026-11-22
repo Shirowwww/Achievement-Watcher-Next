@@ -76,7 +76,32 @@ function createPadPicker() {
   };
 }
 
-if (typeof module !== 'undefined' && module.exports) module.exports = { chooseDirectionalCandidate, isGameTileControl, createPadPicker, isNeutralPad };
+/*
+  The Gamepad API is touched only while navigation by pad is on. A gamepad listener or a
+  getGamepads() call starts Chromium's own reading of every pad, resumed each time the window shows,
+  and an Xbox Wireless Adapter pad then dropped on restore and powered off on reconnect (#217).
+*/
+function createGamepadWatch({ target, gamepads, onChange }) {
+  let active = false;
+  const anyPad = () => Array.from(gamepads() || []).some(Boolean);
+  const connected = () => onChange(true);
+  const disconnected = () => onChange(anyPad());
+  return function setActive(wanted) {
+    if (wanted === active) return;
+    active = wanted;
+    if (active) {
+      target.addEventListener('gamepadconnected', connected);
+      target.addEventListener('gamepaddisconnected', disconnected);
+      onChange(anyPad());
+    } else {
+      target.removeEventListener('gamepadconnected', connected);
+      target.removeEventListener('gamepaddisconnected', disconnected);
+      onChange(false);
+    }
+  };
+}
+
+if (typeof module !== 'undefined' && module.exports) module.exports = { chooseDirectionalCandidate, isGameTileControl, createPadPicker, isNeutralPad, createGamepadWatch };
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   (() => {
@@ -432,23 +457,28 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       leaveControllerMode();
     }
 
-    window.addEventListener('gamepadconnected', () => {
-      padConnected = true;
-      updatePollingState();
+    // A pad already awake when watching starts is reported straight away; otherwise the connect
+    // event is what starts the loop.
+    const watchGamepads = createGamepadWatch({
+      target: window,
+      gamepads: () => (navigator.getGamepads ? navigator.getGamepads() : []),
+      onChange: (connected) => {
+        if (padConnected && !connected) {
+          disarm();
+          leaveControllerMode();
+        }
+        padConnected = connected;
+        updatePollingState();
+      },
     });
-    window.addEventListener('gamepaddisconnected', () => {
-      padConnected = Array.from(navigator.getGamepads?.() || []).some(Boolean);
-      disarm();
-      leaveControllerMode();
+    const followSettings = () => {
+      watchGamepads(isAppControllerEnabled());
       updatePollingState();
-    });
+    };
     window.addEventListener('pointerdown', leaveControllerMode, { passive: true });
     window.addEventListener('keydown', leaveControllerMode, { passive: true });
     document.addEventListener('visibilitychange', updatePollingState);
-    document.addEventListener('controller-settings-changed', updatePollingState);
-    // A pad already awake when the page loaded is reported straight away; otherwise the connect
-    // event above is what starts the loop.
-    padConnected = Array.from(navigator.getGamepads?.() || []).some(Boolean);
+    document.addEventListener('controller-settings-changed', followSettings);
     require('electron').ipcRenderer.on('main-window-visibility', (_event, visible) => {
       mainWindowVisible = visible === true;
       if (!mainWindowVisible) {
@@ -460,6 +490,6 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       }
       updatePollingState();
     });
-    updatePollingState();
+    followSettings();
   })();
 }
