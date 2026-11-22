@@ -1393,7 +1393,8 @@ async function ghCompleteEmulatorSettings(appid, game) {
     steamSettings: base.target,
     gameDir: game.gameDir,
     codes: (diagnosedGoldberg.issues || []).map((issue) => issue && issue.code),
-    manageDlc: emulatorOptions.manageDlc === true,
+    // Clicked and confirmed: the DLC list is written whatever the automatic-repair setting says.
+    manageDlc: true,
     identity: goldberg.userIdentity(app.config, schemaLanguage.get(appid) || app.config?.achievement?.lang),
     stamp: emulatorOptions.stampIdentity === true,
     emulator: diagnosedGoldberg.emulator || 'gbe',

@@ -121,16 +121,15 @@ const CONFIG_CODES = new Set([
   'BAD_USER_CONFIG',
   'PLACEHOLDER_SAVE_PATH',
 ]);
-// Only written when Settings lets AW Next manage DLC (emulator.manageDlc).
-const DLC_CODES = new Set(['NO_DLC_CONFIG', 'BAD_DLC_CONFIG']);
 /*
   Settings the emulator runs fine without: a configuration note, not a defect. A game with a
   complete schema and only these stays green (#194: NO_MAIN_CONFIG alone turned the data row orange).
 */
 const CONFIG_NOTE_CODES = new Set(['NO_DLC_CONFIG', 'BAD_DLC_CONFIG', 'NO_MAIN_CONFIG', 'NO_NEW_APP_TICKET', 'NO_GC_TOKEN', 'NO_USER_CONFIG', 'BAD_USER_CONFIG']);
 
-function configFixable(issue, signals) {
-  return !!issue && CONFIG_CODES.has(issue.code) && (!DLC_CODES.has(issue.code) || signals.manageDlc === true);
+// DLC access too: the button asks first and lists configs.app.ini, so nothing is enabled quietly.
+function configFixable(issue) {
+  return !!issue && CONFIG_CODES.has(issue.code);
 }
 
 const REPAIRABLE_UPLAY_CODES = new Set([
@@ -423,7 +422,7 @@ function coldClientFindings(signals, goldberg) {
   const topics = issueTopics(issues);
   const actions = [];
   if (issues.some((issue) => SCHEMA_CODES.has(issue.code))) actions.push(ACTION.REPAIR_DATA);
-  if (issues.some((issue) => configFixable(issue, signals))) actions.push(ACTION.WRITE_CONFIG);
+  if (issues.some((issue) => configFixable(issue))) actions.push(ACTION.WRITE_CONFIG);
   if (mismatch) actions.push(ACTION.FIX_APPID);
   if (coldClient.viaLoader) actions.push(ACTION.LAUNCH_DIRECT);
   else if (coldClient.launchable) actions.push(ACTION.LAUNCH_VIA_LOADER);
@@ -587,7 +586,7 @@ function emulatorCheck(rawSignals) {
   // step, or the one offline= line.
   const actionsFor = (issues) => [
     ...(issues.some((issue) => SCHEMA_CODES.has(issue.code)) ? [ACTION.REPAIR_DATA] : []),
-    ...(issues.some((issue) => configFixable(issue, signals)) ? [ACTION.WRITE_CONFIG] : []),
+    ...(issues.some((issue) => configFixable(issue)) ? [ACTION.WRITE_CONFIG] : []),
     ...(issues.some((issue) => issue.code === 'EMULATOR_OFFLINE') ? [ACTION.SET_ONLINE] : []),
   ];
   if (errors.length > 0) {

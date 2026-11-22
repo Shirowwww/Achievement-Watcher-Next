@@ -313,12 +313,10 @@ test('optional settings alone are a note: the game stays ready', () => {
   assert.equal(report.state, STATE.READY);
 });
 
-test('DLC settings are only offered when Settings lets AW Next manage DLC', () => {
+test('missing DLC access gets its button even when Settings leaves DLC alone', () => {
   const issues = [{ level: 'warning', code: 'NO_DLC_CONFIG', message: '' }];
-  const off = deriveHealth(healthyGame({ goldberg: { ...healthyGame().goldberg, issues } }));
-  assert.ok(!off.actions.includes(ACTION.WRITE_CONFIG));
-  const on = deriveHealth(healthyGame({ manageDlc: true, goldberg: { ...healthyGame().goldberg, issues } }));
-  assert.ok(on.actions.includes(ACTION.WRITE_CONFIG));
+  const report = deriveHealth(healthyGame({ goldberg: { ...healthyGame().goldberg, issues } }));
+  assert.ok(report.actions.includes(ACTION.WRITE_CONFIG));
 });
 
 test('outdated progress definitions are a warning on the data row, fixed by the rewrite', () => {
