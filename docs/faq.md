@@ -164,7 +164,7 @@ before it installs anything. Download only from the
 [official releases page](https://github.com/Shirowwww/Achievement-Watcher-Next/releases). To check an
 installer yourself, run `Get-FileHash <installer> -Algorithm SHA256` and open
 `https://www.virustotal.com/gui/file/<hash>`. The current release is
-[3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d).
+[3.12.8](https://www.virustotal.com/gui/file/8194dde2c1465291e3c101d5dfe4b837c8ea29a9cf3aeaaf2daaf86dbc6f276d).
 See [Troubleshooting → Checking a release yourself](troubleshooting.md#checking-a-release-yourself).
 
 ### On Linux, why does a keyring prompt appear?

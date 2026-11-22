@@ -160,7 +160,7 @@ bevor er etwas installiert. Lade nur von der
 [offiziellen Releases-Seite](https://github.com/Shirowwww/Achievement-Watcher-Next/releases) herunter. Um einen
 Installer selbst zu prüfen, führe `Get-FileHash <installer> -Algorithm SHA256` aus und öffne
 `https://www.virustotal.com/gui/file/<hash>`. Das aktuelle Release ist
-[3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d).
+[3.12.8](https://www.virustotal.com/gui/file/8194dde2c1465291e3c101d5dfe4b837c8ea29a9cf3aeaaf2daaf86dbc6f276d).
 Siehe [Fehlerbehebung → Ein Release selbst prüfen](troubleshooting.md#checking-a-release-yourself).
 
 ### Warum erscheint unter Linux eine Schlüsselbund-Abfrage? {#on-linux-why-does-a-keyring-prompt-appear}

@@ -286,13 +286,13 @@ Ubisoft のゲームには、Steam GBE の操作ではなく、Ubisoft のメタ
 公開されているインストーラーは、その SHA-256 で VirusTotal で検索できます。
 
 ```powershell
-Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
+Get-FileHash "Achievement.Watcher.Setup.3.12.8.exe" -Algorithm SHA256
 ```
 
 `https://www.virustotal.com/gui/file/<the hash it prints>` を開きます。ファイルが公開されたものと同じなら、
 レポートはすでにあります。現在のリリースでは、それは
-[3.12.7 のインストーラー](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d)
-(`fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d`)です。
+[3.12.8 のインストーラー](https://www.virustotal.com/gui/file/8194dde2c1465291e3c101d5dfe4b837c8ea29a9cf3aeaaf2daaf86dbc6f276d)
+(`8194dde2c1465291e3c101d5dfe4b837c8ea29a9cf3aeaaf2daaf86dbc6f276d`)です。
 
 結果には、各エンジンの判定が一覧されます。エミュレーターのファイルを同梱したビルドでヒューリスティック検出が数件あるのは、
 以下で説明する誤検出です。重要なのは、ハッシュがリリースページで公開されたファイルと

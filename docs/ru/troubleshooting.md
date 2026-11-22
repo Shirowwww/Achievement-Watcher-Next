@@ -291,13 +291,13 @@ AW Next следит за настроенным исполняемым файл
 Любой опубликованный установщик можно найти на VirusTotal по его SHA-256:
 
 ```powershell
-Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
+Get-FileHash "Achievement.Watcher.Setup.3.12.8.exe" -Algorithm SHA256
 ```
 
 Откройте `https://www.virustotal.com/gui/file/<the hash it prints>`. Если файл тот, что опубликован,
 отчёт там уже есть. Для текущего выпуска это
-[установщик 3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d)
-(`fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d`).
+[установщик 3.12.8](https://www.virustotal.com/gui/file/8194dde2c1465291e3c101d5dfe4b837c8ea29a9cf3aeaaf2daaf86dbc6f276d)
+(`8194dde2c1465291e3c101d5dfe4b837c8ea29a9cf3aeaaf2daaf86dbc6f276d`).
 
 Результат перечисляет мнение каждого движка. Несколько эвристических срабатываний на сборке, включающей
 файлы эмуляторов, - это ложное срабатывание, описанное ниже. Важно, чтобы хеш совпадал с файлом,

@@ -187,7 +187,7 @@ Report a vulnerability privately through the [security policy](SECURITY.md).
 
 Download only from the [official releases](https://github.com/Shirowwww/Achievement-Watcher-Next/releases).
 Each release can be checked on VirusTotal by its SHA-256
-([3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d)),
+([3.12.8](https://www.virustotal.com/gui/file/8194dde2c1465291e3c101d5dfe4b837c8ea29a9cf3aeaaf2daaf86dbc6f276d)),
 and the updater installs only an update signed by the project's pinned `CN=Shirow` certificate. The
 project contains no game files and does not bypass online ownership checks.
 

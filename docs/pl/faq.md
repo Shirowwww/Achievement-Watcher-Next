@@ -167,7 +167,7 @@ zanim cokolwiek zainstaluje. Pobieraj tylko z
 [oficjalnej strony wydań](https://github.com/Shirowwww/Achievement-Watcher-Next/releases). Aby samodzielnie sprawdzić
 instalator, uruchom `Get-FileHash <installer> -Algorithm SHA256` i otwórz
 `https://www.virustotal.com/gui/file/<hash>`. Bieżące wydanie to
-[3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d).
+[3.12.8](https://www.virustotal.com/gui/file/8194dde2c1465291e3c101d5dfe4b837c8ea29a9cf3aeaaf2daaf86dbc6f276d).
 Zobacz [Rozwiązywanie problemów → Samodzielne sprawdzenie wydania](troubleshooting.md#checking-a-release-yourself).
 
 ### Dlaczego w systemie Linux pojawia się monit o pęk kluczy? {#on-linux-why-does-a-keyring-prompt-appear}
