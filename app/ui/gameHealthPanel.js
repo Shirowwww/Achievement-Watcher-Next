@@ -297,7 +297,8 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   const system = String(game.system || '');
 
   const forced = emulatorSourceOverride.get(appid);
-  const isUbisoft = forced === 'ubisoft' ? true : forced === 'steam' ? false : uplayR2.isUbisoftGame(game, appid);
+  // A hand-added game says nothing about Uplay in its source; a Uplay crack in its folder does.
+  const isUbisoft = forced === 'ubisoft' ? true : forced === 'steam' ? false : uplayR2.isUbisoftGame(game, appid) || uplayR2.isUplayR2Game(game, appid);
   // Console records read their unlocks from their own emulator's trophy/achievement store.
   const isConsole = !!system && system !== 'uplay';
   const writableAppid = ghWritableAppid(appid, game);

@@ -5895,10 +5895,11 @@ var app = {
           // Manual per-game override (right-click -> Emulator source) forces GBE Fork or Uplay R1/R2
           // when the on-disk heuristic (isUbisoftGame) guesses wrong. `null` means no override, keep automatic detection.
           const emulatorSourceForced = emulatorSourceOverride.get(appid);
-          const isUbisoftSource =
-            emulatorSourceForced === 'ubisoft' ? true : emulatorSourceForced === 'steam' ? false : uplayR2.isUbisoftGame(ctxGame, appid);
           const isUplayR2Source =
             emulatorSourceForced === 'ubisoft' ? true : emulatorSourceForced === 'steam' ? false : uplayR2.isUplayR2Game(ctxGame, appid);
+          // A hand-added game says nothing about Uplay in its source; a Uplay crack in its folder does.
+          const isUbisoftSource =
+            emulatorSourceForced === 'ubisoft' ? true : emulatorSourceForced === 'steam' ? false : uplayR2.isUbisoftGame(ctxGame, appid) || isUplayR2Source;
           const initialGbeEligibility = emulatorFixEligibility.inspect({
             gameDir: ctxGame?.gameDir,
             gameName: ctxGame?.name,

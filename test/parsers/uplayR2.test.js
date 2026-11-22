@@ -204,6 +204,14 @@ function fakePe(arch, text = '') {
     );
     assert.strictEqual(uplayR2.isUplayR2Game({ source: 'Uplay R2' }), true);
     assert.strictEqual(uplayR2.isUplayR2Game({ uplayR2: true, appid: '3751950' }), true);
+
+    // A game added by hand keeps source "Manual": LumaPlay beside it is what says it runs on a Uplay crack.
+    const lumaDir = path.join(temp, 'Rayman Legends');
+    fs.mkdirSync(lumaDir, { recursive: true });
+    fs.writeFileSync(path.join(lumaDir, 'LumaPlay.ini'), '[LumaPlay]\nGameExe = Rayman Legends.exe\n');
+    const lumaGame = { appid: 'manual-1af86150bd02', source: 'Manual', name: 'Rayman Legends', gameDir: lumaDir };
+    assert.strictEqual(uplayR2.isUplayR2Game(lumaGame), true, 'a LumaPlay folder gets the Uplay repair');
+    assert.strictEqual(uplayR2.isUplayR2Game({ ...lumaGame, gameDir: markerOnlyDir }), false, 'a manual game without a crack stays out');
     console.log('PASS: Ubisoft classifier covers loaders, install markers, flags, system and legacy ids');
 
     const toolPaths = uplayR2.getGameToolPaths({

@@ -616,8 +616,19 @@ function isUplayR2Game(game, fallbackAppid) {
   // Official records also use namespaced uplay-<id> identities. Source/type must veto that legacy
   // heuristic or Fix all could put an emulator DLL into a legitimate Ubisoft Connect installation.
   if (/^(?:ubisoft connect|rune uplay)$/i.test(source) || data.type === 'ubisoftOfficial' || data.type === 'runeUplay') return false;
-  if (gameDir && hasEmulatorEvidence(gameDir)) return true;
+  if (gameDir && (hasLumaPlay(gameDir) || hasEmulatorEvidence(gameDir))) return true;
   return /^(?:UPLAY|uplay-)\d+$/i.test(String(appid || ''));
+}
+
+// LumaPlay beside the game is a Uplay crack, so never an official install: a hand-added game keeps
+// source "Manual" and this is the only thing that says it runs on Uplay.
+const LUMAPLAY_FILES = ['lumaplay.ini', 'lumaplay_x86.exe', 'lumaplay_x64.exe', 'lumaplay.exe'];
+function hasLumaPlay(gameDir) {
+  try {
+    return fs.readdirSync(gameDir).some((name) => LUMAPLAY_FILES.includes(name.toLowerCase()));
+  } catch {
+    return false;
+  }
 }
 
 // Resolve the two ids a Ubisoft game can carry in the UI: the native Ubisoft product id and the

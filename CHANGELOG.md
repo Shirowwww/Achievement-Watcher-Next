@@ -17,6 +17,8 @@ renamed in 3.9.0 and the history is kept under one file.
   the emulator could write AW Next's own `manual-...` id into `steam_appid.txt`, so the game
   announced the wrong ID, and its placeholder save landed in a `GSE Saves\manual-...` folder; only
   a real Steam appid is used now.
+- **A Ubisoft game added by hand with LumaPlay now gets the Ubisoft achievement fix.** Its folder
+  was ignored, so Game Health offered the Steam emulator, which such a game never reports to.
 - **Game Health now offers to write a game's missing DLC access.** The note had no button unless
   Settings let AW Next manage DLC; Complete the emulator settings now covers it, after asking.
 
