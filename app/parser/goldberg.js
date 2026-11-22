@@ -1911,7 +1911,7 @@ async function repair({
 
   // The settings files this repair may change, copied first; the rewrite kept its own copies.
   const filesToReplace = [];
-  if (writeAppId && appid != null) filesToReplace.push(path.join(steamSettings, 'steam_appid.txt'));
+  if (writeAppId && /^[0-9]+$/.test(String(appid ?? ''))) filesToReplace.push(path.join(steamSettings, 'steam_appid.txt'));
   if (writeDlc) filesToReplace.push(path.join(steamSettings, 'configs.app.ini'));
   if (writeMain) filesToReplace.push(path.join(steamSettings, 'configs.main.ini'));
   const stampsUser =
@@ -1927,7 +1927,8 @@ async function repair({
     }
   }
 
-  if (writeAppId && appid != null) {
+  // A hand-added game's library id (manual-...) is not a Steam appid: GBE would announce it.
+  if (writeAppId && /^[0-9]+$/.test(String(appid ?? ''))) {
     const appidTxt = path.join(steamSettings, 'steam_appid.txt');
     if (!fs.existsSync(appidTxt)) {
       fs.writeFileSync(appidTxt, String(appid));

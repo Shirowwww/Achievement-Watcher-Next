@@ -103,7 +103,7 @@ async function apply({ plan: planned, appid, fetchDlc = null, replaceIdentity = 
   const result = { steamSettings, backupDir: null, written: [], created: [], removedLaunchAppIds: [] };
   const writes = new Set(planned.writes);
 
-  if (writes.has('steam_appid.txt') && appid != null && !fs.existsSync(path.join(steamSettings, 'steam_appid.txt'))) {
+  if (writes.has('steam_appid.txt') && /^[0-9]+$/.test(String(appid ?? '')) && !fs.existsSync(path.join(steamSettings, 'steam_appid.txt'))) {
     fs.writeFileSync(path.join(steamSettings, 'steam_appid.txt'), String(appid));
   }
   if (writes.has('configs.app.ini')) {

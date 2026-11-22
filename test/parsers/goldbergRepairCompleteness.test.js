@@ -155,3 +155,15 @@ test('a blank name is a broken entry whatever the schema says - GBE matches on i
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+// A game added by hand carries AW Next's own id until it is matched; GBE would read it as its appid.
+test('a repair never writes a library id that is not a Steam appid to steam_appid.txt', async () => {
+  const { root, steamSettings } = tempSettings('manualid');
+  try {
+    const summary = await goldberg.repair({ steamSettings, appid: 'manual-1af86150bd02', schema: oneAchievement('first'), writeDlc: false, writeMain: false });
+    assert.equal(summary.wroteAppId, false);
+    assert.equal(fs.existsSync(path.join(steamSettings, 'steam_appid.txt')), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

@@ -13,6 +13,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 - **Razor1911's GTA IV no longer shows twice once switched to the emulator.** The release's own
   entry stayed next to the emulator's, because the emulator's save was read later in the scan.
+- **A game added by hand no longer gets a bogus ID in its emulator file.** Repairing or installing
+  the emulator could write AW Next's own `manual-...` id into `steam_appid.txt`, so the game
+  announced the wrong ID; only a real Steam appid is written now.
 
 ## 3.12.8 - 2026-11-22
 
