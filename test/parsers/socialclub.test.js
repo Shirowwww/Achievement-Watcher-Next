@@ -166,6 +166,14 @@ function writeRockstarProfileFixture() {
     assert.deepEqual(await socialclub.getAchievements(razor[0]), {});
     assert.equal((await socialclub.getGameData(rdr, 'english', {})).noAchievementRecord, undefined, 'a Goldberg profile is not one');
 
+    // The emulator's save is read later in the scan than the Razor profile, so the stand-in goes
+    // at the end, once every entry is known (eldon's GTA IV showed twice after the switch).
+    const standIn = { appid: 'sc-gta4', data: { type: 'socialclub', razor: true, steamappid: 12210 } };
+    const emulated = { appid: 12210, data: { type: 'gbe' } };
+    const other = { appid: 271590, data: { type: 'gbe' } };
+    assert.deepEqual(socialclub.dropRazorStandIns([standIn, other, emulated]), [other, emulated], 'the emulator entry takes over');
+    assert.deepEqual(socialclub.dropRazorStandIns([standIn, other]), [standIn, other], 'alone, the Razor entry stays');
+
     console.log('PASS: socialclub parser');
   } finally {
     process.env.APPDATA = originalAppData;

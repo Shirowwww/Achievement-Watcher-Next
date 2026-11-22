@@ -16,6 +16,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Fixed
+
+- **Razor1911's GTA IV no longer shows twice once switched to the emulator.** The release's own
+  entry stayed next to the emulator's, because the emulator's save was read later in the scan.
+
 ## 3.12.8 - 2026-11-22
 
 ### Added

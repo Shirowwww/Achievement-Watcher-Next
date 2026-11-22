@@ -108,6 +108,13 @@ function scanRazor(root) {
   return result;
 }
 
+// A Razor1911 profile stands in for its game only while no other entry reads it: once the emulator
+// Game Health switched it to keeps a save, that entry is the game.
+function dropRazorStandIns(games) {
+  const others = new Set(games.filter((game) => !game?.data?.razor).map((game) => String(game.appid)));
+  return games.filter((game) => !game?.data?.razor || !others.has(String(game.data.steamappid)));
+}
+
 function isSocialClubRootName(dir) {
   return ROOT_NAME_RE.test(path.basename(String(dir || '')));
 }
@@ -400,6 +407,7 @@ module.exports = {
   defaultRoots,
   razorRoots,
   scanRazor,
+  dropRazorStandIns,
   RAZOR_SOURCE,
   isSocialClubPath,
   scan,
