@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "A tökéletes játékok platinakülsőt kapnak, a platina járhat az alapjátékkal, mint PlayStationön, a klipek önmagában a játékot filmezhetik, a nightly buildek pedig egyetlen beállításnyira vannak."
+    },
+    {
+      "kind": "heading",
+      "text": "Fő újdonságok"
+    },
+    {
+      "kind": "item",
+      "text": "A 100%-on álló játékok kitűnnek. A könyvtári csempéjük platinafényt, sávot és trófeát kap. Alapértelmezés szerint a platina most akkor érkezik, ha az alapjáték minden teljesítménye megvan, a DLC-ket nem számítva; a Beállítások > Értesítések > A platina feltétele visszahozza a teljes listát."
+    },
+    {
+      "kind": "item",
+      "text": "A klipek önmagában a játékot filmezhetik (#190), az asztal és más ablakok nélkül, kevésbé akadnak, amikor a GPU foglalt, és teljesítményenként egyet lehet menteni belőlük (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Nightly buildek. A Beállítások > Általános > Frissítési csatorna > Nightly minden változást megkap, amint beérkezik. A Stabilra visszaváltva azonnal felkínálja a legújabb kiadást."
+    },
+    {
+      "kind": "item",
+      "text": "Állíts vissza több játékot egyszerre (#192) Ctrl+kattintással vagy Shift+kattintással a könyvtárban, majd jobb kattintással."
+    },
+    {
+      "kind": "item",
+      "text": "Az a ritkaság, amellyel a teljesítmény rendelkezett, amikor megszerezted (#208), a mai játékosarány alatt jelenik meg."
+    },
+    {
+      "kind": "item",
+      "text": "A Játék állapota többet tud: „Csak játékidő” állapotot (#197), figyelmeztetést, ha a figyelt futtatható fájl nem az, amelyet választottál (#193), hiányzó statisztikadefiníciókat (#194), valamint egy lépést, amely kiegészíti az emulátor beállításait a többihez nyúlás nélkül (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "További újdonságok"
+    },
+    {
+      "kind": "item",
+      "text": "Új játékok és portok: inFAMOUS Second Son és First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time és Into the Nexus (#210), Bully xowny Achievements modjával, RUNE Epic-emulátor kiadásai (#214) és Razor1911 GTA IV-je, amelyet a Játék állapota át tud kapcsolni a Goldberg emulátorra."
+    },
+    {
+      "kind": "item",
+      "text": "A Playnite-bővítmény az AW Next bezárt állapotában is működik (1.2.0 bővítmény), az utolsó vizsgálat alapján."
+    },
+    {
+      "kind": "item",
+      "text": "Minden változtatás, amelyet az AW Next egy játékmappában végez, visszavonható, és egy sikertelen javítás visszaállítja a mappát (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Könnyebb a háttérben: az ablak újrahasznosítja a könyvtárat, a vizsgáló és a Steam-kapcsolat tétlenül leáll, a Watchdog pedig kevesebbe kerül, amíg egy játék fut."
+    },
+    {
+      "kind": "item",
+      "text": "Javítások: a kontrollered békén marad, ha a kontrolleres navigáció ki van kapcsolva (#217), SteamDB-keresés után nem marad foglalt CPU-mag (#191), egy hibás feloldási dátum már nem teszi tönkre a csempét (#212), az Ubisoft-javítás békén hagyja a Watch_Dogsot (#213), az emulált Steam-játékok megmaradnak, ha a hivatalos Steam-játékok ki vannak kapcsolva (#211), a 100%-os felugró ablak elkészíti a képernyőképét (#204), az anadius emulátorával crackelt EA-játékok beállítás nélkül mutatják a teljesítményeiket, az Uncharted 1 és 3 ismét számolja a trófeáit, az először futtatott Proton-játék pedig Linuxon rögzíti a teljesítményeit."
+    },
+    {
+      "kind": "text",
+      "text": "A teljes listát a teljes változásnaplóban találod."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

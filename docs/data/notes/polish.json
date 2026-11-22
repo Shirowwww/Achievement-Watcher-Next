@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Idealne gry dostają platynowy wygląd, platyna może przychodzić razem z grą podstawową jak na PlayStation, klipy mogą nagrywać samą grę, a kompilacje nightly są oddalone o jedno ustawienie."
+    },
+    {
+      "kind": "heading",
+      "text": "Najważniejsze"
+    },
+    {
+      "kind": "item",
+      "text": "Gry na 100% rzucają się w oczy. Ich kafelek w bibliotece zyskuje platynową aureolę, pasek i puchar. Domyślnie platyna przychodzi teraz, gdy zdobędziesz wszystkie osiągnięcia gry podstawowej, z pominięciem DLC; Ustawienia > Powiadomienia > Platyna wymaga przywraca całą listę."
+    },
+    {
+      "kind": "item",
+      "text": "Klipy mogą nagrywać samą grę (#190), bez pulpitu i innych okien, rzadziej się zacinają, gdy GPU jest zajęte, i można je zapisywać po jednym na osiągnięcie (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Kompilacje nightly. Ustawienia > Ogólne > Kanał aktualizacji > Nightly pobiera każdą zmianę, gdy tylko trafi do projektu. Powrót do Stabilny od razu oferuje najnowsze wydanie."
+    },
+    {
+      "kind": "item",
+      "text": "Zresetuj kilka gier naraz (#192) przez Ctrl+kliknięcie lub Shift+kliknięcie w bibliotece, a potem kliknięcie prawym przyciskiem."
+    },
+    {
+      "kind": "item",
+      "text": "Rzadkość, jaką miało osiągnięcie, gdy je zdobyłeś (#208), widać pod dzisiejszym odsetkiem graczy."
+    },
+    {
+      "kind": "item",
+      "text": "Stan gry potrafi więcej: stan „Tylko czas gry” (#197), ostrzeżenie, gdy obserwowany plik wykonywalny nie jest tym, który wybrałeś (#193), brakujące definicje statystyk (#194) oraz krok, który uzupełnia ustawienia emulatora bez ruszania reszty (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "Także nowe"
+    },
+    {
+      "kind": "item",
+      "text": "Nowe gry i porty: inFAMOUS Second Son i First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time i Into the Nexus (#210), Bully z modem Achievements od xowny, wydania emulatora Epic od RUNE (#214) oraz GTA IV od Razor1911, które Stan gry może przełączyć na emulator Goldberg."
+    },
+    {
+      "kind": "item",
+      "text": "Rozszerzenie Playnite działa przy zamkniętym AW Next (rozszerzenie 1.2.0), na podstawie ostatniego skanowania."
+    },
+    {
+      "kind": "item",
+      "text": "Każdą zmianę, którą AW Next wprowadza w folderze gry, można cofnąć, a nieudana naprawa przywraca folder (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Lżej w tle: okno ponownie używa biblioteki, skaner i połączenie ze Steamem zatrzymują się w bezczynności, a Watchdog zużywa mniej, gdy gra jest uruchomiona."
+    },
+    {
+      "kind": "item",
+      "text": "Poprawki: twój kontroler zostaje w spokoju, gdy nawigacja kontrolerem jest wyłączona (#217), żaden rdzeń CPU nie pozostaje zajęty po zapytaniu do SteamDB (#191), uszkodzona data odblokowania nie psuje już kafelka (#212), poprawka Ubisoftu zostawia Watch_Dogs w spokoju (#213), emulowane gry Steam zostają przy wyłączonych oficjalnych grach Steam (#211), okienko 100% robi swój zrzut ekranu (#204), gry EA scrackowane emulatorem anadiusa pokazują osiągnięcia bez konfiguracji, Uncharted 1 i 3 znów liczą swoje trofea, a gra Proton uruchomiona po raz pierwszy zapisuje osiągnięcia w systemie Linux."
+    },
+    {
+      "kind": "text",
+      "text": "Pełną listę znajdziesz w pełnym dzienniku zmian."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

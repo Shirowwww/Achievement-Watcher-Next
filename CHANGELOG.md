@@ -9,6 +9,8 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+## 3.12.8 - 2026-11-22
+
 ### Added
 
 - **Games cracked with RUNE's Epic emulator are listed (#214).** They keep Epic's install folder,
@@ -150,13 +152,10 @@ renamed in 3.9.0 and the history is kept under one file.
   unlock time after each trophy, and AW Next read that file as damaged. Unlocks now carry their
   real date, and the game no longer appears a second time as Diablo III: Reaper of Souls.
 - **A PC port of a PlayStation or Xbox game shows that console's logo (#188)**, not Nintendo's.
-- **Counter achievements of a game started from a Steam shortcut keep their progress (#168).** The
-  emulator moves the counters in the shortcut's save folder, and the bar vanished once the game
-  closed.
-- **Game Health ties every counter achievement in one repair (#168).** After a first repair, the
-  next ones kept the emulator's list as it was and never tied the remaining counters. A repair now
-  adds the missing links to it, after a backup, and also reads the stats saved under a Steam
-  shortcut.
+- **Counter achievements keep their progress (#168).** A game started from a Steam shortcut lost
+  its bar once it closed, because the emulator moves the counters in the shortcut's save folder.
+  Game Health now ties every remaining counter in one repair, after a backup, where later repairs
+  left the emulator's list as it was.
 - **On Linux, a Steam game run under Proton for the first time while AW Next is open records its
   achievements.** Proton makes the game's prefix on that first run, and AW Next only watched the
   prefixes it found at startup, so unlocks stayed unseen until a restart. New prefixes are now picked
@@ -169,9 +168,8 @@ renamed in 3.9.0 and the history is kept under one file.
   hidden browser's temporary profile retried without end on a locked file. The profile is now
   removed once the browser has exited, with a few tries at most, and lookups that start together
   share one browser instead of leaving extra ones running. Profiles the old cleanup left behind in
-  the Temp folder are removed when they are clearly dead.
-- **A SteamDB lookup that started while the hidden browser was closing is no longer remembered as "no
-  launch option"**, which left the game without a process name until the cache expired.
+  the Temp folder are removed when they are clearly dead. A lookup that started while that browser
+  was closing is no longer remembered as "no launch option".
 - **"Rewrite the achievement data" changes only the achievement list (#194).** It writes
   achievements.json, stats.json and missing icons, nothing else. A complete schema is left as it is,
   and entries it adds follow the file's own format, languages and icon folder. Every changed file is
@@ -199,12 +197,11 @@ renamed in 3.9.0 and the history is kept under one file.
   longer replace it with a detected one, and the Watchdog recognises it by its path. Without a
   choice, detection no longer picks an anti-cheat bootstrapper such as `start_protected_game.exe`
   over the real game.
-- **Repack downloads no longer appear as games.** The checksum tool they ship (QuickSFV in `MD5`)
-  and ElAmigos update installers are skipped, while a game installed next to them is still found.
-- **Injectors, tool folders and bundled emulators no longer appear as games.** An overlay injector
-  in a `__` folder, or the Cemu a port ships with, is skipped; the port is listed under its own
-  folder name. A game is no longer named after a tool its executable describes ("CDKey", "Wii U
-  emulator"): the folder name is used.
+- **Repack tools, injectors and bundled emulators no longer appear as games.** The checksum tool
+  repacks ship (QuickSFV in `MD5`), ElAmigos update installers, an overlay injector in a `__` folder
+  and the Cemu a port ships with are skipped, while a game next to them is still found. A game is no
+  longer named after a tool its executable describes ("CDKey", "Wii U emulator"): the folder name is
+  used.
 - **Games added to Steam with LuaTools or SteamTools show their achievements**, even with official
   Steam games turned off in Sources, including when SteamTools keeps them all in one
   `steamtools.lua`.

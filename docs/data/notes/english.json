@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Perfect games get a platinum look, the platinum can come with the base game as on PlayStation, clips can film the game alone, and nightly builds are one setting away."
+    },
+    {
+      "kind": "heading",
+      "text": "Highlights"
+    },
+    {
+      "kind": "item",
+      "text": "Games at 100% stand out. Their library tile wears a platinum halo, bar and trophy. By default the platinum now arrives once every base-game achievement is earned, DLC aside; Settings > Notifications > Platinum requires brings back the whole list."
+    },
+    {
+      "kind": "item",
+      "text": "Clips can film the game alone (#190), without the desktop or other windows, judder less while the GPU is busy, and can be saved one per achievement (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Nightly builds. Settings > General > Update channel > Nightly gets each change as soon as it lands. Going back to Stable offers the latest release at once."
+    },
+    {
+      "kind": "item",
+      "text": "Reset several games at once (#192) with Ctrl+click or Shift+click in the library, then a right-click."
+    },
+    {
+      "kind": "item",
+      "text": "The rarity an achievement had when you earned it (#208) shows under today's share of players."
+    },
+    {
+      "kind": "item",
+      "text": "Game Health does more: a \"Playtime only\" state (#197), a warning when the watched executable is not the one you chose (#193), missing stat definitions (#194), and a step that completes the emulator settings without touching the rest (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "Also new"
+    },
+    {
+      "kind": "item",
+      "text": "New games and ports: inFAMOUS Second Son and First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time and Into the Nexus (#210), Bully with xowny's Achievements mod, RUNE's Epic emulator releases (#214), and Razor1911's GTA IV, which Game Health can switch to the Goldberg emulator."
+    },
+    {
+      "kind": "item",
+      "text": "The Playnite extension works while AW Next is closed (extension 1.2.0), from the last scan."
+    },
+    {
+      "kind": "item",
+      "text": "Every change AW Next makes in a game folder can be undone, and a failed fix puts the folder back (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Lighter in the background: the window reuses the library, the scanner and the Steam connection stop when idle, and the Watchdog costs less while a game runs."
+    },
+    {
+      "kind": "item",
+      "text": "Fixes: your controller is left alone when navigation by controller is off (#217), no CPU core stays busy after a SteamDB lookup (#191), a broken unlock date no longer breaks a tile (#212), the Ubisoft fix leaves Watch_Dogs alone (#213), emulated Steam games stay with official Steam games off (#211), the 100% popup takes its screenshot (#204), EA games cracked with anadius' emulator show their achievements without setup, Uncharted 1 and 3 count their trophies again, and a Proton game run for the first time records its achievements on Linux."
+    },
+    {
+      "kind": "text",
+      "text": "See the full changelog for the complete list."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

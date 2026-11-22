@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Dokonalé hry dostávají platinový vzhled, platina může přijít už se základní hrou jako na PlayStationu, klipy mohou natáčet samotnou hru a nightly sestavení jsou o jedno nastavení dál."
+    },
+    {
+      "kind": "heading",
+      "text": "Hlavní novinky"
+    },
+    {
+      "kind": "item",
+      "text": "Hry na 100 % vynikají. Jejich dlaždice v knihovně dostane platinovou záři, pruh a trofej. Platina nově ve výchozím stavu přijde, jakmile jsou získány všechny úspěchy základní hry bez DLC; Nastavení > Oznámení > Platina vyžaduje vrátí celý seznam."
+    },
+    {
+      "kind": "item",
+      "text": "Klipy mohou natáčet samotnou hru (#190), bez plochy a dalších oken, méně sebou cukají, když je GPU vytížená, a lze je ukládat po jednom na každý úspěch (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Nightly sestavení. Nastavení > Obecné > Kanál aktualizací > Nightly přináší každou změnu, jakmile vznikne. Návrat na Stabilní okamžitě nabídne nejnovější vydání."
+    },
+    {
+      "kind": "item",
+      "text": "Obnovte více her najednou (#192) pomocí Ctrl+kliknutí nebo Shift+kliknutí v knihovně a poté kliknutím pravým tlačítkem."
+    },
+    {
+      "kind": "item",
+      "text": "Vzácnost, kterou úspěch měl v okamžiku, kdy jste ho získali (#208), se zobrazuje pod dnešním podílem hráčů."
+    },
+    {
+      "kind": "item",
+      "text": "Stav hry umí víc: stav „Pouze doba hraní“ (#197), upozornění, když sledovaný spustitelný soubor není ten, který jste vybrali (#193), chybějící definice statistik (#194) a krok, který doplní nastavení emulátoru bez zásahu do zbytku (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "Další novinky"
+    },
+    {
+      "kind": "item",
+      "text": "Nové hry a porty: inFAMOUS Second Son a First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time a Into the Nexus (#210), Bully s modem Achievements od xownyho, vydání emulátoru Epic od RUNE (#214) a GTA IV od Razor1911, které Stav hry umí přepnout na emulátor Goldberg."
+    },
+    {
+      "kind": "item",
+      "text": "Rozšíření pro Playnite funguje i při zavřeném AW Next (rozšíření 1.2.0), podle posledního skenu."
+    },
+    {
+      "kind": "item",
+      "text": "Každou změnu, kterou AW Next provede ve složce hry, lze vrátit zpět, a neúspěšná oprava složku vrátí do původního stavu (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Lehčí na pozadí: okno znovu používá knihovnu, skener a připojení ke Steamu se v klidu zastaví a Watchdog méně zatěžuje, zatímco hra běží."
+    },
+    {
+      "kind": "item",
+      "text": "Opravy: ovladač zůstane na pokoji, když je navigace ovladačem vypnutá (#217), po vyhledání na SteamDB už nezůstává zaneprázdněné jádro procesoru (#191), vadné datum odemčení už nerozbije dlaždici (#212), oprava Ubisoftu nechává Watch_Dogs na pokoji (#213), emulované hry Steam zůstávají, i když jsou oficiální hry Steam vypnuté (#211), vyskakovací okno 100 % pořídí snímek obrazovky (#204), hry EA nacrackované emulátorem od anadius zobrazují úspěchy bez nastavení, Uncharted 1 a 3 znovu počítají své trofeje a hra přes Proton spuštěná poprvé zaznamenává úspěchy na Linuxu."
+    },
+    {
+      "kind": "text",
+      "text": "Úplný seznam najdete v úplném seznamu změn."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

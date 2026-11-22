@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Perfekte Spiele bekommen einen Platin-Look, die Platin kann wie auf PlayStation mit dem Basisspiel kommen, Clips können das Spiel allein filmen, und Nightly-Builds sind nur eine Einstellung entfernt."
+    },
+    {
+      "kind": "heading",
+      "text": "Highlights"
+    },
+    {
+      "kind": "item",
+      "text": "Spiele mit 100 % stechen hervor. Ihre Bibliothekskachel trägt einen Platin-Schein, Balken und Pokal. Standardmäßig kommt die Platin jetzt, sobald alle Erfolge des Basisspiels erreicht sind, DLC ausgenommen; Einstellungen > Benachrichtigung > Platin verlangt bringt die ganze Liste zurück."
+    },
+    {
+      "kind": "item",
+      "text": "Clips können das Spiel allein filmen (#190), ohne Desktop und andere Fenster, ruckeln weniger bei ausgelasteter GPU und lassen sich einzeln pro Erfolg speichern (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Nightly-Builds. Einstellungen > Allgemein > Update-Kanal > Nightly holt jede Änderung, sobald sie eingeht. Der Wechsel zurück zu Stabil bietet sofort die neueste Version an."
+    },
+    {
+      "kind": "item",
+      "text": "Setze mehrere Spiele auf einmal zurück (#192) mit Strg+Klick oder Umschalt+Klick in der Bibliothek und danach einem Rechtsklick."
+    },
+    {
+      "kind": "item",
+      "text": "Die Seltenheit, die ein Erfolg hatte, als du ihn erreicht hast (#208), steht unter dem heutigen Spieleranteil."
+    },
+    {
+      "kind": "item",
+      "text": "Spielzustand kann mehr: einen Zustand „Nur Spielzeit“ (#197), eine Warnung, wenn die überwachte ausführbare Datei nicht die gewählte ist (#193), fehlende Statistikdefinitionen (#194) und einen Schritt, der die Emulator-Einstellungen vervollständigt, ohne den Rest anzufassen (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "Außerdem neu"
+    },
+    {
+      "kind": "item",
+      "text": "Neue Spiele und Portierungen: inFAMOUS Second Son und First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time und Into the Nexus (#210), Bully mit xownys Achievements-Mod, RUNEs Epic-Emulator-Releases (#214) und Razor1911s GTA IV, das Spielzustand auf den Goldberg-Emulator umstellen kann."
+    },
+    {
+      "kind": "item",
+      "text": "Die Playnite-Erweiterung funktioniert auch bei geschlossenem AW Next (Erweiterung 1.2.0), anhand des letzten Scans."
+    },
+    {
+      "kind": "item",
+      "text": "Jede Änderung, die AW Next in einem Spielordner vornimmt, lässt sich rückgängig machen, und eine fehlgeschlagene Korrektur stellt den Ordner wieder her (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Leichter im Hintergrund: Das Fenster verwendet die Bibliothek wieder, Scanner und Steam-Verbindung stoppen im Leerlauf, und der Watchdog kostet weniger, während ein Spiel läuft."
+    },
+    {
+      "kind": "item",
+      "text": "Fehlerbehebungen: Dein Controller bleibt unangetastet, wenn die Steuerung per Controller aus ist (#217), nach einer SteamDB-Abfrage bleibt kein CPU-Kern ausgelastet (#191), ein defektes Freischaltdatum zerstört keine Kachel mehr (#212), die Ubisoft-Korrektur lässt Watch_Dogs in Ruhe (#213), emulierte Steam-Spiele bleiben bei ausgeschalteten offiziellen Steam-Spielen erhalten (#211), das 100-%-Popup macht seinen Screenshot (#204), mit dem Emulator von anadius gecrackte EA-Spiele zeigen ihre Erfolge ohne Einrichtung, Uncharted 1 und 3 zählen ihre Trophäen wieder, und ein zum ersten Mal gestartetes Proton-Spiel erfasst seine Erfolge unter Linux."
+    },
+    {
+      "kind": "text",
+      "text": "Die vollständige Liste findest du im vollständigen Changelog."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

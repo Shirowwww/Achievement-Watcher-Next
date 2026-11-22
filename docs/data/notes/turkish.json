@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Kusursuz oyunlar platin görünümü alıyor, platin PlayStation'daki gibi temel oyunla birlikte gelebiliyor, klipler yalnızca oyunu çekebiliyor ve nightly sürümler tek bir ayar uzağınızda."
+    },
+    {
+      "kind": "heading",
+      "text": "Öne çıkanlar"
+    },
+    {
+      "kind": "item",
+      "text": "%100'deki oyunlar öne çıkıyor. Kütüphanedeki kutucukları platin bir hale, çubuk ve kupa taşıyor. Platin artık varsayılan olarak temel oyunun tüm başarımları kazanıldığında geliyor, DLC hariç; Ayarlar > Bildirim > Platin için gereken tüm listeyi geri getirir."
+    },
+    {
+      "kind": "item",
+      "text": "Klipler masaüstü ve diğer pencereler olmadan yalnızca oyunu çekebiliyor (#190), GPU meşgulken daha az takılıyor ve başarım başına bir tane olacak şekilde kaydedilebiliyor (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Nightly sürümler. Ayarlar > Genel > Güncelleme kanalı > Nightly, her değişikliği girer girmez alır. Kararlı'ya dönmek en son sürümü hemen sunar."
+    },
+    {
+      "kind": "item",
+      "text": "Kütüphanede Ctrl+tıklama veya Shift+tıklama ile birkaç oyunu seçip sağ tıklayarak hepsini bir kerede sıfırlayın (#192)."
+    },
+    {
+      "kind": "item",
+      "text": "Bir başarımı kazandığınızda sahip olduğu nadirlik (#208), bugünkü oyuncu payının altında görünür."
+    },
+    {
+      "kind": "item",
+      "text": "Oyun durumu daha fazlasını yapıyor: \"Yalnızca oynama süresi\" durumu (#197), izlenen çalıştırılabilir dosya seçtiğiniz dosya olmadığında bir uyarı (#193), eksik istatistik tanımları (#194) ve geri kalanına dokunmadan emülatör ayarlarını tamamlayan bir adım (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "Ayrıca yeni"
+    },
+    {
+      "kind": "item",
+      "text": "Yeni oyunlar ve portlar: inFAMOUS Second Son ve First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time ve Into the Nexus (#210), xowny'nin Achievements modlu Bully'si, RUNE'un Epic emülatörü sürümleri (#214) ve Oyun durumu'nun Goldberg emülatörüne geçirebildiği Razor1911'in GTA IV'ü."
+    },
+    {
+      "kind": "item",
+      "text": "Playnite eklentisi, AW Next kapalıyken de çalışır (eklenti 1.2.0), son taramaya göre."
+    },
+    {
+      "kind": "item",
+      "text": "AW Next'in bir oyun klasöründe yaptığı her değişiklik geri alınabilir ve başarısız bir düzeltme klasörü eski haline getirir (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Arka planda daha hafif: pencere kütüphaneyi yeniden kullanıyor, tarayıcı ve Steam bağlantısı boştayken duruyor ve Watchdog bir oyun çalışırken daha az kaynak harcıyor."
+    },
+    {
+      "kind": "item",
+      "text": "Düzeltmeler: denetleyici ile gezinme kapalıyken denetleyiciniz rahat bırakılıyor (#217), SteamDB aramasından sonra hiçbir CPU çekirdeği meşgul kalmıyor (#191), bozuk bir kilit açma tarihi artık kutucuğu bozmuyor (#212), Ubisoft düzeltmesi Watch_Dogs'a dokunmuyor (#213), resmi Steam oyunları kapalıyken emüle edilen Steam oyunları kalıyor (#211), %100 açılır penceresi ekran görüntüsünü alıyor (#204), anadius'un emülatörüyle crack'lenen EA oyunları başarımlarını kurulum gerektirmeden gösteriyor, Uncharted 1 ve 3 kupalarını yeniden sayıyor ve ilk kez çalıştırılan bir Proton oyunu başarımlarını Linux'ta kaydediyor."
+    },
+    {
+      "kind": "text",
+      "text": "Tam liste için tam değişiklik günlüğüne bakın."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Game hoàn hảo có diện mạo bạch kim, bạch kim có thể đến cùng game gốc như trên PlayStation, clip có thể quay riêng game, và bản nightly chỉ cách một thiết lập."
+    },
+    {
+      "kind": "heading",
+      "text": "Điểm nổi bật"
+    },
+    {
+      "kind": "item",
+      "text": "Game đạt 100% nổi bật hơn. Thẻ thư viện của chúng có vầng hào quang, thanh và chiếc cúp bạch kim. Theo mặc định, bạch kim giờ đến khi mọi thành tựu của game gốc đã đạt, không tính DLC; Cài đặt > Thông báo > Bạch kim yêu cầu đưa lại toàn bộ danh sách."
+    },
+    {
+      "kind": "item",
+      "text": "Clip có thể quay riêng game (#190), không có màn hình nền hay cửa sổ khác, ít giật hơn khi GPU bận, và có thể lưu mỗi thành tựu một clip (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Bản nightly. Cài đặt > Chung > Kênh cập nhật > Nightly nhận mọi thay đổi ngay khi nó vào. Quay lại Ổn định sẽ đề xuất ngay bản phát hành mới nhất."
+    },
+    {
+      "kind": "item",
+      "text": "Đặt lại nhiều game cùng lúc (#192) bằng Ctrl+nhấp hoặc Shift+nhấp trong thư viện, rồi nhấp chuột phải."
+    },
+    {
+      "kind": "item",
+      "text": "Độ hiếm mà một thành tựu có khi bạn đạt được (#208) hiện bên dưới tỷ lệ người chơi hôm nay."
+    },
+    {
+      "kind": "item",
+      "text": "Tình trạng trò chơi làm được nhiều hơn: trạng thái \"Chỉ thời gian chơi\" (#197), cảnh báo khi tệp thực thi đang theo dõi không phải tệp bạn đã chọn (#193), định nghĩa thống kê bị thiếu (#194), và một bước hoàn tất thiết lập trình giả lập mà không đụng đến phần còn lại (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "Cũng mới"
+    },
+    {
+      "kind": "item",
+      "text": "Game và bản port mới: inFAMOUS Second Son và First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time và Into the Nexus (#210), Bully với mod Achievements của xowny, các bản phát hành trình giả lập Epic của RUNE (#214), và GTA IV của Razor1911, mà Tình trạng trò chơi có thể chuyển sang trình giả lập Goldberg."
+    },
+    {
+      "kind": "item",
+      "text": "Tiện ích mở rộng Playnite hoạt động khi AW Next đang đóng (tiện ích 1.2.0), dựa trên lần quét gần nhất."
+    },
+    {
+      "kind": "item",
+      "text": "Mọi thay đổi AW Next thực hiện trong thư mục game đều có thể hoàn tác, và một bản sửa thất bại sẽ trả thư mục về như cũ (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Nhẹ hơn ở nền: cửa sổ dùng lại thư viện, trình quét và kết nối Steam dừng khi rảnh, và Watchdog tốn ít tài nguyên hơn khi game đang chạy."
+    },
+    {
+      "kind": "item",
+      "text": "Sửa lỗi: tay cầm của bạn được để yên khi điều hướng bằng tay cầm đang tắt (#217), không còn nhân CPU nào bận mãi sau khi tra cứu SteamDB (#191), ngày mở khóa hỏng không còn làm hỏng thẻ (#212), bản sửa Ubisoft không đụng đến Watch_Dogs (#213), game Steam giả lập vẫn còn khi tắt game Steam chính thức (#211), cửa sổ bật lên 100% chụp được ảnh màn hình (#204), game EA bị crack bằng trình giả lập của anadius hiện thành tựu mà không cần thiết lập, Uncharted 1 và 3 đếm lại cúp của chúng, và game Proton chạy lần đầu ghi lại thành tựu trên Linux."
+    },
+    {
+      "kind": "text",
+      "text": "Xem changelog đầy đủ để biết danh sách đầy đủ."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

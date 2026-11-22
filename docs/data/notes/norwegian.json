@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Perfekte spill får et platinautseende, platinaen kan komme sammen med grunnspillet som på PlayStation, klipp kan filme spillet alene, og nightly-bygg er én innstilling unna."
+    },
+    {
+      "kind": "heading",
+      "text": "Høydepunkter"
+    },
+    {
+      "kind": "item",
+      "text": "Spill på 100 % skiller seg ut. Ruten i biblioteket får en platinaglorie, linje og pokal. Som standard kommer platinaen nå når alle prestasjonene i grunnspillet er oppnådd, DLC unntatt; Innstillinger > Varsler > Platina krever tar tilbake hele listen."
+    },
+    {
+      "kind": "item",
+      "text": "Klipp kan filme spillet alene (#190), uten skrivebordet eller andre vinduer, hakker mindre når GPU-en er opptatt, og kan lagres ett per prestasjon (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Nightly-bygg. Innstillinger > Generelt > Oppdateringskanal > Nightly henter hver endring så snart den kommer inn. Går du tilbake til Stabil, tilbys den nyeste utgivelsen med én gang."
+    },
+    {
+      "kind": "item",
+      "text": "Tilbakestill flere spill samtidig (#192) med Ctrl+klikk eller Shift+klikk i biblioteket, og deretter et høyreklikk."
+    },
+    {
+      "kind": "item",
+      "text": "Hvor sjelden en prestasjon var da du oppnådde den (#208), vises under dagens andel spillere."
+    },
+    {
+      "kind": "item",
+      "text": "Spilltilstand kan mer: en tilstand «Kun spilletid» (#197), en advarsel når den overvåkede kjørbare filen ikke er den du valgte (#193), manglende statistikkdefinisjoner (#194) og et trinn som fullfører emulatorinnstillingene uten å røre resten (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "Også nytt"
+    },
+    {
+      "kind": "item",
+      "text": "Nye spill og porter: inFAMOUS Second Son og First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time og Into the Nexus (#210), Bully med xownys Achievements-mod, RUNEs utgivelser av Epic-emulatoren (#214) og Razor1911s GTA IV, som Spilltilstand kan bytte til Goldberg-emulatoren."
+    },
+    {
+      "kind": "item",
+      "text": "Playnite-utvidelsen fungerer mens AW Next er lukket (utvidelse 1.2.0), ut fra siste skanning."
+    },
+    {
+      "kind": "item",
+      "text": "Hver endring AW Next gjør i en spillmappe, kan angres, og en mislykket reparasjon setter mappen tilbake (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Lettere i bakgrunnen: vinduet gjenbruker biblioteket, skanneren og Steam-tilkoblingen stopper når de er ledige, og Watchdog koster mindre mens et spill kjører."
+    },
+    {
+      "kind": "item",
+      "text": "Rettinger: kontrolleren din blir latt i fred når navigasjon med kontroller er av (#217), ingen CPU-kjerne blir værende opptatt etter et SteamDB-oppslag (#191), en ødelagt opplåsingsdato ødelegger ikke lenger en rute (#212), Ubisoft-rettingen lar Watch_Dogs være (#213), emulerte Steam-spill blir værende når offisielle Steam-spill er av (#211), 100 %-popupen tar skjermbildet sitt (#204), EA-spill crackede med anadius' emulator viser prestasjonene uten oppsett, Uncharted 1 og 3 teller trofeene sine igjen, og et Proton-spill som kjøres for første gang, registrerer prestasjonene sine på Linux."
+    },
+    {
+      "kind": "text",
+      "text": "Se hele changeloggen for den fullstendige listen."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

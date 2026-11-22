@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Los juegos perfectos lucen un aspecto de platino, el platino puede llegar con el juego base como en PlayStation, los clips pueden filmar solo el juego y las versiones nightly están a un ajuste de distancia."
+    },
+    {
+      "kind": "heading",
+      "text": "Lo más destacado"
+    },
+    {
+      "kind": "item",
+      "text": "Los juegos al 100% se destacan. Su recuadro en la biblioteca lleva un halo, una barra y un trofeo de platino. Por defecto, el platino ahora llega cuando se obtienen todos los logros del juego base, sin contar los DLC; Ajustes > Notificación > El platino requiere trae de vuelta la lista completa."
+    },
+    {
+      "kind": "item",
+      "text": "Los clips pueden filmar solo el juego (#190), sin el escritorio ni otras ventanas, se traban menos cuando la GPU está ocupada y se pueden guardar uno por logro (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Versiones nightly. Ajustes > General > Canal de actualizaciones > Nightly recibe cada cambio apenas entra. Volver a Estable ofrece al instante la última versión."
+    },
+    {
+      "kind": "item",
+      "text": "Restablece varios juegos a la vez (#192) con Ctrl+clic o Mayús+clic en la biblioteca y luego un clic derecho."
+    },
+    {
+      "kind": "item",
+      "text": "La rareza que tenía un logro cuando lo obtuviste (#208) aparece debajo del porcentaje actual de jugadores."
+    },
+    {
+      "kind": "item",
+      "text": "Estado del juego hace más: un estado «Solo tiempo de juego» (#197), un aviso cuando el ejecutable vigilado no es el que elegiste (#193), definiciones de estadísticas que faltan (#194) y un paso que completa los ajustes del emulador sin tocar el resto (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "También nuevo"
+    },
+    {
+      "kind": "item",
+      "text": "Juegos y ports nuevos: inFAMOUS Second Son y First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time y Into the Nexus (#210), Bully con el mod Achievements de xowny, los lanzamientos del emulador Epic de RUNE (#214) y el GTA IV de Razor1911, que Estado del juego puede pasar al emulador Goldberg."
+    },
+    {
+      "kind": "item",
+      "text": "La extensión de Playnite funciona con AW Next cerrado (extensión 1.2.0), a partir del último escaneo."
+    },
+    {
+      "kind": "item",
+      "text": "Todo cambio que AW Next hace en la carpeta de un juego se puede deshacer, y una corrección fallida deja la carpeta como estaba (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Más liviano en segundo plano: la ventana reutiliza la biblioteca, el escáner y la conexión con Steam se detienen cuando están inactivos, y el Watchdog consume menos mientras corre un juego."
+    },
+    {
+      "kind": "item",
+      "text": "Correcciones: tu control se deja en paz cuando la navegación con control está desactivada (#217), ningún núcleo de la CPU queda ocupado después de una consulta a SteamDB (#191), una fecha de desbloqueo dañada ya no rompe un recuadro (#212), la corrección de Ubisoft no toca Watch_Dogs (#213), los juegos de Steam emulados se quedan con los juegos oficiales de Steam desactivados (#211), el aviso del 100% toma su captura de pantalla (#204), los juegos de EA crackeados con el emulador de anadius muestran sus logros sin configuración, Uncharted 1 y 3 vuelven a contar sus trofeos, y un juego de Proton ejecutado por primera vez registra sus logros en Linux."
+    },
+    {
+      "kind": "text",
+      "text": "Consulta el registro de cambios completo para ver la lista completa."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

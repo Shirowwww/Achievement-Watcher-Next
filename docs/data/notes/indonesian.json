@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Game yang sempurna mendapat tampilan platinum, platinum bisa datang bersama game dasar seperti di PlayStation, klip bisa merekam game saja, dan build nightly hanya berjarak satu pengaturan."
+    },
+    {
+      "kind": "heading",
+      "text": "Sorotan"
+    },
+    {
+      "kind": "item",
+      "text": "Game dengan 100% tampil menonjol. Kartu perpustakaannya mengenakan lingkaran cahaya, bilah, dan piala platinum. Secara default, platinum kini datang begitu semua pencapaian game dasar diperoleh, di luar DLC; Pengaturan > Notifikasi > Platinum memerlukan mengembalikan seluruh daftar."
+    },
+    {
+      "kind": "item",
+      "text": "Klip bisa merekam game saja (#190), tanpa desktop atau jendela lain, lebih sedikit tersendat saat GPU sibuk, dan bisa disimpan satu per pencapaian (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Build nightly. Pengaturan > Umum > Kanal pembaruan > Nightly mendapat setiap perubahan begitu masuk. Kembali ke Stabil langsung menawarkan rilis terbaru."
+    },
+    {
+      "kind": "item",
+      "text": "Atur ulang beberapa game sekaligus (#192) dengan Ctrl+klik atau Shift+klik di perpustakaan, lalu klik kanan."
+    },
+    {
+      "kind": "item",
+      "text": "Kelangkaan yang dimiliki sebuah pencapaian saat Anda memperolehnya (#208) tampil di bawah persentase pemain hari ini."
+    },
+    {
+      "kind": "item",
+      "text": "Kesehatan game kini bisa lebih banyak: status \"Hanya waktu bermain\" (#197), peringatan saat file eksekusi yang dipantau bukan yang Anda pilih (#193), definisi statistik yang hilang (#194), dan langkah yang melengkapi pengaturan emulator tanpa menyentuh yang lain (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "Juga baru"
+    },
+    {
+      "kind": "item",
+      "text": "Game dan port baru: inFAMOUS Second Son dan First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time dan Into the Nexus (#210), Bully dengan mod Achievements dari xowny, rilis emulator Epic dari RUNE (#214), dan GTA IV dari Razor1911, yang bisa dialihkan Kesehatan game ke emulator Goldberg."
+    },
+    {
+      "kind": "item",
+      "text": "Ekstensi Playnite berfungsi saat AW Next ditutup (ekstensi 1.2.0), berdasarkan pemindaian terakhir."
+    },
+    {
+      "kind": "item",
+      "text": "Setiap perubahan yang dibuat AW Next di folder game bisa dibatalkan, dan perbaikan yang gagal mengembalikan folder seperti semula (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Lebih ringan di latar belakang: jendela memakai ulang perpustakaan, pemindai dan koneksi Steam berhenti saat menganggur, dan Watchdog lebih hemat saat game berjalan."
+    },
+    {
+      "kind": "item",
+      "text": "Perbaikan: kontroler Anda dibiarkan saat navigasi dengan kontroler dimatikan (#217), tidak ada inti CPU yang tetap sibuk setelah pencarian SteamDB (#191), tanggal pembukaan yang rusak tidak lagi merusak kartu (#212), perbaikan Ubisoft tidak menyentuh Watch_Dogs (#213), game Steam emulasi tetap ada saat game Steam resmi dimatikan (#211), popup 100% mengambil tangkapan layarnya (#204), game EA yang di-crack dengan emulator anadius menampilkan pencapaiannya tanpa penyiapan, Uncharted 1 dan 3 kembali menghitung trofinya, dan game Proton yang dijalankan pertama kali mencatat pencapaiannya di Linux."
+    },
+    {
+      "kind": "text",
+      "text": "Lihat changelog lengkap untuk daftar selengkapnya."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

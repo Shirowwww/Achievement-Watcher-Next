@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Perfecte games krijgen een platina look, de platina kan met de basisgame komen zoals op PlayStation, clips kunnen alleen de game filmen en nightly-builds zijn één instelling verderop."
+    },
+    {
+      "kind": "heading",
+      "text": "Hoogtepunten"
+    },
+    {
+      "kind": "item",
+      "text": "Games op 100% vallen op. Hun bibliotheektegel krijgt een platina halo, balk en trofee. Standaard komt de platina nu zodra elke prestatie van de basisgame is behaald, DLC niet meegerekend; Instellingen > Meldingen > Platina vereist brengt de hele lijst terug."
+    },
+    {
+      "kind": "item",
+      "text": "Clips kunnen alleen de game filmen (#190), zonder het bureaublad of andere vensters, haperen minder als de GPU druk bezig is en kunnen per prestatie worden opgeslagen (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Nightly-builds. Instellingen > Algemeen > Updatekanaal > Nightly haalt elke wijziging binnen zodra die er is. Terug naar Stabiel biedt meteen de nieuwste release aan."
+    },
+    {
+      "kind": "item",
+      "text": "Reset meerdere games tegelijk (#192) met Ctrl+klik of Shift+klik in de bibliotheek, en daarna een rechtermuisklik."
+    },
+    {
+      "kind": "item",
+      "text": "De zeldzaamheid die een prestatie had toen je hem behaalde (#208) staat onder het huidige aandeel spelers."
+    },
+    {
+      "kind": "item",
+      "text": "Gamestatus kan meer: een status \"Alleen speeltijd\" (#197), een waarschuwing als het gevolgde uitvoerbare bestand niet het bestand is dat je koos (#193), ontbrekende statdefinities (#194) en een stap die de emulatorinstellingen aanvult zonder de rest aan te raken (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "Ook nieuw"
+    },
+    {
+      "kind": "item",
+      "text": "Nieuwe games en ports: inFAMOUS Second Son en First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time en Into the Nexus (#210), Bully met de Achievements-mod van xowny, de Epic-emulatorreleases van RUNE (#214) en de GTA IV van Razor1911, die Gamestatus naar de Goldberg-emulator kan omzetten."
+    },
+    {
+      "kind": "item",
+      "text": "De Playnite-extensie werkt ook als AW Next gesloten is (extensie 1.2.0), vanaf de laatste scan."
+    },
+    {
+      "kind": "item",
+      "text": "Elke wijziging die AW Next in een gamemap aanbrengt, kan ongedaan worden gemaakt, en een mislukte reparatie zet de map terug (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Lichter op de achtergrond: het venster hergebruikt de bibliotheek, de scanner en de Steam-verbinding stoppen bij inactiviteit en de Watchdog kost minder terwijl een game draait."
+    },
+    {
+      "kind": "item",
+      "text": "Reparaties: je controller blijft met rust als navigatie met de controller uit staat (#217), na een SteamDB-opzoeking blijft geen CPU-kern bezet (#191), een kapotte ontgrendeldatum breekt een tegel niet meer (#212), de Ubisoft-fix laat Watch_Dogs met rust (#213), geëmuleerde Steam-games blijven staan als officiële Steam-games uit staan (#211), de 100%-popup maakt zijn screenshot (#204), EA-games gecrackt met de emulator van anadius tonen hun prestaties zonder setup, Uncharted 1 en 3 tellen hun trofeeën weer mee en een Proton-game die voor het eerst draait, legt zijn prestaties vast op Linux."
+    },
+    {
+      "kind": "text",
+      "text": "Zie de volledige changelog voor de volledige lijst."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",

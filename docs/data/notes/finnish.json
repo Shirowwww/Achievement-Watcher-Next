@@ -1,4 +1,66 @@
 {
+  "3.12.8": [
+    {
+      "kind": "text",
+      "text": "Täydelliset pelit saavat platinaisen ilmeen, platina voi tulla peruspelin mukana kuten PlayStationilla, klipit voivat kuvata pelin yksin ja nightly-versiot ovat yhden asetuksen päässä."
+    },
+    {
+      "kind": "heading",
+      "text": "Kohokohdat"
+    },
+    {
+      "kind": "item",
+      "text": "100 %:n pelit erottuvat. Niiden kirjastoruutu saa platinahehkun, palkin ja pokaalin. Oletuksena platina tulee nyt, kun kaikki peruspelin saavutukset on ansaittu DLC:t pois lukien; Asetukset > Ilmoitukset > Platina vaatii palauttaa koko luettelon."
+    },
+    {
+      "kind": "item",
+      "text": "Klipit voivat kuvata pelin yksin (#190), ilman työpöytää tai muita ikkunoita, nykivät vähemmän GPU:n ollessa kiireinen ja ne voi tallentaa yhden saavutusta kohden (#215)."
+    },
+    {
+      "kind": "item",
+      "text": "Nightly-versiot. Asetukset > Yleiset > Päivityskanava > Nightly tuo jokaisen muutoksen heti, kun se on valmis. Paluu Vakaaseen tarjoaa uusimman julkaisun heti."
+    },
+    {
+      "kind": "item",
+      "text": "Nollaa useita pelejä kerralla (#192) Ctrl+napsautuksella tai Shift+napsautuksella kirjastossa ja sitten hiiren oikealla painikkeella."
+    },
+    {
+      "kind": "item",
+      "text": "Harvinaisuus, joka saavutuksella oli sen ansaitessasi (#208), näkyy tämänpäiväisen pelaajaosuuden alla."
+    },
+    {
+      "kind": "item",
+      "text": "Pelin kunto osaa enemmän: \"Vain peliaika\" -tila (#197), varoitus, kun seurattu suoritettava tiedosto ei ole valitsemasi (#193), puuttuvat tilastomääritykset (#194) sekä vaihe, joka täydentää emulaattorin asetukset koskematta muuhun (#196)."
+    },
+    {
+      "kind": "heading",
+      "text": "Myös uutta"
+    },
+    {
+      "kind": "item",
+      "text": "Uusia pelejä ja portteja: inFAMOUS Second Son ja First Light (#188), Dead Nation (#188), Ratchet & Clank: A Crack in Time ja Into the Nexus (#210), Bully xownyn Achievements-modilla, RUNEn Epic-emulaattorin julkaisut (#214) ja Razor1911:n GTA IV, jonka Pelin kunto voi vaihtaa Goldberg-emulaattorille."
+    },
+    {
+      "kind": "item",
+      "text": "Playnite-laajennus toimii AW Nextin ollessa suljettuna (laajennus 1.2.0) viimeisimmän skannauksen pohjalta."
+    },
+    {
+      "kind": "item",
+      "text": "Jokaisen muutoksen, jonka AW Next tekee pelikansioon, voi perua, ja epäonnistunut korjaus palauttaa kansion ennalleen (#195)."
+    },
+    {
+      "kind": "item",
+      "text": "Kevyempi taustalla: ikkuna käyttää kirjastoa uudelleen, skanneri ja Steam-yhteys pysähtyvät joutilaina ja Watchdog kuormittaa vähemmän pelin ollessa käynnissä."
+    },
+    {
+      "kind": "item",
+      "text": "Korjauksia: ohjaintasi ei kosketa, kun ohjaimella navigointi on pois päältä (#217), mikään suorittimen ydin ei jää kiireiseksi SteamDB-haun jälkeen (#191), rikkinäinen avauspäivä ei enää riko ruutua (#212), Ubisoft-korjaus jättää Watch_Dogsin rauhaan (#213), emuloidut Steam-pelit pysyvät mukana, kun viralliset Steam-pelit ovat pois päältä (#211), 100 %:n ponnahdus ottaa kuvakaappauksensa (#204), anadiusin emulaattorilla crackatut EA-pelit näyttävät saavutuksensa ilman asetuksia, Uncharted 1 ja 3 laskevat taas pokaalinsa ja ensimmäistä kertaa ajettu Proton-peli tallentaa saavutuksensa Linuxilla."
+    },
+    {
+      "kind": "text",
+      "text": "Koko muutosloki sisältää täydellisen luettelon."
+    }
+  ],
   "3.12.7": [
     {
       "kind": "text",
