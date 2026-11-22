@@ -105,6 +105,7 @@ test('the Game Health plan for a native game installs libsteam_api.so and no dll
       calls.install = args;
       return { installed: 1, backedUp: 0, tag: 'v1', perDir: [] };
     },
+    ensureTitleSetup: () => [],
   };
   const plan = planRuntimeInstall({ gbeInstaller: stub, gameDir: '/games/Native', arch: 'x86', native: true });
   assert.equal(plan.file, 'libsteam_api.so');

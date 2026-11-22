@@ -2178,7 +2178,14 @@ async function runGameHealthAction(appid, action, button) {
       setGameHealthProgress({ phase: 'runtime' });
       let readiness;
       try {
-        readiness = await gameHealthRepair.switchInterfacesReady({ gbeInstaller, plan, cacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'), steamSettings, log: debug });
+        readiness = await gameHealthRepair.switchInterfacesReady({
+          gbeInstaller,
+          plan,
+          cacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'),
+          steamSettings,
+          appid: ghWritableAppid(appid, game),
+          log: debug,
+        });
       } finally {
         setGameHealthProgress(null);
       }
@@ -2265,6 +2272,7 @@ async function runGameHealthAction(appid, action, button) {
           dlls,
           goldberg,
           legacyDlc,
+          appid: ghWritableAppid(appid, game),
         });
       });
     } finally {

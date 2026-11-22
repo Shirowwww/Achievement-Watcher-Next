@@ -1628,6 +1628,7 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
     if (!dllDirs.some((dir) => dir.toLowerCase() === exeDir.toLowerCase())) dllDirs.push(exeDir);
     debug.log(`[${appid}] seeded missing ${wantedFile} beside ${detectedExe && detectedExe.name ? detectedExe.name : 'the detected executable'}`);
   }
+  gbeInstaller.ensureTitleSetup({ appid, dirs: dllDirs, log: debug });
   steamSettingsDirs.push(...dllDirs.map((dir) => path.join(dir, 'steam_settings')));
   if (steamSettings) steamSettingsDirs.push(steamSettings);
 

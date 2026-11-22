@@ -464,10 +464,18 @@ function emulatorCheck(rawSignals) {
   if (hasNoAchievements(signals)) return null;
   // Said as a fact, not a fault: the emulator fix in the right-click menu is how to change it.
   if (noUnlockSource(signals)) return check('emulator', LEVEL.INFO, { params: { noSource: true } });
-  // The crack runs the game but keeps no record of an unlock: nothing on disk will ever say one
-  // happened, so the row names it rather than reporting a setup AW Next cannot see.
-  if (signals.noAchievementRecord) {
-    return check('emulator', LEVEL.FAIL, { blocking: true, params: { servedBy: String(signals.noAchievementRecord), noRecord: true } });
+  /*
+    The crack runs the game but keeps no record of an unlock: nothing on disk will ever say one
+    happened, so the row names it. Once the install row has located the game, GBE Fork goes in over
+    it; gbeInstaller's TITLE_SETUPS supplies what such a release lacks. A GBE setup there reads as one.
+  */
+  if (signals.noAchievementRecord && !signals.emulated && !signals.goldberg) {
+    const located = !!(signals.gameDir && signals.gameDirExists);
+    return check('emulator', LEVEL.FAIL, {
+      blocking: true,
+      params: { servedBy: String(signals.noAchievementRecord), noRecord: true },
+      actions: located ? [ACTION.SWITCH_RUNTIME] : [],
+    });
   }
   const offlineServedBy = serverAwardedOffline(signals);
   if (offlineServedBy) {

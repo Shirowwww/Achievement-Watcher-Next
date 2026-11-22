@@ -17,8 +17,10 @@ renamed in 3.9.0 and the history is kept under one file.
   it keeps none.
 - **GTA IV from Razor1911 is listed.** Its Complete Edition release keeps only your save and settings
   in `%APPDATA%\.1911\GTA IV\profile`, so the game was missing. It now shows, and Game Health
-  explains that this crack never records an achievement and that the Goldberg Steam emulator is how
-  to track them. Once that emulator saves your unlocks, its entry takes over.
+  explains that this crack never records an achievement. Once you locate the game, Game Health
+  switches it to the Goldberg Steam emulator with the two things this release lacks: the list of
+  Steam interfaces it was built against, and `-useSteam` in its `commandline.txt`. The emulator fix
+  in the right-click menu does the same. Once the emulator saves your unlocks, its entry takes over.
 - **Switching to the supported emulator keeps the DLC (#214).** The DLC list and unlock-all setting
   of the replaced crack's `steam_emu.ini`, `steam_api.ini` or `cpy.ini` move to the new emulator's
   settings when those have none of their own.

@@ -109,7 +109,8 @@ Four cases have their own handling:
 - **Goldberg SocialClub**: the Rockstar and Social Club variant, with its own switch. The same
   switch lists Razor1911's Rockstar releases (GTA IV Complete Edition) from
   `%APPDATA%\.1911\GTA IV\profile`. That crack keeps no record of an unlock, so the game shows with
-  none and Game Health says so; set it up with the Goldberg Steam emulator (gbe_fork) to track it.
+  none and Game Health says so. Once the game is located, Game Health switches it to the Goldberg
+  Steam emulator (gbe_fork), with the interface list and the `-useSteam` launch switch it needs.
 - **anadius (EA)**: anadius' emulator for EA games keeps its unlocks in
   `%LOCALAPPDATA%\anadius\LSX emu\achievement-<set>.xml`. AW Next reads that file without any setup,
   finds the game on Steam by its name and matches each unlock to the Steam achievement of the same

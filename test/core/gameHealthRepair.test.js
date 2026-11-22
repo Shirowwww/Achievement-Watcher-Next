@@ -182,6 +182,10 @@ test('the runtime install passes the planned dirs and arch straight to installDl
       calls.interfaces = args;
       return { generated: true };
     },
+    ensureTitleSetup: (args) => {
+      calls.title = args;
+      return [];
+    },
   };
 
   const plan = planRuntimeInstall({ gbeInstaller: stub, gameDir: 'C:/Jeux/Test', arch: 'x64' });
@@ -190,7 +194,12 @@ test('the runtime install passes the planned dirs and arch straight to installDl
     plan,
     cacheDir: 'C:/cache/gbe',
     steamSettings: 'C:/Jeux/Test/steam_settings',
+    appid: '12210',
   });
+
+  // A release with no Valve dll (GTA IV from Razor1911) gets what its table knows from both steps.
+  assert.equal(calls.interfaces.appid, '12210');
+  assert.deepEqual(calls.title, { appid: '12210', dirs: ['C:/Jeux/Test'], log: undefined });
 
   assert.equal(calls.ensure.cacheDir, 'C:/cache/gbe');
   assert.deepEqual(calls.install.dllDirs, ['C:/Jeux/Test']);
@@ -212,6 +221,7 @@ test('a failed steam_interfaces generation is reported without failing the insta
     generateInterfaces: async () => {
       throw new Error('generator exploded');
     },
+    ensureTitleSetup: () => [],
   };
   const plan = planRuntimeInstall({ gbeInstaller: stub, gameDir: 'C:/Jeux/Test', arch: 'x64' });
   const summary = await installEmulatorRuntime({ gbeInstaller: stub, plan, cacheDir: 'C:/cache', steamSettings: 'C:/Jeux/Test/steam_settings' });

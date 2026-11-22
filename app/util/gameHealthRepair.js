@@ -234,6 +234,7 @@ async function installEmulatorRuntime({
   dlls: staged = null,
   goldberg = null,
   legacyDlc = null,
+  appid = '',
 } = {}) {
   if (!plan || !Array.isArray(plan.dirs) || plan.dirs.length === 0) {
     throw new Error('installEmulatorRuntime: no target directory resolved');
@@ -260,6 +261,7 @@ async function installEmulatorRuntime({
         // The other target folders hold copies of the same dll; one of them may still be the
         // original when the one just replaced was already an emulator (see interfaceSourceFor).
         candidates: plan.dirs.slice(1).map((dir) => path.join(dir, plan.file)),
+        appid,
         log,
       });
     } catch (err) {
@@ -269,6 +271,7 @@ async function installEmulatorRuntime({
     }
   }
 
+  gbeInstaller.ensureTitleSetup({ appid, dirs: plan.dirs, log });
   const dlc = migrateDlcConfig({ goldberg, steamSettings, legacy: legacyDlc });
   return { ...summary, interfaces, dlc };
 }
@@ -304,6 +307,7 @@ async function switchToSupportedRuntime({
     dlls,
     goldberg,
     legacyDlc,
+    appid,
     log,
   });
   // Only when absent: an appid the release already names is not this step's to change.
@@ -319,7 +323,7 @@ async function switchToSupportedRuntime({
   crack has replaced Valve's dll nothing may be left to generate it from: Dark Souls III over CODEX
   then closed three seconds after every launch. Tried before anything changes, in a throwaway folder.
 */
-async function switchInterfacesReady({ gbeInstaller, plan, cacheDir, steamSettings = null, log } = {}) {
+async function switchInterfacesReady({ gbeInstaller, plan, cacheDir, steamSettings = null, appid = '', log } = {}) {
   if (steamSettings && fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) return { ready: true, reason: '' };
   if (plan.native) return { ready: true, reason: '' };
   const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir, log });
@@ -328,6 +332,7 @@ async function switchInterfacesReady({ gbeInstaller, plan, cacheDir, steamSettin
       dllPath: path.join(plan.dirs[0], plan.file),
       dlls,
       candidates: plan.dirs.slice(1).map((dir) => path.join(dir, plan.file)),
+      appid,
       log,
     });
     return result && result.generated ? { ready: true, reason: '' } : { ready: false, reason: (result && result.reason) || 'no-output' };

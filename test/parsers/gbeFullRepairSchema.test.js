@@ -87,6 +87,7 @@ function fakeInstaller({ failInterfaces = false } = {}) {
       if (failInterfaces) throw new Error('boom');
       return { generated: false };
     },
+    ensureTitleSetup: () => [],
   };
 }
 

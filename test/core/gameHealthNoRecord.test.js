@@ -35,6 +35,17 @@ test('a crack that keeps no achievement record is explained as tracking nothing'
   assert.deepEqual(emulatorRow(report).actions, []);
 });
 
+test('once the game is located, the switch to the supported emulator is offered', () => {
+  const report = gameHealth.deriveHealth(signals({ gameDir: 'C:/Games/GTA IV', gameDirExists: true }));
+  assert.deepEqual(emulatorRow(report).actions, [gameHealth.ACTION.SWITCH_RUNTIME]);
+});
+
+test('after the switch the GBE setup is diagnosed, not the crack', () => {
+  const report = gameHealth.deriveHealth(signals({ gameDir: 'C:/Games/GTA IV', gameDirExists: true, emulated: true, goldberg: { dllCount: 1 } }));
+  assert.notEqual(report.reason, 'crack-keeps-no-record');
+  assert.notEqual(emulatorRow(report)?.params?.noRecord, true);
+});
+
 test('a game whose crack keeps its unlocks is not told it records nothing', () => {
   const report = gameHealth.deriveHealth(signals({ noAchievementRecord: '' }));
   assert.notEqual(report.reason, 'crack-keeps-no-record');

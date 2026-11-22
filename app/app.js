@@ -7375,6 +7375,7 @@ var app = {
                           nativeArch,
                           log: debug,
                         });
+                        gbeInstaller.ensureTitleSetup({ appid: writableAppid, dirs: dllDirs, log: debug });
                         // Pre-create the save folder the installed build writes to, so the game is listed before its first launch.
                         try {
                           fs.mkdirSync(achievements.emulatorFixSaveFolder(writableAppid, emuCfg, gameDir), { recursive: true });

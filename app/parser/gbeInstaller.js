@@ -546,22 +546,81 @@ function writeSceneInterfaces({ dllPath, candidates, steamSettings, log }) {
   return { generated: true, file: dest, original: scene.file, arch: archOfSteamApiFile(dllPath) };
 }
 
+/*
+  What a release with no Steam layer of its own cannot tell the emulator, by Steam appid. Razor1911's
+  GTA IV Complete Edition ships no steam_api.dll: built against SteamClient018-020, it crashed on
+  gbe_fork's newer default (its controller call landed on GetISteamMusic). 020 only appends to 018
+  and 019. The game loads Steam only with -useSteam in its commandline.txt. Checked on a player's
+  install, 22/11/2026.
+*/
+const TITLE_SETUPS = {
+  12210: { interfaces: ['SteamClient020'], exe: 'gtaiv.exe', launchArg: '-useSteam' },
+};
+
+function writeTitleInterfaces({ appid, dllPath, steamSettings, log }) {
+  const setup = TITLE_SETUPS[String(appid || '')];
+  if (!setup) return null;
+  fs.mkdirSync(steamSettings, { recursive: true });
+  const dest = path.join(steamSettings, 'steam_interfaces.txt');
+  fs.writeFileSync(dest, `${setup.interfaces.join('\n')}\n`);
+  log.log(`[gbe] generated ${dest} from the known setup of appid ${appid}`);
+  return { generated: true, file: dest, original: '', arch: archOfSteamApiFile(dllPath) };
+}
+
+function holdsFile(dir, lowerName) {
+  try {
+    return fs.readdirSync(dir).some((name) => name.toLowerCase() === lowerName);
+  } catch {
+    return false;
+  }
+}
+
+/*
+  The rest of a TITLE_SETUPS entry, in each runtime folder that holds the title's exe: its interface
+  list when none was made, and its launch switch in commandline.txt. Returns the files it wrote.
+*/
+function ensureTitleSetup({ appid, dirs = [], log = noopLog } = {}) {
+  const setup = TITLE_SETUPS[String(appid || '')];
+  if (!setup) return [];
+  const changed = [];
+  for (const dir of new Set(dirs.filter(Boolean))) {
+    if (!holdsFile(dir, setup.exe)) continue;
+    const steamSettings = path.join(dir, 'steam_settings');
+    if (!fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) {
+      changed.push(writeTitleInterfaces({ appid, dllPath: path.join(dir, ARCH.x86.file), steamSettings, log }).file);
+    }
+    const file = path.join(dir, 'commandline.txt');
+    let text = '';
+    try {
+      text = fs.readFileSync(file, 'utf8');
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+    if (text.split(/\s+/).some((arg) => arg.toLowerCase() === setup.launchArg.toLowerCase())) continue;
+    const separator = text && !/\s$/.test(text) ? '\n' : '';
+    fs.writeFileSync(file, `${text}${separator}${setup.launchArg}\n`);
+    log.log(`[gbe] added ${setup.launchArg} to ${file}`);
+    changed.push(file);
+  }
+  return changed;
+}
+
 // Generate steam_settings/steam_interfaces.txt from the original game DLL, picked by
-// interfaceSourceFor above, or from a scene crack's steam_emu.ini when the dll yields nothing.
-async function generateInterfaces({ dllPath, steamSettings, dlls, candidates = [], log = noopLog } = {}) {
+// interfaceSourceFor above, then from a scene crack's steam_emu.ini, then from TITLE_SETUPS.
+async function generateInterfaces({ dllPath, steamSettings, dlls, candidates = [], appid = '', log = noopLog } = {}) {
   if (!dllPath) return { generated: false, reason: 'missing-dll' };
   if (!steamSettings) throw new Error('generateInterfaces: steamSettings path is required');
-  const sceneArgs = { dllPath, candidates, steamSettings, log };
+  const fallback = () => writeSceneInterfaces({ dllPath, candidates, steamSettings, log }) || writeTitleInterfaces({ appid, dllPath, steamSettings, log });
   let result;
   try {
     result = await generateFromDll({ dllPath, steamSettings, dlls, candidates, log });
   } catch (err) {
-    const scene = writeSceneInterfaces(sceneArgs);
-    if (scene) return scene;
+    const known = fallback();
+    if (known) return known;
     throw err;
   }
   if (result.generated) return result;
-  return writeSceneInterfaces(sceneArgs) || result;
+  return fallback() || result;
 }
 
 // The tool works in a private temp directory so it never drops files beside the game unexpectedly.
@@ -621,10 +680,10 @@ async function generateFromDll({ dllPath, steamSettings, dlls, candidates, log }
 
 // generateInterfaces into a throwaway steam_settings, to learn whether it can work before anything
 // in the game folder changes. Same result shape; the file it made is removed with the folder.
-async function tryGenerateInterfaces({ dllPath, dlls, candidates = [], log = noopLog } = {}) {
+async function tryGenerateInterfaces({ dllPath, dlls, candidates = [], appid = '', log = noopLog } = {}) {
   const trialDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gse-interfaces-trial-'));
   try {
-    return await generateInterfaces({ dllPath, steamSettings: path.join(trialDir, 'steam_settings'), dlls, candidates, log });
+    return await generateInterfaces({ dllPath, steamSettings: path.join(trialDir, 'steam_settings'), dlls, candidates, appid, log });
   } finally {
     try { fs.rmSync(trialDir, { recursive: true, force: true }); } catch {}
   }
@@ -1014,6 +1073,7 @@ module.exports = {
   installDlls,
   generateInterfaces,
   tryGenerateInterfaces,
+  ensureTitleSetup,
   matchesCachedDll,
   runtimeDllDirs,
   runtimeDllState,
