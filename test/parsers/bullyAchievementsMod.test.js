@@ -78,6 +78,21 @@ test("the Bully Achievements mod's state.ini is the game's achievement list when
   ], 'a comma in an icon name is fine, a path out of the icon folder is not');
 });
 
+test("the mod's list wins over a steam_settings schema made from it, whose icons were never copied", () => {
+  const { game, mod } = bullyInstall();
+  const settings = path.join(game, 'steam_settings');
+  fs.mkdirSync(settings, { recursive: true });
+  fs.writeFileSync(
+    path.join(settings, 'achievements.json'),
+    JSON.stringify([{ name: 'BA_AfterHours', displayName: 'After Hours', description: '', hidden: 0, icon: 'images/ach_icon_0.png', icon_gray: 'images/ach_icon_0.png' }])
+  );
+  steam.forgetLocalSchemaLocations(game);
+  const schema = steam.getLocalAchievementSchema(game, '12200', 'english');
+  const icon = path.join(mod, 'Graphics', 'Achievements', 'ach_icon_0.png').replace(/\\/g, '/');
+  assert.equal(schema.length, 4, 'the whole list of the mod, not the one entry of the generated schema');
+  assert.equal(schema[0].icon, icon, "the icon is the mod's own file, not a Steam url that does not exist");
+});
+
 test('a game folder without the mod gets no list from it', () => {
   const game = makeTempDir('aw-bully-none-');
   assert.deepEqual(steam.getLocalAchievementSchema(game, '12200', 'english'), []);

@@ -33,6 +33,10 @@ renamed in 3.9.0 and the history is kept under one file.
   folder of the crack outranked the emulator now in the game folder until it was deleted (#219).
 - **Game Health now offers to write a game's missing DLC access.** The note had no button unless
   Settings let AW Next manage DLC; Complete the emulator settings now covers it, after asking.
+- **Bully's achievements show their icons again.** Once AW Next had written the emulator's
+  achievement file from the Achievements mod's list, it read that file instead of the mod and
+  showed question marks: the mod's icons were never copied next to it. The mod's list is read
+  first now, and a repair copies its icons.
 
 ## 3.12.8 - 2026-11-22
 

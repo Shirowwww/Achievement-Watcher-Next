@@ -123,6 +123,23 @@ test('a missing icon is fetched under the exact name the schema gives it', async
   assert.equal(fs.existsSync(path.join(dir, 'img', '0123abcd.jpg')), false);
 });
 
+test("an icon the schema takes from a file on this PC (the Bully mod's art) is copied, with no download", async () => {
+  const art = path.join(tmp, 'mod-art');
+  fs.mkdirSync(art, { recursive: true });
+  const local = path.join(art, 'ach_icon_0.png');
+  fs.writeFileSync(local, 'mod art');
+  const dir = path.join(tmp, 'local-icons', 'steam_settings');
+  fs.mkdirSync(dir, { recursive: true });
+  const summary = await gbeSchema.rewrite({
+    steamSettings: dir,
+    schema: awSchema([awEntry('BA_AfterHours', { icon: local.replace(/\\/g, '/'), icongray: local.replace(/\\/g, '/') })]),
+  });
+  const [entry] = read(dir, 'achievements.json');
+  assert.equal(entry.icon, 'images/ach_icon_0.png');
+  assert.equal(fs.readFileSync(path.join(dir, 'images', 'ach_icon_0.png'), 'utf8'), 'mod art', 'the file the schema names exists');
+  assert.ok(summary.created.includes('images/ach_icon_0.png'), 'and is listed as created, so an undo removes it');
+});
+
 test('a fresh GBE schema is written in the format GBE reads natively', async () => {
   const dir = path.join(tmp, 'fresh', 'steam_settings');
   fs.mkdirSync(dir, { recursive: true });

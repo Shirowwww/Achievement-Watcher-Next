@@ -13,6 +13,12 @@ const fs = require('fs');
 const path = require('path');
 
 const GRAY_KEYS = ['icon_gray', 'icongray'];
+// Each AW schema icon field and the emulator keys that name its file.
+const ICON_FIELDS = [
+  ['icon', ['icon']],
+  ['icongray', GRAY_KEYS],
+];
+const IMAGE_FILE = /\.(png|jpe?g|gif|bmp|webp)$/i;
 const DEFAULT_FOLDER = 'images';
 const ICON_CONCURRENCY = 8;
 // > ICON_CONCURRENCY, so one bad batch alone never gives up on the set.
@@ -259,7 +265,7 @@ function missingIcons({ steamSettings, entries, schemaList }) {
   const list = (schemaList || []).filter((a) => a && a.name != null);
   for (const source of list) {
     const entry = final.get(upper(source.name));
-    for (const [urlKey, refKeys] of [['icon', ['icon']], ['icongray', GRAY_KEYS]]) {
+    for (const [urlKey, refKeys] of ICON_FIELDS) {
       const url = source[urlKey];
       const ref = entry && refKeys.map((key) => entry[key]).find(Boolean);
       const file = ref && !isRemote(ref) ? path.join(steamSettings, ref) : null;
@@ -273,6 +279,40 @@ function missingIcons({ steamSettings, entries, schemaList }) {
     }
   }
   return { jobs: [...jobs.values()], skipped, total: list.length * 2 };
+}
+
+/*
+  Icons the AW schema takes from a file already on this PC (the Bully mod's art) are copied under
+  the name the final schema gives them: nothing downloads a local path, and the schema would
+  otherwise name images that never arrive. Returns how many files were copied.
+*/
+function copyLocalIcons({ steamSettings, entries, schemaList, onCreated }) {
+  const final = byName(entries, (entry) => entry);
+  const root = path.resolve(steamSettings);
+  let copied = 0;
+  for (const source of schemaList || []) {
+    const entry = source && final.get(upper(source.name));
+    if (!entry) continue;
+    for (const [fromKey, refKeys] of ICON_FIELDS) {
+      const from = String(source[fromKey] || '');
+      const ref = refKeys.map((key) => entry[key]).find(Boolean);
+      // Only an image file, whatever path a schema names: nothing else belongs in the icon folder.
+      if (!from || isRemote(from) || !path.isAbsolute(from) || !IMAGE_FILE.test(from) || !ref || isRemote(ref)) continue;
+      const file = path.resolve(root, String(ref));
+      const inside = path.relative(root, file);
+      if (!inside || inside.startsWith('..') || path.isAbsolute(inside) || fs.existsSync(file)) continue;
+      try {
+        if (!fs.statSync(from).isFile()) continue;
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.copyFileSync(from, file);
+        copied++;
+        onCreated(file);
+      } catch {
+        // An unreadable source stays a missing icon, which Game Health already reports.
+      }
+    }
+  }
+  return copied;
 }
 
 function readJson(file) {
@@ -387,6 +427,7 @@ async function rewrite({
     summary.backupDir = backupDir;
   }
   const created = (file) => summary.created.push(path.relative(steamSettings, file).replace(/\\/g, '/'));
+  summary.icons.copied = copyLocalIcons({ steamSettings, entries: planned.entries, schemaList, onCreated: created });
 
   if (downloadIcon) {
     const { jobs, skipped, total } = missingIcons({ steamSettings, entries: planned.entries, schemaList });

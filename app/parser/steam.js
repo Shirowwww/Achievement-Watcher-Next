@@ -2045,6 +2045,10 @@ function getBullyModSchema(gameDir) {
 }
 
 module.exports.getLocalAchievementSchema = (gameDir, appid, lang = 'english') => {
+  // The Bully mod's list comes first: a steam_settings schema beside it was made from it (AW's own
+  // repair writes one), and only the mod's copy points at icons that exist.
+  const bullyMod = getBullyModSchema(gameDir);
+  if (bullyMod.length > 0) return bullyMod;
   // Probe the known emulator locations for BOTH layouts before walking anything: tenoke.ini is rare,
   // and looking for it first without probing would force a full walk of every non-TENOKE install.
   const candidates = gameDir ? schemaCandidateDirs(gameDir) : [];
@@ -2072,7 +2076,7 @@ module.exports.getLocalAchievementSchema = (gameDir, appid, lang = 'english') =>
     const schema = getGoldbergSchemaFromFile(goldberg, appid, lang);
     if (schema.length > 0) return schema;
   }
-  return getBullyModSchema(gameDir);
+  return [];
 };
 
 // Ranked AppID candidates for a name, best first: [{ appid, name, score, tier }]. Includes fuzzy
