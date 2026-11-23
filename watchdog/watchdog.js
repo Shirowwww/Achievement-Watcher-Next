@@ -47,6 +47,9 @@ function exitAfterSavingPlaytime() {
   try {
     require('./notification/clip.js').shutdown();
   } catch {}
+  try {
+    universeLanServer.stop();
+  } catch {}
   let save = Promise.resolve();
   try {
     save = playtimeMonitorEmitter?.saveActiveSessions?.() ?? save;
@@ -148,6 +151,24 @@ const unlockRarityStore = require(sharedAppModulePath('util/unlockRarity.js'));
 const uplayR2 = require(sharedAppModulePath('parser/uplayR2Live.js'));
 const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('./util/appidFolder.js');
 const steamClientStats = require('./util/steamClientStats.js');
+const gogUniverseLan = require(sharedAppModulePath('parser/gogUniverseLan.js'));
+const universeLanServer = require('./util/universeLanServer.js').createUniverseLanServer({
+  readInstalls: () => gogUniverseLan.readInstalls(userDataDir()),
+  findGalaxyDlls: (dir) => gogUniverseLan.findGalaxyDlls(dir),
+  isRunning: universeLanServerRunning,
+  log: (line) => debug.log(line),
+});
+
+// Any UniverseLAN server already running, whoever started it.
+function universeLanServerRunning() {
+  try {
+    return require('./util/processSnapshot.js')
+      .listSync()
+      .some((row) => /^universelanserver(64)?\.exe$/i.test(String(row.process || '')));
+  } catch {
+    return false;
+  }
+}
 const steamClock = require('./util/steamClock.js').createSteamClock({ log: (line) => debug.log(line) });
 const { freshUnlockTime } = require('./util/unlockAge.js');
 
@@ -767,6 +788,8 @@ process.on('message', (msg) => {
   }
   if (msg.reloadPlaytimeIndex === true) {
     // Sent at the end of every library scan, which is also what rewrites the redirected save folders.
+    // A UniverseLAN fix just applied is followed by one: its server is up before the game starts.
+    universeLanServer.ensure('library scan');
     const redirectsStamp = fileStamp(cfg_file.saveRedirects);
     if ((redirectsStamp || app.redirectsStamp) && !sameStamp(app.redirectsStamp, redirectsStamp)) {
       debug.log('redirected save folders changed -> reloading watchers');
@@ -1616,6 +1639,7 @@ var app = {
     // report itself as the live monitor.
     startHeartbeat();
     scheduleInstallCompression();
+    universeLanServer.ensure('monitor start');
 
     // Start WQL before other COM clients initialize security.
     const playtimeMonitorReady = playtimeMonitor
