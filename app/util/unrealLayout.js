@@ -103,6 +103,8 @@ function buildRootFor(dir, { maxClimb = 4 } = {}) {
   nothing UE (Phantom Blade Zero runs platform/steam/PBZ.exe with -basedir into the build). Only
   the Steamworks lookup uses it, so the game folder itself never moves; a library root never holds
   Engine/Binaries, so the two-level climb cannot take one for a build.
+  A launcher folder that runs an emulator of its own keeps it: Voices' release replaced the
+  steam_api64.dll beside PBZ.exe and left Valve's in the engine, where a fix then aimed.
 */
 const LAUNCHER_FOLDER_CLIMB = 2;
 
@@ -113,9 +115,16 @@ function launcherBuildRootFor(dir) {
     const parent = path.dirname(current);
     if (!parent || parent === current) return '';
     current = parent;
-    if (isBuildRoot(current)) return current;
+    if (isBuildRoot(current)) return runsOwnEmulator(dir) ? '' : current;
   }
   return '';
+}
+
+// Read lazily: crackLoaderDetect.js requires this module.
+function runsOwnEmulator(dir) {
+  const { isEmulatorDll } = require('./crackLoaderDetect.js');
+  const entries = dirCache.readdir(dir) || [];
+  return entries.some((entry) => entry.isFile() && STEAM_API_DLLS.has(entry.name.toLowerCase()) && isEmulatorDll(path.join(dir, entry.name)));
 }
 
 /*

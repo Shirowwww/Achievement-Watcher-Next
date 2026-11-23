@@ -313,3 +313,52 @@ test('the fix gate sees the engine dll and an engine-side setup it must not over
   assert.equal(existing && existing.kind, 'steam-settings');
   assert.equal(existing && existing.path, path.join(build.steamworks, 'steam_settings'));
 });
+
+// Voices' release of Phantom Blade Zero runs GBE as the steam_api64.dll beside PBZ.exe and leaves Valve's in the engine.
+test('a launcher folder that runs its own emulator keeps it, and the engine copy stays out of the fix', () => {
+  const build = launcherFolderBuild('aw-ue-voices-');
+  write(path.join(build.launchDir, 'steam_api64.dll'), 'gbe steam_settings marker GSE Saves');
+  writeSettings(path.join(build.launchDir, 'steam_settings'));
+
+  assert.deepEqual(unrealLayout.steamworksDllDirs(build.launchDir), []);
+  const report = goldberg.diagnose({ gameDir: build.launchDir, appid: '4115450', schema: SCHEMA, savesRoots: [] });
+  assert.ok(!report.issues.some((entry) => entry.code === 'UNREAL_ENGINE_DLL_UNCONFIGURED'), 'no "where the emulator files are" warning');
+  assert.equal(goldberg.findSteamSettings(build.launchDir), path.join(build.launchDir, 'steam_settings'));
+  assert.deepEqual(goldberg.detectEmulator(build.launchDir).dll, [path.join(build.launchDir, 'steam_api64.dll')]);
+});
+
+test("a restore point takes the engine's dll above a launcher folder and puts it back", () => {
+  const build = launcherFolderBuild('aw-ue-backup-', { artifact: true });
+  const engineDll = path.join(build.steamworks, 'steam_api64.dll');
+  // The engine's dll counts once a steam_settings sits beside it, and it is outside the game folder.
+  writeSettings(path.join(build.steamworks, 'steam_settings'));
+  assert.ok(goldberg.detectEmulator(build.launchDir).dll.includes(engineDll));
+
+  const destinationRoot = tmpdir('aw-ue-backup-dest-');
+  const backup = goldberg.backupSetup({ gameDir: build.launchDir, destinationRoot });
+  assert.equal(backup.manifest.rootUp, 2);
+  assert.ok(backup.files.includes(path.join('Engine', 'Binaries', 'ThirdParty', 'Steamworks', 'Steamv165', 'Win64', 'steam_api64.dll')));
+
+  fs.writeFileSync(engineDll, 'changed by a fix');
+  goldberg.restoreSetup({ backupDir: backup.backupDir, gameDir: build.launchDir });
+  assert.equal(fs.readFileSync(engineDll, 'utf8'), 'valve-original-x64');
+});
+
+test('a restore point refuses a manifest that climbs further than a build can', () => {
+  const build = launcherFolderBuild('aw-ue-rootup-');
+  const backupDir = tmpdir('aw-ue-rootup-backup-');
+  write(path.join(backupDir, 'x.txt'), 'x');
+  fs.writeFileSync(path.join(backupDir, 'backup.json'), JSON.stringify({ version: 2, gameDir: build.launchDir, files: ['x.txt'], rootUp: 9 }));
+  assert.throws(() => goldberg.restoreSetup({ backupDir, gameDir: build.launchDir }), /invalid rootUp/);
+});
+
+test('a restore point only climbs to an Unreal build, never to whatever folder sits above', () => {
+  const library = tmpdir('aw-ue-rootup-plain-');
+  const gameDir = path.join(library, 'Some Game', 'bin');
+  write(path.join(gameDir, 'game.exe'), 'game');
+  const backupDir = tmpdir('aw-ue-rootup-plain-backup-');
+  write(path.join(backupDir, 'startup.bat'), 'x');
+  fs.writeFileSync(path.join(backupDir, 'backup.json'), JSON.stringify({ version: 2, gameDir, files: ['startup.bat'], rootUp: 2 }));
+  assert.throws(() => goldberg.restoreSetup({ backupDir, gameDir }), /not a packaged build/);
+  assert.equal(fs.existsSync(path.join(library, 'startup.bat')), false);
+});

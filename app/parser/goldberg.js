@@ -341,6 +341,25 @@ function shortcutLaunchDirs(gameDir, shortcutExes = steamShortcutLaunches) {
   return dirs;
 }
 
+/*
+  The folder a restore point's paths start from: gameDir, or the packaged Unreal build above it when
+  detectEmulator counted the engine's dll there, outside gameDir (Phantom Blade Zero's launcher
+  folder). `rootUp` says how far up, so a restore never trusts a path stored in the manifest.
+*/
+const MAX_BACKUP_ROOT_UP = 4;
+
+function backupBase(gameDir, sources) {
+  const inside = (base) => sources.every((source) => isInside(source, base));
+  let base = path.resolve(gameDir);
+  for (let rootUp = 0; rootUp <= MAX_BACKUP_ROOT_UP; rootUp++) {
+    if (inside(base) && (rootUp === 0 || unrealLayout.isBuildRoot(base))) return { base, rootUp };
+    const parent = path.dirname(base);
+    if (parent === base) break;
+    base = parent;
+  }
+  return { base: path.resolve(gameDir), rootUp: 0 };
+}
+
 function copyIntoBackup(source, gameDir, backupDir) {
   const relative = path.relative(gameDir, source);
   if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
@@ -377,7 +396,8 @@ function backupSetup({ gameDir, destinationRoot, steamSettings } = {}) {
   while (fs.existsSync(backupDir)) backupDir = path.join(destinationRoot, `${safeName} - GBE backup - ${backupTimestamp()} (${suffix++})`);
   fs.mkdirSync(backupDir, { recursive: true });
 
-  const files = sources.map((source) => copyIntoBackup(source, gameDir, backupDir));
+  const { base, rootUp } = backupBase(resolvedGameDir, sources);
+  const files = sources.map((source) => copyIntoBackup(source, base, backupDir));
   /*
     A backup is only as good as what it says about itself. Versions up to 3.10.6 rewrote the emulator
     configs during a plain scan, so a backup taken afterwards captures AW Next's own configuration and
@@ -393,6 +413,7 @@ function backupSetup({ gameDir, destinationRoot, steamSettings } = {}) {
     pristine: !managed.managed,
     awManagedFiles: managed.files,
     files,
+    ...(rootUp > 0 ? { rootUp } : {}),
   };
   fs.writeFileSync(path.join(backupDir, 'backup.json'), JSON.stringify(manifest, null, 2));
   return { backupDir, files, manifest, pristine: !managed.managed, awManagedFiles: managed.files };
@@ -422,11 +443,17 @@ function restoreSetup({ backupDir, gameDir } = {}) {
   const files = Array.isArray(manifest.files) ? manifest.files : [];
   if (files.length === 0) throw new Error('restore: the manifest lists no files to restore');
 
+  const rootUp = manifest.rootUp === undefined ? 0 : manifest.rootUp;
+  if (!Number.isInteger(rootUp) || rootUp < 0 || rootUp > MAX_BACKUP_ROOT_UP) throw new Error(`restore: backup.json has an invalid rootUp: ${rootUp}`);
+  const base = path.resolve(resolvedGameDir, ...Array(rootUp).fill('..'));
+  // The climb backupBase made, and no other: a manifest cannot send the files above any game.
+  if (rootUp > 0 && !unrealLayout.isBuildRoot(base)) throw new Error(`restore: ${base} is not a packaged build above the game folder`);
+
   fs.mkdirSync(resolvedGameDir, { recursive: true });
   const restored = [];
   for (const relative of files) {
-    const destination = path.resolve(resolvedGameDir, relative);
-    if (destination !== resolvedGameDir && !destination.startsWith(resolvedGameDir + path.sep)) {
+    const destination = path.resolve(base, relative);
+    if (destination !== base && !destination.startsWith(base + path.sep)) {
       throw new Error(`restore: manifest path is outside the game folder: ${relative}`);
     }
     const source = path.join(backupDir, relative);
