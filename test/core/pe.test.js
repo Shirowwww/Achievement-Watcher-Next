@@ -143,6 +143,20 @@ try {
   assert.strictEqual(pe.readExeFileVersion(path.join(temp, 'notpe.txt')), '');
   assert.strictEqual(pe.readExeFileVersion(path.join(temp, 'does-not-exist.exe')), '');
 
+  // readImportNames lists the DLLs a program loads as it starts, x64 and x86, the last name at the end of the file.
+  const { peWithImports } = require(path.join(__dirname, '..', 'helpers', 'fakePe.js'));
+  const imports64 = path.join(temp, 'imports64.exe');
+  fs.writeFileSync(imports64, peWithImports(['KERNEL32.dll', 'steam_api64.dll']));
+  assert.deepStrictEqual(pe.readImportNames(imports64), ['KERNEL32.dll', 'steam_api64.dll']);
+  const imports32 = path.join(temp, 'imports32.exe');
+  fs.writeFileSync(imports32, peWithImports(['steam_api.dll'], { pe32: true }));
+  assert.deepStrictEqual(pe.readImportNames(imports32), ['steam_api.dll']);
+  assert.deepStrictEqual(pe.readImportNames(path.join(temp, 'notpe.txt')), []);
+  assert.deepStrictEqual(pe.readImportNames(path.join(temp, 'does-not-exist.exe')), []);
+  for (const exe of realExes) {
+    if (!pe.readImportNames(exe).some((name) => /^(kernel32|user32)\.dll$/i.test(name))) throw new Error(`readImportNames missed the system DLLs of ${exe}`);
+  }
+
   console.log('PASS: pe util (exeArch machine type + SteamStub .bind detection)');
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });

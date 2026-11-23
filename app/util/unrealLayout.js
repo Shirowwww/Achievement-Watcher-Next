@@ -25,6 +25,7 @@
 
 const path = require('path');
 const dirCache = require('./dirCache.js');
+const pe = require('./pe.js');
 
 const STEAM_API_DLLS = new Set(['steam_api.dll', 'steam_api64.dll']);
 
@@ -103,8 +104,6 @@ function buildRootFor(dir, { maxClimb = 4 } = {}) {
   nothing UE (Phantom Blade Zero runs platform/steam/PBZ.exe with -basedir into the build). Only
   the Steamworks lookup uses it, so the game folder itself never moves; a library root never holds
   Engine/Binaries, so the two-level climb cannot take one for a build.
-  A launcher folder that runs an emulator of its own keeps it: Voices' release replaced the
-  steam_api64.dll beside PBZ.exe and left Valve's in the engine, where a fix then aimed.
 */
 const LAUNCHER_FOLDER_CLIMB = 2;
 
@@ -115,26 +114,60 @@ function launcherBuildRootFor(dir) {
     const parent = path.dirname(current);
     if (!parent || parent === current) return '';
     current = parent;
-    if (isBuildRoot(current)) return runsOwnEmulator(dir) ? '' : current;
+    if (isBuildRoot(current)) return current;
   }
   return '';
 }
 
-// Read lazily: crackLoaderDetect.js requires this module.
-function runsOwnEmulator(dir) {
+// The folders of a build an executable runs from: the root, and <Project>/Binaries/Win64 (or Win32).
+function executableDirs(root) {
+  const out = [root];
+  for (const name of subdirectories(root)) {
+    if (name.toLowerCase() === 'engine') continue;
+    for (const arch of ['Win64', 'Win32']) {
+      const dir = resolveChain(path.join(root, name), ['Binaries', arch]);
+      if (dir) out.push(dir);
+    }
+  }
+  return out;
+}
+
+/*
+  Whether `folder` runs a Steam emulator of its own, which the engine's copy then never replaces:
+  an emulator's steam_api dll beside an executable that loads it as it starts (its import table
+  names it, as It Takes Two's does), or beside the executable of a launcher folder outside the
+  Unreal tree (Voices' Phantom Blade Zero, platform\steam). Unreal itself delay-loads steam_api and
+  preloads the engine's copy, so an emulator left beside such an exe stays unread.
+  Read lazily: crackLoaderDetect.js requires this module.
+*/
+function runsOwnEmulator(folder, { launcher = false } = {}) {
   const { isEmulatorDll } = require('./crackLoaderDetect.js');
-  const entries = dirCache.readdir(dir) || [];
-  return entries.some((entry) => entry.isFile() && STEAM_API_DLLS.has(entry.name.toLowerCase()) && isEmulatorDll(path.join(dir, entry.name)));
+  const entries = dirCache.readdir(folder) || [];
+  const emulated = entries
+    .filter((entry) => entry.isFile() && STEAM_API_DLLS.has(entry.name.toLowerCase()) && isEmulatorDll(path.join(folder, entry.name)))
+    .map((entry) => entry.name.toLowerCase());
+  if (emulated.length === 0) return false;
+  if (launcher) return true;
+  return entries.some(
+    (entry) => entry.isFile() && /\.exe$/i.test(entry.name) && pe.readImportNames(path.join(folder, entry.name)).some((name) => emulated.includes(name.toLowerCase()))
+  );
+}
+
+function buildRunsOwnEmulator(dir, root) {
+  const own = path.resolve(dir);
+  if (runsOwnEmulator(own, { launcher: !buildRootFor(own) })) return true;
+  return executableDirs(root).some((folder) => path.resolve(folder).toLowerCase() !== own.toLowerCase() && runsOwnEmulator(folder));
 }
 
 /*
   The Win64/Win32 folders under Engine/Binaries/ThirdParty/Steamworks of the packaged build at or
   above `dir`, newest SDK first so the folder the engine most likely loads leads the list. Empty
-  when `dir` is not a packaged Unreal build.
+  when `dir` is not a packaged Unreal build, or when the game runs an emulator of its own beside
+  its executable.
 */
 function steamworksDllDirs(dir) {
   const root = buildRootFor(dir) || launcherBuildRootFor(dir);
-  if (!root) return [];
+  if (!root || buildRunsOwnEmulator(dir, root)) return [];
   const parent = resolveChain(root, STEAMWORKS_PARENT);
   if (!parent) return [];
   const sdks = subdirectories(parent)

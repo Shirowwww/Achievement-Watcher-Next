@@ -18,10 +18,11 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Games fixed with UniverseLAN record their achievements without a manual step.** The game only
   signs in to a running UniverseLAN server, which the fix copied but never started, so nothing was
   recorded until it was started by hand. AW Next now keeps it running while a game has the fix.
-- **Phantom Blade Zero's emulator fix works on releases that run the emulator beside PBZ.exe.**
-  Game Health aimed at the engine's own Steam dll instead, said the emulator files were in the
-  wrong place, and the fix stopped with "path is outside the game folder". A restore point can now
-  also hold a file of the engine above a game's folder.
+- **An Unreal game whose release runs the emulator beside the game's exe keeps it.** Game Health
+  aimed at the engine's own Steam dll instead, said the emulator files were in the wrong place, and
+  the fix stopped with "path is outside the game folder" (Voices' Phantom Blade Zero). It now leaves
+  the engine alone whenever the exe loads the emulator beside it, in any layout, and a restore point
+  can also hold a file of the engine above a game's folder.
 - **Razor1911's GTA IV no longer shows twice once switched to the emulator.** The release's own
   entry stayed next to the emulator's, because the emulator's save was read later in the scan.
 - **A game added by hand no longer gets a bogus ID in its emulator file.** Repairing or installing

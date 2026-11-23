@@ -17,6 +17,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { makeTempDir } = require('../helpers/tempDir');
+const { peWithImports } = require('../helpers/fakePe');
 
 const unrealLayout = require(path.join(__dirname, '..', '..', 'app', 'util', 'unrealLayout.js'));
 const exeDetect = require(path.join(__dirname, '..', '..', 'app', 'parser', 'exeDetect.js'));
@@ -325,6 +326,30 @@ test('a launcher folder that runs its own emulator keeps it, and the engine copy
   assert.ok(!report.issues.some((entry) => entry.code === 'UNREAL_ENGINE_DLL_UNCONFIGURED'), 'no "where the emulator files are" warning');
   assert.equal(goldberg.findSteamSettings(build.launchDir), path.join(build.launchDir, 'steam_settings'));
   assert.deepEqual(goldberg.detectEmulator(build.launchDir).dll, [path.join(build.launchDir, 'steam_api64.dll')]);
+});
+
+// Any Unreal build, not only a launcher folder: an exe that imports steam_api runs the copy beside it (It Takes Two's does).
+test('an emulator beside an exe that loads steam_api as it starts is the one that runs, in any layout', () => {
+  const build = packagedBuild('aw-ue-imports-');
+  fs.writeFileSync(build.exe, peWithImports(['KERNEL32.dll', 'steam_api64.dll']));
+  const besideExe = path.dirname(build.exe);
+  write(path.join(besideExe, 'steam_api64.dll'), 'gbe steam_settings marker GSE Saves');
+  writeSettings(path.join(besideExe, 'steam_settings'));
+
+  assert.deepEqual(unrealLayout.steamworksDllDirs(build.root), []);
+  assert.deepEqual(unrealLayout.steamworksDllDirs(besideExe), []);
+  const report = goldberg.diagnose({ gameDir: build.root, appid: '4115450', schema: SCHEMA, savesRoots: [] });
+  assert.ok(!report.issues.some((entry) => entry.code === 'UNREAL_ENGINE_DLL_UNCONFIGURED'));
+  assert.equal(goldberg.findSteamSettings(build.root), path.join(besideExe, 'steam_settings'));
+});
+
+test('an emulator beside an exe that does not load steam_api stays a leftover: the engine copy runs', () => {
+  const build = packagedBuild('aw-ue-noimport-');
+  fs.writeFileSync(build.exe, peWithImports(['KERNEL32.dll']));
+  write(path.join(path.dirname(build.exe), 'steam_api64.dll'), 'gbe steam_settings marker GSE Saves');
+  write(path.join(build.root, 'steam_api64.dll'), 'gbe steam_settings marker GSE Saves');
+
+  assert.deepEqual(unrealLayout.steamworksDllDirs(build.root), [build.steamworks]);
 });
 
 test("a restore point takes the engine's dll above a launcher folder and puts it back", () => {
