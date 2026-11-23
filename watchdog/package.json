@@ -26,7 +26,7 @@
     "crc": "^4.3.2",
     "fast-glob": "^3.2.5",
     "humanize-duration": "^3.35.1",
-    "koffi": "3.3.7",
+    "koffi": "3.3.8",
     "moment": "^2.31.0",
     "node-html-parser": "^9.0.7",
     "node-watch": "^0.7.4",
@@ -39,6 +39,6 @@
     "xinput-ffi": "^4.0.2"
   },
   "overrides": {
-    "koffi": "3.3.7"
+    "koffi": "3.3.8"
   }
 }
