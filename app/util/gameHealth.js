@@ -456,8 +456,17 @@ function noUnlockSource(signals) {
   return !(Array.isArray(signals.saveSources) && signals.saveSources.length > 0);
 }
 
+// A GBE runtime in the game folder is what the game loads now; an old scene save beside it is history (#219).
+function hasGoldbergRuntime(goldberg) {
+  if (!goldberg) return false;
+  if (Array.isArray(goldberg.runtimeDlls) && goldberg.runtimeDlls.some((dll) => dll && dll.emulator)) return true;
+  return !!goldberg.emulator && goldberg.emulator !== 'none' && num(goldberg.dllCount) > 0;
+}
+
 function emulatorCheck(rawSignals) {
-  const signals = rawSignals.crackLoader && rawSignals.crackLoader.name ? rawSignals : { ...rawSignals, crackLoader: loaderFromSceneSaves(rawSignals) };
+  const fromSave = rawSignals.crackLoader && rawSignals.crackLoader.name ? null : loaderFromSceneSaves(rawSignals);
+  const signals =
+    rawSignals.crackLoader && rawSignals.crackLoader.name ? rawSignals : { ...rawSignals, crackLoader: fromSave && !hasGoldbergRuntime(rawSignals.goldberg) ? fromSave : null };
   // An emulator setup over a game with no achievements has nothing to read and nothing to repair.
   // Diagnosing it anyway turned an inert folder into a list of faults on a game that is fine.
   if (hasNoAchievements(signals)) return null;

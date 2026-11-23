@@ -971,3 +971,16 @@ test('a RUNE save folder proves a loader serves the game even when no loader fil
   assert.notEqual(emulator.level, LEVEL.FAIL);
   assert.equal(emulator.params.servedBy, 'RUNE');
 });
+
+test('an old RUNE save does not outrank the GBE runtime now in the game folder', () => {
+  // Gears of War: E-Day (#219): switched to GBE, still shown as served by RUNE until its folder was deleted.
+  const report = deriveHealth(
+    healthyGame({
+      saveSources: [
+        { source: 'Rune', path: 'C:/Users/Public/Documents/Steam/RUNE/3010850' },
+        { source: 'Goldberg', path: 'C:/Users/me/AppData/Roaming/GSE Saves/3010850' },
+      ],
+    })
+  );
+  assert.notEqual(checkFor(report, 'emulator').params.servedBy, 'RUNE');
+});

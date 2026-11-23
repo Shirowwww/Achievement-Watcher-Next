@@ -19,6 +19,11 @@ renamed in 3.9.0 and the history is kept under one file.
   a real Steam appid is used now.
 - **A Ubisoft game added by hand with LumaPlay now gets the Ubisoft achievement fix.** Its folder
   was ignored, so Game Health offered the Steam emulator, which such a game never reports to.
+- **Switching a recent game from its crack to the supported emulator is no longer refused.** Game
+  Health asked every game for the interface list only games from before 2016 need, and called them
+  "older games" when the crack had replaced the file it is read from.
+- **Game Health no longer says a game is served by RUNE or CODEX after switching it.** An old save
+  folder of the crack outranked the emulator now in the game folder until it was deleted (#219).
 - **Game Health now offers to write a game's missing DLC access.** The note had no button unless
   Settings let AW Next manage DLC; Complete the emulator settings now covers it, after asking.
 
