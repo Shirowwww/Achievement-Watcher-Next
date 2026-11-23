@@ -949,6 +949,12 @@ function translateUI(lang, locale, template) {
   $('#source-stores-title').text(clear(template.settings.source.groupStores));
   $('#source-memory-title').text(clear(template.settings.source.groupMemory));
   $('#source-consoles-title').text(clear(template.settings.source.groupConsoles));
+  $('#source-ports-title').text(clear(template.settings.source.groupPorts));
+  // The Consoles & ports page holds the consoles card and the game fixes; its status lines are app.js's.
+  const ports = template.settings.emulator.ports;
+  $('#ports-nav-label').text(clear(ports.nav));
+  $('#ports-options-title').text(clear(ports.title));
+  $('#ports-options-intro').text(clear(ports.intro));
   // Every on/off Sources row is bound by id: rows move between the cards, so a position means
   // nothing here. A row whose name is a brand keeps it in app.html and has no `name` key.
   for (const key of ['steamEmu', 'greenLuma', 'lumaPlay', 'runeUplay', 'gog', 'epic', 'xlln', 'socialClub', 'markerpatch', 'madnesspatch', 'pcports', 'importCache', 'ubisoftOfficial', 'ea', 'rockstarOfficial', 'psnLibrary', 'rpcs3', 'shadps4', 'kytyps5', 'ps4recomp', 'ps3recomp', 'x360recomp', 'xenia', 'retroAchievements']) {

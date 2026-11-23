@@ -9,6 +9,13 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Improved
+
+- **Consoles & ports has its own page in Settings (#226).** The console emulators, the PC ports of
+  console games and the community game fixes left Sources for a page next to Steam / GBE Fork and
+  Ubisoft. Each switch that is on says how many games it found in your library, or, when it found
+  none, to run Smart Find or add the game's folder.
+
 ### Fixed
 
 - **An achievement the popup announced no longer stays locked in the library.** A game that saves

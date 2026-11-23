@@ -4952,6 +4952,23 @@ body.is-resizing #game-list {
 .arrow-list li.hasHelper .help:empty {
   display: none;
 }
+/* Consoles & ports: what a switch found, under its description (#226). */
+.arrow-list li.hasHelper .port-status {
+  grid-column: 1;
+  grid-row: 3;
+  margin: 4px 0 0 28px;
+  font-size: var(--fs-sm);
+  line-height: 1.28;
+}
+.arrow-list li.hasHelper .port-status[hidden] {
+  display: none;
+}
+.port-status[data-state='found'] {
+  color: var(--success);
+}
+.port-status[data-state='none'] {
+  color: var(--warning);
+}
 .arrow-list li .help {
   font-size: var(--fs-sm);
   line-height: 1.28;

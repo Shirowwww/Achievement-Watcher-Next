@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Emulator repair",
       "groupNav": "Emulators",
+      "ports": {
+        "nav": "Consoles & ports",
+        "title": "Consoles & ports",
+        "intro": "Console emulators, PC ports of console games and community game fixes. Turn on the ones you use, then run Smart Find in Folders or add the game's folder there: each line below says how many games it found.",
+        "found": "{count} found in your library",
+        "none": "None found yet: run Smart Find in Settings > Folders, or add its folder there."
+      },
       "sectionTitle": "Emulator setup",
       "intro": "Safe, automatic repair for supported Steam/GBE Fork games.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Official platforms",
       "groupMemory": "Library memory",
-      "groupConsoles": "Consoles and retro"
+      "groupConsoles": "Consoles and retro",
+      "groupPorts": "PC ports and game fixes"
     },
     "help": {
       "nav": "Help",

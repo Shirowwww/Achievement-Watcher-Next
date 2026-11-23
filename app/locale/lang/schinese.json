@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "模拟器修复",
       "groupNav": "模拟器",
+      "ports": {
+        "nav": "主机与移植版",
+        "title": "主机与移植版",
+        "intro": "主机模拟器、主机游戏的 PC 移植版以及社区游戏修复。打开你用到的项目，然后在文件夹中运行智能查找，或在那里添加游戏的文件夹：下方每一行都会显示找到的游戏数量。",
+        "found": "在你的游戏库中找到：{count}",
+        "none": "尚未找到任何内容：请在 设置 > 文件夹 中运行智能查找，或在那里添加其文件夹。"
+      },
       "sectionTitle": "模拟器设置",
       "intro": "安全、自动地修复受支持的 Steam/GBE Fork 游戏。",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "官方平台",
       "groupMemory": "游戏库记忆",
-      "groupConsoles": "主机与复古"
+      "groupConsoles": "主机与复古",
+      "groupPorts": "PC 移植版与游戏修复"
     },
     "help": {
       "nav": "帮助",

@@ -34,7 +34,8 @@ test('the panels are named dialogs and every Settings tab can take focus', async
     const dialog = { role: 'dialog', modal: 'true', labelled: true };
     assert.deepEqual(result.settings, dialog);
     assert.deepEqual(result.gameConfig, dialog);
-    assert.equal(result.tabs.length, 11);
+    // Twelve since Consoles & ports joined the Emulators group (#226).
+    assert.equal(result.tabs.length, 12);
     assert.deepEqual([...new Set(result.tabs.map((tab) => tab.join()))], ['button,0'], 'each tab is a focusable button');
     assert.deepEqual([...new Set(result.groups)], [-1], 'the group captions are not tab stops');
   } finally {

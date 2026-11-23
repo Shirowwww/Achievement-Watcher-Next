@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Riparazione emulatori",
       "groupNav": "Emulatori",
+      "ports": {
+        "nav": "Console e porting",
+        "title": "Console e porting",
+        "intro": "Emulatori di console, porting per PC di giochi per console e correzioni della community. Attiva quelli che usi, poi avvia la Ricerca smart in Cartelle o aggiungi lì la cartella del gioco: ogni riga qui sotto indica quanti giochi ha trovato.",
+        "found": "Trovati nella tua libreria: {count}",
+        "none": "Ancora nulla trovato: avvia la Ricerca smart in Impostazioni > Cartelle oppure aggiungi lì la sua cartella."
+      },
       "sectionTitle": "Configurazione emulatori",
       "intro": "Riparazione sicura e automatica per i giochi Steam/GBE Fork compatibili.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Piattaforme ufficiali",
       "groupMemory": "Memoria della libreria",
-      "groupConsoles": "Console e retro"
+      "groupConsoles": "Console e retro",
+      "groupPorts": "Porting per PC e correzioni dei giochi"
     },
     "help": {
       "nav": "Aiuto",

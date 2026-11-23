@@ -40,8 +40,8 @@ const DEFAULT_COLLAPSED = [
   'adv-diag-title',
   'profile-backup-title',
   'gbe-dll-settings',
-  // Version 2: the long tabs open on their main block only.
-  'options-source-consoles',
+  // Version 2: the long tabs open on their main block only. The consoles card left Sources for
+  // Consoles & ports (#226), where it is the main block, so it is no longer folded.
   'steam-connect',
   'epic-connect',
   'xbox-connect',

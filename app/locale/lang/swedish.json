@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Emulatorreparation",
       "groupNav": "Emulatorer",
+      "ports": {
+        "nav": "Konsoller och portar",
+        "title": "Konsoller och portar",
+        "intro": "Konsolemulatorer, PC-portar av konsolspel och spelfixar från communityn. Slå på de du använder och kör sedan Smart sökning i Mappar eller lägg till spelets mapp där: varje rad nedan visar hur många spel som hittades.",
+        "found": "Hittade i ditt bibliotek: {count}",
+        "none": "Inget hittat ännu: kör Smart sökning i Inställningar > Mappar eller lägg till dess mapp där."
+      },
       "sectionTitle": "Emulatoruppsättning",
       "intro": "Säker och automatisk reparation för Steam-/GBE Fork-spel som stöds.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Officiella plattformar",
       "groupMemory": "Bibliotekets minne",
-      "groupConsoles": "Konsoller och retro"
+      "groupConsoles": "Konsoller och retro",
+      "groupPorts": "PC-portar och spelfixar"
     },
     "help": {
       "nav": "Hjälp",

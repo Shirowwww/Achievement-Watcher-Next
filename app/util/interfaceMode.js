@@ -32,7 +32,8 @@ const ADVANCED_VIEWS = ['emulator', 'uplay', 'advanced'];
 
 // Tabs Simple mode always shows. Listed rather than derived so a new tab has to make a deliberate
 // choice instead of silently defaulting into the streamlined interface.
-const SIMPLE_VIEWS = ['general', 'appearance', 'controller', 'notification', 'presets', 'source', 'folder', 'help'];
+// Consoles & ports holds the console and port switches that used to sit in Sources, so it shows too.
+const SIMPLE_VIEWS = ['general', 'appearance', 'controller', 'notification', 'presets', 'source', 'ports', 'folder', 'help'];
 
 /*
   Game Health checks Simple mode leaves out of the summary list. `identity` reports the resolved

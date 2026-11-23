@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Emulatorreparatie",
       "groupNav": "Emulators",
+      "ports": {
+        "nav": "Consoles en ports",
+        "title": "Consoles en ports",
+        "intro": "Console-emulators, pc-ports van consolegames en community-fixes voor games. Zet de emulators aan die je gebruikt en voer dan Slim zoeken uit in Mappen of voeg daar de map van de game toe: elke regel hieronder geeft aan hoeveel games gevonden zijn.",
+        "found": "Gevonden in je bibliotheek: {count}",
+        "none": "Nog niets gevonden: voer Slim zoeken uit in Instellingen > Mappen of voeg de map daar toe."
+      },
       "sectionTitle": "Emulator instellen",
       "intro": "Veilige, automatische reparatie voor ondersteunde Steam/GBE Fork-games.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Officiële platformen",
       "groupMemory": "Bibliotheekgeheugen",
-      "groupConsoles": "Consoles en retro"
+      "groupConsoles": "Consoles en retro",
+      "groupPorts": "Pc-ports en game-fixes"
     },
     "help": {
       "nav": "Help",

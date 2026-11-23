@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Emulátorjavítás",
       "groupNav": "Emulátorok",
+      "ports": {
+        "nav": "Konzolok és portok",
+        "title": "Konzolok és portok",
+        "intro": "Konzolemulátorok, konzolos játékok PC-s portjai és közösségi játékjavítások. Kapcsold be azokat, amelyeket használsz, majd futtasd az Okos keresést a Mappákban, vagy add hozzá ott a játék mappáját: az alábbi sorok mindegyike megmutatja, hány játékot talált.",
+        "found": "Találat a könyvtáradban: {count}",
+        "none": "Még nincs találat: futtasd az Okos keresést a Beállítások > Mappák oldalon, vagy add hozzá ott a mappáját."
+      },
       "sectionTitle": "Emulátorok beállítása",
       "intro": "Biztonságos, automatikus javítás a támogatott Steam/GBE Fork játékokhoz.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Hivatalos platformok",
       "groupMemory": "Könyvtármemória",
-      "groupConsoles": "Konzolok és retro"
+      "groupConsoles": "Konzolok és retro",
+      "groupPorts": "PC-s portok és játékjavítások"
     },
     "help": {
       "nav": "Súgó",

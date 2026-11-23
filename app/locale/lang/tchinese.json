@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "模擬器修復",
       "groupNav": "模擬器",
+      "ports": {
+        "nav": "主機與移植版",
+        "title": "主機與移植版",
+        "intro": "主機模擬器、主機遊戲的 PC 移植版，以及社群遊戲修復。開啟你會用到的項目，然後在資料夾中執行智慧尋找，或在那裡新增遊戲的資料夾：下方每一行都會顯示找到的遊戲數量。",
+        "found": "在你的收藏庫中找到：{count}",
+        "none": "尚未找到任何內容：請在 設定 > 資料夾 中執行智慧尋找，或在那裡新增其資料夾。"
+      },
       "sectionTitle": "模擬器設定",
       "intro": "為支援的 Steam/GBE Fork 遊戲提供安全的自動修復。",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "官方平台",
       "groupMemory": "遊戲庫記憶",
-      "groupConsoles": "主機與復古"
+      "groupConsoles": "主機與復古",
+      "groupPorts": "PC 移植版與遊戲修復"
     },
     "help": {
       "nav": "說明",

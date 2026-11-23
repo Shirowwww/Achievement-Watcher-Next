@@ -310,7 +310,8 @@ test('a niche source is decided per row, not by a static marker in the markup', 
     const row = document.querySelector(`#option_${key}`);
     assert.ok(row, `#option_${key} must exist`);
     assert.ok(!row.closest(`[${interfaceMode.ADVANCED_ATTRIBUTE}]`), `#option_${key} must be decided at runtime, not marked`);
-    assert.equal(row.closest('section.content').getAttribute('data-view'), 'source', 'it belongs to the Sources tab');
+    // The game fixes row moved to Consoles & ports (#226); the rule finds rows by id on either tab.
+    assert.ok(['source', 'ports'].includes(row.closest('section.content').getAttribute('data-view')), 'it belongs to the Sources or Consoles & ports tab');
   }
   const applier = settingsUi.slice(settingsUi.indexOf('function applySourceVisibility(mode)'));
   const body = applier.slice(0, applier.indexOf('\n}\n'));

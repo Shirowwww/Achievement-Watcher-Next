@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Emülatör onarımı",
       "groupNav": "Emülatörler",
+      "ports": {
+        "nav": "Konsollar ve portlar",
+        "title": "Konsollar ve portlar",
+        "intro": "Konsol emülatörleri, konsol oyunlarının PC portları ve topluluk oyun düzeltmeleri. Kullandıklarınızı açın, ardından Klasörler bölümünde Akıllı Bul'u çalıştırın veya oyunun klasörünü oraya ekleyin: aşağıdaki her satır kaç oyun bulduğunu gösterir.",
+        "found": "Kütüphanenizde bulunan: {count}",
+        "none": "Henüz bulunan yok: Ayarlar > Klasörler bölümünde Akıllı Bul'u çalıştırın veya klasörünü oraya ekleyin."
+      },
       "sectionTitle": "Emülatör kurulumu",
       "intro": "Desteklenen Steam/GBE Fork oyunları için güvenli, otomatik onarım.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Resmî platformlar",
       "groupMemory": "Kitaplık belleği",
-      "groupConsoles": "Konsollar ve retro"
+      "groupConsoles": "Konsollar ve retro",
+      "groupPorts": "PC portları ve oyun düzeltmeleri"
     },
     "help": {
       "nav": "Yardım",

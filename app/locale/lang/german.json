@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Emulator-Reparatur",
       "groupNav": "Emulatoren",
+      "ports": {
+        "nav": "Konsolen und Ports",
+        "title": "Konsolen und Ports",
+        "intro": "Konsolen-Emulatoren, PC-Ports von Konsolenspielen und Spiele-Fixes aus der Community. Aktiviere die, die du nutzt, und starte dann die Intelligente Suche unter Ordner oder füge dort den Ordner des Spiels hinzu: Jede Zeile unten zeigt, wie viele Spiele gefunden wurden.",
+        "found": "In deiner Bibliothek gefunden: {count}",
+        "none": "Noch nichts gefunden: Starte die Intelligente Suche unter Einstellungen > Ordner oder füge den Ordner dort hinzu."
+      },
       "sectionTitle": "Emulator-Einrichtung",
       "intro": "Sichere, automatische Reparatur für unterstützte Steam/GBE-Fork-Spiele.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Offizielle Plattformen",
       "groupMemory": "Bibliotheksgedächtnis",
-      "groupConsoles": "Konsolen und Retro"
+      "groupConsoles": "Konsolen und Retro",
+      "groupPorts": "PC-Ports und Spiele-Fixes"
     },
     "help": {
       "nav": "Hilfe",

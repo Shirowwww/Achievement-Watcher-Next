@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Oprava emulátorů",
       "groupNav": "Emulátory",
+      "ports": {
+        "nav": "Konzole a porty",
+        "title": "Konzole a porty",
+        "intro": "Emulátory konzolí, PC porty konzolových her a komunitní opravy her. Zapněte ty, které používáte, a pak spusťte Chytré hledání ve Složkách nebo tam přidejte složku hry: každý řádek níže říká, kolik her našel.",
+        "found": "Nalezeno ve vaší knihovně: {count}",
+        "none": "Zatím nic nenalezeno: spusťte Chytré hledání v Nastavení > Složky nebo tam přidejte jeho složku."
+      },
       "sectionTitle": "Nastavení emulátorů",
       "intro": "Bezpečná automatická oprava podporovaných her Steam/GBE Fork.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Oficiální platformy",
       "groupMemory": "Paměť knihovny",
-      "groupConsoles": "Konzole a retro"
+      "groupConsoles": "Konzole a retro",
+      "groupPorts": "PC porty a opravy her"
     },
     "help": {
       "nav": "Nápověda",

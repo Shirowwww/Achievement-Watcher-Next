@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Naprawa emulatorów",
       "groupNav": "Emulatory",
+      "ports": {
+        "nav": "Konsole i porty",
+        "title": "Konsole i porty",
+        "intro": "Emulatory konsol, porty gier konsolowych na PC i poprawki do gier tworzone przez społeczność. Włącz te, których używasz, a następnie uruchom Inteligentne wyszukiwanie w Folderach lub dodaj tam folder gry: każdy wiersz poniżej pokazuje, ile gier znaleziono.",
+        "found": "Znaleziono w Twojej bibliotece: {count}",
+        "none": "Nic jeszcze nie znaleziono: uruchom Inteligentne wyszukiwanie w Ustawienia > Foldery lub dodaj tam jego folder."
+      },
       "sectionTitle": "Konfiguracja emulatorów",
       "intro": "Bezpieczna automatyczna naprawa obsługiwanych gier Steam/GBE Fork.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Oficjalne platformy",
       "groupMemory": "Pamięć biblioteki",
-      "groupConsoles": "Konsole i retro"
+      "groupConsoles": "Konsole i retro",
+      "groupPorts": "Porty na PC i poprawki do gier"
     },
     "help": {
       "nav": "Pomoc",

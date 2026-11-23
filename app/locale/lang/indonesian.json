@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Perbaikan emulator",
       "groupNav": "Emulator",
+      "ports": {
+        "nav": "Konsol dan port",
+        "title": "Konsol dan port",
+        "intro": "Emulator konsol, port PC dari gim konsol, dan perbaikan gim dari komunitas. Aktifkan yang Anda gunakan, lalu jalankan Pencarian Cerdas di Folder atau tambahkan folder gimnya di sana: setiap baris di bawah menunjukkan berapa gim yang ditemukan.",
+        "found": "Ditemukan di perpustakaan Anda: {count}",
+        "none": "Belum ada yang ditemukan: jalankan Pencarian Cerdas di Pengaturan > Folder, atau tambahkan foldernya di sana."
+      },
       "sectionTitle": "Penyiapan emulator",
       "intro": "Perbaikan otomatis yang aman untuk game Steam/GBE Fork yang didukung.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Platform resmi",
       "groupMemory": "Memori pustaka",
-      "groupConsoles": "Konsol dan retro"
+      "groupConsoles": "Konsol dan retro",
+      "groupPorts": "Port PC dan perbaikan gim"
     },
     "help": {
       "nav": "Bantuan",

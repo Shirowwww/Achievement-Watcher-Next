@@ -39,6 +39,7 @@ const { pathToFileURL } = require('url');
 const args_split = require('argv-split');
 const { cssUrl, cssUrlValue } = require(path.join(appPath, 'util/cssUrl.js'));
 const appToolCaches = require(path.join(appPath, 'util/toolCaches.js'));
+const portSources = require(path.join(appPath, 'util/portSources.js'));
 const { focusAchievementRow } = require(path.join(appPath, 'util/achievementFocus.js'));
 const { applyUpdateChip } = require(path.join(appPath, 'util/updateChipView.js'));
 const { splitLaunchArgs } = require(path.join(appPath, 'util/launchArgs.js'));
@@ -10609,6 +10610,21 @@ var app = {
         $('#gbe-dll-status-text').text(text);
       };
       $("#settingNav li[data-view='emulator']").on('click', refreshGbeDllStatus);
+
+      // Consoles & ports (#226): each switch that is on says how many games it brought in, or what to do when none.
+      const refreshPortStatus = () => {
+        const words = (window.appLocale && window.appLocale.settings && window.appLocale.settings.emulator && window.appLocale.settings.emulator.ports) || {};
+        const counts = portSources.portGameCounts(gameList);
+        for (const key of Object.keys(portSources.PORT_SOURCES)) {
+          const status = portSources.portStatus($(`#option_${key}`).val() === 'true', counts[key]);
+          const line = $(`#port-status-${key}`);
+          line.attr('data-state', status.kind).prop('hidden', !status.kind);
+          if (status.kind === 'found') line.text(String(appInterpolate(words.found || '{count} found in your library', { count: status.count })));
+          if (status.kind === 'none') line.text(String(words.none || 'None found yet: run Smart Find in Settings > Folders, or add its folder there.'));
+        }
+      };
+      $("#settingNav li[data-view='ports']").on('click', refreshPortStatus);
+      $('#options-source-consoles select, #options-source-ports select').on('change', refreshPortStatus);
       refreshGbeDllStatus();
 
       $('#import-gbe-dll').on('click', async function () {

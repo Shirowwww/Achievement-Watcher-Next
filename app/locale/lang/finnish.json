@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Emulaattorin korjaus",
       "groupNav": "Emulaattorit",
+      "ports": {
+        "nav": "Konsolit ja portit",
+        "title": "Konsolit ja portit",
+        "intro": "Konsoliemulaattorit, konsolipelien PC-portit ja yhteisön pelikorjaukset. Ota käyttöön ne, joita käytät, ja suorita sitten Älykäs haku Kansiot-sivulla tai lisää pelin kansio sinne: jokainen alla oleva rivi kertoo, montako peliä löytyi.",
+        "found": "Löytyi kirjastostasi: {count}",
+        "none": "Ei vielä löytynyt mitään: suorita Älykäs haku kohdassa Asetukset > Kansiot tai lisää sen kansio sinne."
+      },
       "sectionTitle": "Emulaattorin asetukset",
       "intro": "Turvallinen ja automaattinen korjaus tuetuille Steam- ja GBE Fork -peleille.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Viralliset alustat",
       "groupMemory": "Kirjaston muisti",
-      "groupConsoles": "Konsolit ja retro"
+      "groupConsoles": "Konsolit ja retro",
+      "groupPorts": "PC-portit ja pelikorjaukset"
     },
     "help": {
       "nav": "Ohje",

@@ -234,6 +234,7 @@
                 <li class="nav-group" id="nav-group-emulator" data-nav-group="emulator"></li>
                 <li data-view="emulator" role="button" tabindex="0"><i class="fab fa-steam"></i> <span id="emulator-nav-label">Steam / GBE Fork</span><b class="nav-count"></b></li>
                 <li data-view="uplay" role="button" tabindex="0"><i class="fas fa-gamepad"></i> <span id="uplay-r2-nav-label">Ubisoft / Uplay R1/R2</span><b class="nav-count"></b></li>
+                <li data-view="ports" role="button" tabindex="0"><i class="fas fa-compact-disc"></i> <span id="ports-nav-label">Consoles &amp; ports</span><b class="nav-count"></b></li>
                 <li class="nav-group" id="nav-group-help" data-nav-group="help"></li>
                 <li data-view="help" role="button" tabindex="0"><i class="fas fa-question-circle"></i> <span id="help-nav-label">Help</span><b class="nav-count"></b></li>
                 <li class="nav-group" id="nav-group-advanced" data-nav-group="advanced"></li>
@@ -636,6 +637,223 @@
                   </li>
                   <li class="uplay-r2-result-row">
                     <div id="uplay-r2-settings-result" class="diag-line" role="status" aria-live="polite"></div>
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            <!-- Consoles, recompiled ports and game fixes: the Sources rows of these kinds, bound by id like every Sources row. -->
+            <section class="content emulator-settings" data-view="ports">
+              <div class="emulator-hero">
+                <div class="emulator-hero-icon"><i class="fas fa-compact-disc"></i></div>
+                <div>
+                  <div class="title" id="ports-options-title">Consoles &amp; ports</div>
+                  <p id="ports-options-intro"></p>
+                </div>
+              </div>
+
+              <div class="arrow-list" id="ports-consoles">
+                <div class="title"><span id="source-consoles-title"></span></div>
+                <ul id="options-source-consoles" class="source-list">
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-playstation"></i> <span>RPCS3</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_rpcs3">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-rpcs3"></div>
+                    <div class="port-status" id="port-status-rpcs3" role="status" hidden></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-playstation"></i> <span>shadPS4</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_shadps4">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-shadps4"></div>
+                    <div class="port-status" id="port-status-shadps4" role="status" hidden></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-playstation"></i> <span>KytyPS5</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_kytyps5">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-kytyps5"></div>
+                    <div class="port-status" id="port-status-kytyps5" role="status" hidden></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-playstation"></i> <span>PS4 Recomp</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_ps4recomp">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-ps4recomp"></div>
+                    <div class="port-status" id="port-status-ps4recomp" role="status" hidden></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-playstation"></i> <span>PS3 Recomp</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_ps3recomp">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-ps3recomp"></div>
+                    <div class="port-status" id="port-status-ps3recomp" role="status" hidden></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-xbox"></i> <span>Xbox 360 Recomp</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_x360recomp">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-x360recomp"></div>
+                    <div class="port-status" id="port-status-x360recomp" role="status" hidden></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-xbox"></i> <span>Xenia</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_xenia">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-xenia"></div>
+                    <div class="port-status" id="port-status-xenia" role="status" hidden></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-gamepad"></i> <span>RetroAchievements</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_retroAchievements">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-retroAchievements"></div>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="arrow-list" id="ports-fixes">
+                <div class="title"><span id="source-ports-title"></span></div>
+                <ul id="options-source-ports" class="source-list">
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-tools"></i> <span id="source-name-markerpatch"></span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_markerpatch">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-markerpatch"></div>
+                    <div class="port-status" id="port-status-markerpatch" role="status" hidden></div>
+                  </li>
+
+                  <!-- The game-fix row above drives these two: one switch for the user, one key per scanner. -->
+                  <li class="hasHelper" hidden>
+                    <div class="left"><i class="fas fa-chess-knight"></i> <span>MadnessPatch</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_madnesspatch">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-madnesspatch"></div>
+                  </li>
+
+                  <li class="hasHelper" hidden>
+                    <div class="left"><i class="fas fa-desktop"></i> <span>PC Ports</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_pcports">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-pcports"></div>
                   </li>
                 </ul>
               </div>
@@ -1050,58 +1268,6 @@
                     </div>
                     <div class="help" id="source-help-socialClub"></div>
                   </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-tools"></i> <span id="source-name-markerpatch"></span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_markerpatch">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-markerpatch"></div>
-                  </li>
-
-                  <!-- The game-fix row above drives these two: one switch for the user, one key per scanner. -->
-                  <li class="hasHelper" hidden>
-                    <div class="left"><i class="fas fa-chess-knight"></i> <span>MadnessPatch</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_madnesspatch">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-madnesspatch"></div>
-                  </li>
-
-                  <li class="hasHelper" hidden>
-                    <div class="left"><i class="fas fa-desktop"></i> <span>PC Ports</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_pcports">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-pcports"></div>
-                  </li>
                 </ul>
               </div>
 
@@ -1253,147 +1419,6 @@
                       </div>
                     </div>
                     <div class="help" id="source-help-psnLibrary"></div>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="arrow-list">
-                <div class="title"><span id="source-consoles-title"></span></div>
-                <ul id="options-source-consoles" class="source-list">
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-playstation"></i> <span>RPCS3</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_rpcs3">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-rpcs3"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-playstation"></i> <span>shadPS4</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_shadps4">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-shadps4"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-playstation"></i> <span>KytyPS5</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_kytyps5">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-kytyps5"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-playstation"></i> <span>PS4 Recomp</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_ps4recomp">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-ps4recomp"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-playstation"></i> <span>PS3 Recomp</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_ps3recomp">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-ps3recomp"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-xbox"></i> <span>Xbox 360 Recomp</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_x360recomp">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-x360recomp"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-xbox"></i> <span>Xenia</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_xenia">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-xenia"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-gamepad"></i> <span>RetroAchievements</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_retroAchievements">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-retroAchievements"></div>
                   </li>
                 </ul>
               </div>

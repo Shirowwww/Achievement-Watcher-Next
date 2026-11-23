@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Sửa lỗi giả lập",
       "groupNav": "Trình giả lập",
+      "ports": {
+        "nav": "Console và bản port",
+        "title": "Console và bản port",
+        "intro": "Trình giả lập console, bản port PC của game console và bản sửa lỗi game do cộng đồng làm. Hãy bật những mục bạn dùng, rồi chạy Tìm thông minh trong Thư mục hoặc thêm thư mục của game vào đó: mỗi dòng bên dưới cho biết đã tìm thấy bao nhiêu game.",
+        "found": "Tìm thấy trong thư viện của bạn: {count}",
+        "none": "Chưa tìm thấy gì: hãy chạy Tìm thông minh trong Cài đặt > Thư mục, hoặc thêm thư mục của nó vào đó."
+      },
       "sectionTitle": "Thiết lập trình giả lập",
       "intro": "Sửa lỗi tự động và an toàn cho các trò chơi Steam/GBE Fork được hỗ trợ.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Nền tảng chính thức",
       "groupMemory": "Bộ nhớ thư viện",
-      "groupConsoles": "Máy console và retro"
+      "groupConsoles": "Máy console và retro",
+      "groupPorts": "Bản port PC và bản sửa lỗi game"
     },
     "help": {
       "nav": "Trợ giúp",

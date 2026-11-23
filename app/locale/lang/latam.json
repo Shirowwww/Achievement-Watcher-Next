@@ -418,6 +418,13 @@
     "emulator": {
       "nav": "Reparación de emuladores",
       "groupNav": "Emuladores",
+      "ports": {
+        "nav": "Consolas y ports",
+        "title": "Consolas y ports",
+        "intro": "Emuladores de consola, ports para PC de juegos de consola y arreglos de la comunidad. Activa los que uses y luego ejecuta la Búsqueda inteligente en Carpetas o agrega ahí la carpeta del juego: cada línea de abajo indica cuántos juegos encontró.",
+        "found": "Encontrados en tu biblioteca: {count}",
+        "none": "Aún no se encontró nada: ejecuta la Búsqueda inteligente en Ajustes > Carpetas o agrega ahí su carpeta."
+      },
       "sectionTitle": "Configuración de emuladores",
       "intro": "Reparación segura y automática para juegos Steam/GBE Fork compatibles.",
       "coreTitle": "Steam / GBE Fork",
@@ -1615,7 +1622,8 @@
       },
       "groupStores": "Plataformas oficiales",
       "groupMemory": "Memoria de la biblioteca",
-      "groupConsoles": "Consolas y retro"
+      "groupConsoles": "Consolas y retro",
+      "groupPorts": "Ports para PC y arreglos de juegos"
     },
     "help": {
       "nav": "Ayuda",

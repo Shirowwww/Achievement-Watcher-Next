@@ -59,7 +59,8 @@ test('every General select sits in a swept container, directly under .right', ()
 });
 
 test('every Sources select sits in a swept source list, directly under .right', () => {
-  const rows = selectsOf('source').filter((row) => row.containers.some((id) => id.startsWith('options-source')));
+  // The consoles and the game fixes live on the Consoles & ports page since #226.
+  const rows = [...selectsOf('source'), ...selectsOf('ports')].filter((row) => row.containers.some((id) => id.startsWith('options-source')));
   assert.ok(rows.length >= 20, `expected every source switch, saw ${rows.length}`);
   for (const row of rows) {
     assert.ok(containers.SOURCE.some((id) => row.containers.includes(id)), `${row.id} is outside every source list`);
@@ -77,7 +78,9 @@ const MOVED_GENERAL = {
 // Emulators and fixes share the first card; EA Desktop and PlayStation Network sit with the official
 // launchers, RPCS3 with the consoles.
 const MOVED_SOURCE = {
-  'options-source': ['option_steamEmu', 'option_greenLuma', 'option_lumaPlay', 'option_runeUplay', 'option_gog', 'option_epic', 'option_xlln', 'option_socialClub', 'option_markerpatch', 'option_madnesspatch', 'option_pcports'],
+  'options-source': ['option_steamEmu', 'option_greenLuma', 'option_lumaPlay', 'option_runeUplay', 'option_gog', 'option_epic', 'option_xlln', 'option_socialClub'],
+  // The game fixes and ports moved with the consoles to the Consoles & ports page (#226).
+  'options-source-ports': ['option_markerpatch', 'option_madnesspatch', 'option_pcports'],
   'options-source-stores': ['option_legitSteam', 'option_ubisoftOfficial', 'option_gogOfficial', 'option_epicOfficial', 'option_ea', 'option_rockstarOfficial', 'option_xboxPc', 'option_psnLibrary'],
   'options-source-consoles': ['option_rpcs3', 'option_shadps4', 'option_kytyps5', 'option_ps4recomp', 'option_ps3recomp', 'option_x360recomp', 'option_xenia', 'option_retroAchievements'],
   // Not a game source, so it left the emulator card for one of its own.
