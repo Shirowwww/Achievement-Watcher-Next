@@ -38,10 +38,22 @@ function* statProgressPairs(localSchema, rawFor) {
 }
 
 /*
-  The Watchdog's form of the same mapping: its parsed save is an array of { name, Achieved,
-  CurProgress, ... }, not a keyed object, so a missing achievement is appended, the larger progress
-  wins, a reached goal marks it unlocked, and the consumed raw stat entries are removed so a stat
-  hash is never announced as an achievement.
+  What a stat tied to an achievement does to that achievement's entry, the one rule of the library
+  and the Watchdog (#225). The furthest of the recorded progress and the stat wins: GBE records
+  progress only when the stat moves, and CODEX writes CurProgress=0 everywhere. The goal fills an
+  empty maximum, and a stat at its goal unlocks the achievement, as Steam does on its own.
+*/
+function applyStat(entry, value, max) {
+  const recorded = Math.max(Number(entry.CurProgress) || 0, Number(entry.progress) || 0);
+  if (value > recorded || !(recorded > 0)) entry.CurProgress = value;
+  if (!(Number(entry.MaxProgress) > 0) && !(Number(entry.max_progress) > 0) && max) entry.MaxProgress = max;
+  if (max > 0 && value >= max) entry.Achieved = true;
+}
+
+/*
+  The same mapping over a parsed list of { name, Achieved, CurProgress, ... }: a missing achievement
+  is appended, and the consumed raw stat entries are removed so a stat hash is never announced as an
+  achievement.
 */
 function mapStatProgressEntries(entries, localSchema) {
   if (!Array.isArray(entries) || !Array.isArray(localSchema) || localSchema.length === 0) return 0;
@@ -61,9 +73,7 @@ function mapStatProgressEntries(entries, localSchema) {
       entries.push(target);
       byName.set(key, target);
     }
-    if (!target.CurProgress || value > Number(target.CurProgress || 0)) target.CurProgress = value;
-    if (!(Number(target.MaxProgress) > 0) && max) target.MaxProgress = max;
-    if (!target.Achieved && max > 0 && value >= max) target.Achieved = true;
+    applyStat(target, value, max);
     consumedStats.add(String(statName).toUpperCase());
     applied++;
   }
@@ -74,6 +84,7 @@ function mapStatProgressEntries(entries, localSchema) {
   return applied;
 }
 
+// The same mapping over a save keyed by name, as the readers return it; names match whatever their case.
 function applyLocalStatProgress(root, localSchema) {
   if (!root || typeof root !== 'object' || !Array.isArray(localSchema) || localSchema.length === 0) return 0;
   const byKey = new Map(Object.keys(root).map((key) => [String(key).toUpperCase(), key]));
@@ -83,19 +94,16 @@ function applyLocalStatProgress(root, localSchema) {
     return statKey ? root[statKey] : undefined;
   };
   for (const { achievement, max, value } of statProgressPairs(localSchema, rawFor)) {
-    if (root[achievement.name] && typeof root[achievement.name] === 'object') {
-      // The furthest of the two wins: GBE records progress only when the stat moves, so either can
-      // lag. CODEX writes CurProgress=0 for every entry, which never beats a value.
-      const entry = root[achievement.name];
-      const recorded = Math.max(Number(entry.CurProgress) || 0, Number(entry.progress) || 0);
-      if (value > recorded || !(recorded > 0)) entry.CurProgress = value;
-      if (!(Number(entry.MaxProgress) > 0) && !(Number(entry.max_progress) > 0) && max) entry.MaxProgress = max;
+    const upper = String(achievement.name).toUpperCase();
+    let key = byKey.get(upper);
+    if (key && root[key] && typeof root[key] === 'object') {
+      applyStat(root[key], value, max);
     } else {
-      root[achievement.name] = {
-        CurProgress: value,
-        MaxProgress: max,
-        Achieved: max > 0 && value >= max ? '1' : '0',
-      };
+      key = key || achievement.name;
+      // An entry the save does not have, written in the save's own form; a bare "1" there is an unlock.
+      const unlocked = root[key] === '1' || (max > 0 && value >= max);
+      root[key] = { CurProgress: value, MaxProgress: max, Achieved: unlocked ? '1' : '0' };
+      byKey.set(upper, key);
     }
     applied++;
   }

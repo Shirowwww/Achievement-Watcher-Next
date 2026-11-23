@@ -34,6 +34,7 @@ const steamLanguages = require(path.join(appPath, 'locale/steam.json'));
 const { isUnambiguousRldBlob, decodeRldBlob } = require('../util/rldBlob.js');
 const { iconCacheDir } = require('../util/dataLayout.js');
 const emuSave = require(path.join(appPath, 'parser/emuSave.js'));
+const saveState = require(path.join(appPath, 'parser/saveState.js'));
 const ff7 = require(path.join(appPath, 'parser/ff7.js'));
 const fs = require('fs');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
@@ -867,23 +868,6 @@ function readFirstSaveFile(filePath) {
   throw `No achievement file found in '${filePath}'`;
 }
 
-// Raw stat values from the sibling Stats.ini, kept so statProgress.js can resolve progress-type
-// achievements via operand1. Tagged non-enumerable so they are stripped from `root` afterward
-// rather than matched against a schema entry named "stat_1".
-function mergeSiblingStats(result, statsDir) {
-  // Stat names come lower-cased while achievement keys keep their casing: compare case-insensitively.
-  const resultKeys = new Set(Object.keys(result).map((k) => String(k).toUpperCase()));
-  const rawStatKeys = [];
-  for (const [name, num] of Object.entries(emuSave.readSiblingStats(statsDir))) {
-    if (resultKeys.has(String(name).toUpperCase())) continue; // never shadow a real achievement entry
-    result[name] = num;
-    rawStatKeys.push(name);
-  }
-  if (rawStatKeys.length > 0) {
-    Object.defineProperty(result, '__rawStatKeys', { value: rawStatKeys, enumerable: false, configurable: true });
-  }
-}
-
 module.exports.getAchievementsFromFile = async (filePath) => {
   // Said plainly rather than as the "path must be of type string" thrown by the first candidate
   // read, which reported a save folder named "undefined" and hid the caller that had none.
@@ -896,7 +880,8 @@ module.exports.getAchievementsFromFile = async (filePath) => {
 
   const { local, matchedFile } = readFirstSaveFile(filePath);
   const result = emuSave.decodeSaveEntries(local);
-  if (/achievements\.ini$/i.test(matchedFile)) mergeSiblingStats(result, path.join(filePath, path.dirname(matchedFile)));
+  // Its Stats.ini, read as the Watchdog reads it (saveState.js).
+  saveState.addSiblingStats(result, path.join(filePath, matchedFile));
   return result;
 };
 

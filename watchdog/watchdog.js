@@ -135,8 +135,7 @@ const xboxPc = require(sharedAppModulePath('parser/xboxPcCore.js'));
 const progressMute = require(sharedAppModulePath('parser/progressMute.js'));
 progressMute.setUserDataPath(userDataDir());
 const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'));
-const { mapStatProgressEntries, findProgressSchema } = require(sharedAppModulePath('parser/statProgress.js'));
-const { readSiblingStats } = require(sharedAppModulePath('parser/emuSave.js'));
+const { findProgressSchema } = require(sharedAppModulePath('parser/statProgress.js'));
 const psnTrophyLink = require(sharedAppModulePath('parser/psnTrophyLinkRead.js'));
 const platinumScope = require(sharedAppModulePath('util/platinumScope.js'));
 // The GOG/Epic -> Steam appid maps (steam_cache/gog.db, epic.db), read and written by their parsers.
@@ -285,11 +284,11 @@ function twinSaveFiles(file) {
 }
 
 // The save file as monitor.parse reads it, merged with its twins' when the game has any.
-async function parseWithTwins(file, twinFiles) {
-  if (twinFiles.length === 0) return monitor.parse(file);
+async function parseWithTwins(file, twinFiles, readOptions) {
+  if (twinFiles.length === 0) return monitor.parse(file, readOptions);
   const [own, ...others] = await Promise.all([
-    monitor.parse(file),
-    ...twinFiles.map((twin) => monitor.parse(twin).catch((err) => {
+    monitor.parse(file, readOptions),
+    ...twinFiles.map((twin) => monitor.parse(twin, readOptions).catch((err) => {
         debug.warn(`Twin save "${twin}" skipped: ${err.message || err}`);
         return [];
       })),
@@ -480,26 +479,6 @@ function findLocalProgressSchema(appID, game) {
   const { schema } = findProgressSchema({ appid: appID, localSchema, cacheDir: userDataDir() });
   if (schema.length > 0) localProgressSchemaCache.set(key, schema);
   return schema;
-}
-
-// CODEX and RUNE keep stats in a stats.ini beside achievements.ini ([UserStats]; OnlineFix: [Stats]).
-// Only the stats the schema names are added, as entries mapStatProgressEntries then folds away.
-function appendSiblingStats(achievements, filePath, progressSchema) {
-  if (!Array.isArray(achievements) || !Array.isArray(progressSchema) || progressSchema.length === 0) return 0;
-  if (path.basename(String(filePath)).toLowerCase() !== 'achievements.ini') return 0;
-  const wanted = new Set(
-    progressSchema.map((a) => a && a.progress && a.progress.value && a.progress.value.operand1).filter(Boolean).map((n) => String(n).toUpperCase())
-  );
-  const present = new Set(achievements.map((a) => String((a && a.name) || '').toUpperCase()));
-  let added = 0;
-  // The library's reader (emuSave.js): its names come lower-cased, matched here case-insensitively.
-  for (const [name, value] of Object.entries(readSiblingStats(path.dirname(filePath)))) {
-    if (!wanted.has(name.toUpperCase()) || present.has(name.toUpperCase())) continue;
-    achievements.push({ name, Achieved: false, CurProgress: value, MaxProgress: 0, UnlockTime: 0 });
-    present.add(name.toUpperCase());
-    added++;
-  }
-  return added;
 }
 
 const indexedGameLookup = createIndexedGameLookup({
@@ -1252,9 +1231,11 @@ var app = {
           // awaitWriteFinish). parseWithRetry below still guards the residual race.
           await waitForFileStable(name);
 
-          // The game's other save folders (its own appid and its shortcut ids) are one save: parsed together.
+          // The game's other save folders (its own appid and its shortcut ids) are one save: parsed together,
+          // each read as the library reads it, stats folded in (saveState.js).
           const twinFiles = options.steamClient || options.appid ? [] : twinSaveFiles(name);
-          const parseSave = options.steamClient ? async () => steamClientStats.readSteamClientUnlocks(name) : () => parseWithTwins(name, twinFiles);
+          const readOptions = { source: game.source, schema: findLocalProgressSchema(appID, game), steamSettings: game.steamSettings || null };
+          const parseSave = options.steamClient ? async () => steamClientStats.readSteamClientUnlocks(name) : () => parseWithTwins(name, twinFiles, readOptions);
           let achievements = await parseWithRetry(parseSave, {
             onError: (err, attempt) => {
               debug.warn(`Achievement parse attempt ${attempt + 1} failed for "${name}": ${err.message || err}`);
@@ -1273,11 +1254,9 @@ var app = {
               objectiveIds: uplayR2.objectiveMapFor(appID),
             });
             if (remapped > 0) debug.log(`[uplay-r2] mapped ${remapped} objective id(s) onto the game's achievement names`);
+            // A stat already folded in under the achievement's name now meets its renamed objective: keep one.
+            if (remapped > 0) achievements = shortcutSaveIds.mergeParsedLists([achievements]);
           }
-          const progressSchema = findLocalProgressSchema(appID, game);
-          appendSiblingStats(achievements, name, progressSchema);
-          const mappedStats = mapStatProgressEntries(achievements, progressSchema);
-          if (mappedStats > 0) debug.log(`Mapped ${mappedStats} stat progress entr${mappedStats === 1 ? 'y' : 'ies'} through the progress schema`);
 
           if (achievements.length > 0) {
             let cache = await track.load(appID);

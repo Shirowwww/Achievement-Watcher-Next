@@ -9,7 +9,9 @@ const debug = require('./util/log.js');
 const { signatureWatchEntries } = require('./util/rootCascade.js');
 const { SOCIALCLUB_ACHIEVEMENT_FILES, isUnderSocialClubRoot } = require(sharedAppModulePath('parser/socialclubNames.js'));
 // The library's own save decoder and root table, so a format or a folder is described once.
-const { readSaveFile, normalizeSaveEntry } = require(sharedAppModulePath('parser/emuSave.js'));
+const { readSaveFile } = require(sharedAppModulePath('parser/emuSave.js'));
+// What a save says about each achievement, read by the library's own function (#225).
+const { saveState, addSaveStats } = require(sharedAppModulePath('parser/saveState.js'));
 const { SAVE_ROOTS, SAVE_FILE_NAMES, GSE_WATCH, rowDir, watchOptions } = require(sharedAppModulePath('parser/emuSaveRoots.js'));
 const { readUserDirEntries } = require(sharedAppModulePath('parser/userDirEntries.js'));
 // Shared with the app so the bit-to-api-name table lives in exactly one place. Only its pure readers
@@ -231,27 +233,22 @@ module.exports.getFolders = async (userDir_file, options = {}, redirectedSaves =
   return withoutDisabled(firstPerFolder(roots), configuredDirs);
 };
 
-// One decoded entry in the shape the notification path reads, judged by the library's own rule.
-function watchdogEntry(key, entry) {
-  const parsed = normalizeSaveEntry(entry);
-  const result = {
-    name: entry.id || entry.apiname || entry.name || entry.AchievementId || key,
-    Achieved: parsed.Achieved,
-    // A raw stat (GBE stats.json) carries its count as `value`, which statProgress.js maps.
-    CurProgress: parsed.CurProgress || entry.value || entry.Value || 0,
-    MaxProgress: parsed.MaxProgress || 0,
-    UnlockTime: parsed.UnlockTime,
-  };
-  if (entry.crc) result.crc = entry.crc;
-  return result;
-}
-
-module.exports.parse = async (filePath) => {
+/*
+  One save file as the notification path reads it, [{ name, crc?, Achieved, CurProgress, MaxProgress,
+  UnlockTime }] newest first, read by the library's own function (saveState.js): the same stats, the
+  same unlocked rule and the date in epoch seconds. `source` is the game's (GOG and Epic emulator
+  saves list only unlocks), `schema` its stats -> achievements table, `steamSettings` its GBE
+  settings when known, which type the stat files of the save's folder.
+*/
+module.exports.parse = async (filePath, { source, schema = [], steamSettings = null } = {}) => {
   const local = await readSaveFile(filePath);
-  const achievements = [];
-  for (const [key, entry] of Object.entries(local)) {
-    if (entry != null) achievements.push(watchdogEntry(key, entry));
-  }
+  addSaveStats(local, { saveFile: filePath, folders: [path.dirname(filePath)], steamSettings, schema });
+  const achievements = saveState(local, { source, schema }).map(({ name, crc, state }) => ({
+    name,
+    ...(crc ? { crc } : {}),
+    ...state,
+    MaxProgress: state.MaxProgress || 0,
+  }));
   achievements.sort((a, b) => b.UnlockTime - a.UnlockTime);
   return achievements;
 };

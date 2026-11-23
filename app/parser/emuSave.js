@@ -213,8 +213,11 @@ function normalizeSaveEntry(entry, source) {
       fields.timestamp ||
       0,
   };
-  // CODEX Gears 5 / Gears Tactics: progress maxed out but the Achieved flag never written.
-  if (!parsed.Achieved && parsed.MaxProgress != 0 && parsed.CurProgress != 0 && parsed.MaxProgress == parsed.CurProgress) parsed.Achieved = true;
+  // Progress at its goal with no Achieved flag written (CODEX Gears 5, Gears Tactics), or a float
+  // counter saved past it (RUNE Death Stranding 2: 80.43 of 80, #225).
+  const current = Number(parsed.CurProgress);
+  const goal = Number(parsed.MaxProgress);
+  if (!parsed.Achieved && goal > 0 && current > 0 && current >= goal) parsed.Achieved = true;
   // RLD! writes no flag, only times (a locked entry has Time=0); an explicit Unlocked=false wins.
   if (!parsed.Achieved && !hasExplicitState && Number(parsed.UnlockTime) > 0) parsed.Achieved = true;
   // Legacy GOG/Epic emulator saves list only unlocked achievements, with no flag.

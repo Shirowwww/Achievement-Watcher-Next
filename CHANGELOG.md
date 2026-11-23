@@ -11,6 +11,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **An achievement the popup announced no longer stays locked in the library.** A game that saves
+  its counter a little past the goal (80.43 of 80 for RUNE's Death Stranding 2) got its popup, while
+  the library waited for the exact value. The library and the popups now read a save with the same
+  code, so they can no longer disagree about what it holds (#225).
 - **Razor1911's GTA IV no longer shows twice once switched to the emulator.** The release's own
   entry stayed next to the emulator's, because the emulator's save was read later in the scan.
 - **A game added by hand no longer gets a bogus ID in its emulator file.** Repairing or installing

@@ -79,12 +79,11 @@ const gameIndex = require(path.join(appPath, 'gameIndex.js'));
 const { userDataDir } = require(path.join(appPath, '..', 'util', 'userDataPath.js'));
 const saveRedirects = require(path.join(appPath, '..', 'util', 'saveRedirects.js'));
 const shortcutSaveIds = require(path.join(appPath, '..', 'util', 'shortcutSaveIds.js'));
-const gbeStatFiles = require(path.join(appPath, 'gbeStatFiles.js'));
 const { resolveAchievementDataPath, achievementDataPaths } = require(path.join(appPath, '..', 'util', 'achievementDataPath.js'));
 const scanFingerprint = require(path.join(appPath, '..', 'util', 'scanFingerprint.js'));
 const exeDetect = require(path.join(appPath, 'exeDetect.js'));
 const installState = require(path.join(appPath, 'installState.js'));
-const { applyLocalStatProgress, resolveProgressSchema, fetchCommunityProgressSchema, fetchCommunityStats } = require(path.join(appPath, 'statProgress.js'));
+const { resolveProgressSchema, fetchCommunityProgressSchema, fetchCommunityStats } = require(path.join(appPath, 'statProgress.js'));
 
 // The Steam client's appcache/stats folder, looked up once per run; null without a client.
 let _steamStatsDir;
@@ -168,7 +167,9 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
 // One raw save entry reduced to { Achieved, CurProgress, MaxProgress?, UnlockTime }, by the rule the
 // Watchdog shares (parser/emuSave.js).
 const { normalizeSaveEntry } = require(path.join(appPath, 'emuSave.js'));
-const { parseUnlockTimeSeconds, MILLISECOND_THRESHOLD } = require('../util/unlockTime.js');
+// What a save says about each achievement, read exactly as the Watchdog reads it.
+const { saveState, entryState, addSaveStats } = require(path.join(appPath, 'saveState.js'));
+const { MILLISECOND_THRESHOLD } = require('../util/unlockTime.js');
 // A millisecond stamp past this is the year 2286 too: what is left is not a time in any unit we read.
 const UNREADABLE_TIME = MILLISECOND_THRESHOLD * 1000;
 
@@ -668,7 +669,7 @@ async function holdsEarnedAchievement(record) {
   if (!data || data.type !== 'file' || typeof data.path !== 'string' || !data.path) return false;
   try {
     const entries = await steam.getAchievementsFromFile(data.path);
-    return Object.values(entries || {}).some((entry) => normalizeSaveEntry(entry, record.source).Achieved);
+    return saveState(entries, { source: record.source }).some((item) => item.state.Achieved);
   } catch {
     return false;
   }
@@ -3420,9 +3421,9 @@ async function readSaveFolderUnlocks(appid, { game, helpers }) {
   let fromFile =
     aliasPaths.length > 0
       ? await shortcutSaveIds.readMergedSaves(steam.getAchievementsFromFile, [appid.data.path, ...aliasPaths], {
-          isEarned: (entry) => normalizeSaveEntry(entry, appid.source).Achieved,
-          timeOf: (entry) => Number(normalizeSaveEntry(entry, appid.source).UnlockTime) || 0,
-          progressOf: (entry) => Number(normalizeSaveEntry(entry, appid.source).CurProgress) || 0,
+          isEarned: (entry) => entryState(null, entry, appid.source).state.Achieved,
+          timeOf: (entry) => entryState(null, entry, appid.source).state.UnlockTime,
+          progressOf: (entry) => Number(entryState(null, entry, appid.source).state.CurProgress) || 0,
         })
       : await steam.getAchievementsFromFile(appid.data.path);
   // The same folder can hold a Steam-emulator save AND a Uplay loader's redirect target
@@ -4764,6 +4765,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       }
 
       const hasSteamSettings = Boolean(appid.data && appid.data.steamSettings);
+      let progressSchema = [];
       if (root && typeof root === 'object' && (hasSteamSettings || Array.isArray(root.__rawStatKeys))) {
         try {
           // A stats file with no steam_settings beside it (CODEX, RUNE) still maps through the
@@ -4779,35 +4781,32 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             schema = await fetchCommunityProgressSchema(appid.appid, { cacheDir: _userDataPath });
             if (schema.length > 0) debug.log(`[${appid.appid}] progress schema fetched from games-infos-datas (${schema.length})`);
           }
-          // GBE's stat files hold a counter's current value, in every save folder of the game (#168).
-          if (hasSteamSettings && typeof appid.data.path === 'string' && appid.data.path) {
+          // GBE's stat files hold a counter's current value, in every save folder of the game (#168);
+          // the Watchdog reads those of the folder it watches, typed by steam_settings when known.
+          if (typeof appid.data.path === 'string' && appid.data.path) {
             const aliases = Array.isArray(appid.data.aliasSavePaths) ? appid.data.aliasSavePaths : [];
-            gbeStatFiles.addSavedStats(root, { folders: [appid.data.path, ...aliases], steamSettings: appid.data.steamSettings, schema });
+            addSaveStats(root, { folders: [appid.data.path, ...aliases], steamSettings: appid.data.steamSettings || null, schema });
           }
-          const applied = applyLocalStatProgress(root, schema);
-          if (applied > 0) debug.log(`[${appid.appid}] mapped ${applied} stat progress entr${applied === 1 ? 'y' : 'ies'} through the progress schema`);
+          progressSchema = schema;
+          if (schema.length > 0) debug.log(`[${appid.appid}] stats mapped through a progress schema of ${schema.length} achievement${schema.length === 1 ? '' : 's'}`);
         } catch (err) {
           debug.log(`[${appid.appid}] local stat progress mapping failed => ${err}`);
         }
       }
 
-      if (root && typeof root === 'object' && Array.isArray(root.__rawStatKeys)) {
-        // Raw Stats.ini values merged in by steam.js purely to feed applyLocalStatProgress above -
-        // not real achievement records. Left in place they'd each fail schema matching below (e.g.
-        // a schema entry literally named "stat_1" never exists) and spam one warning per stat.
-        for (const key of root.__rawStatKeys) delete root[key];
-      }
+      // The save read as the Watchdog reads it: stats folded in and dropped, so a schema entry
+      // literally named "stat_1" is never looked for, and each entry's state.
+      let saved = saveState(root, { source: game.source, schema: progressSchema });
 
-      if (game.achievement.list.length === 0 && root && typeof root === 'object' && Object.keys(root).length > 0) {
+      if (game.achievement.list.length === 0 && saved.length > 0) {
         // No schema to match against at all (e.g. the game has no real Steam achievements) -
         // iterating would just spam one ACH_NOT_FOUND_IN_SCHEMA warning per save entry.
-        debug.warn(`[${appid.appid}] Local save has ${Object.keys(root).length} achievement entr${Object.keys(root).length === 1 ? 'y' : 'ies'} but the schema has none - skipping match`);
-        root = {};
+        debug.warn(`[${appid.appid}] Local save has ${saved.length} achievement entr${saved.length === 1 ? 'y' : 'ies'} but the schema has none - skipping match`);
+        saved = [];
       }
 
-      const rootEntries = root == null ? [] : Object.values(root);
       const schemaIndex = buildAchievementSchemaIndex(game.achievement.list, {
-        includeCrc: rootEntries.some((entry) => entry && entry.crc),
+        includeCrc: saved.some((item) => item.crc),
       });
 
       // Counted, not logged one by one: a save whose api-names no longer line up with the schema
@@ -4816,57 +4815,54 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       // enough to churn the 2 MB parser.log rotation on its own. The aggregate carries the same signal.
       let schemaMissCount = 0;
       let badTimeLogged = false;
-      for (let i in root) {
-        if (Object.prototype.hasOwnProperty.call(root, i)) {
-          try {
-            let achievement = findAchievementInSchema(schemaIndex, root[i], i);
-            if (!achievement) throw 'ACH_NOT_FOUND_IN_SCHEMA';
+      for (const item of saved) {
+        try {
+          let achievement = findAchievementInSchema(schemaIndex, item.entry, item.key);
+          if (!achievement) throw 'ACH_NOT_FOUND_IN_SCHEMA';
 
-            let parsed = normalizeSaveEntry(root[i], game.source);
-            // Epoch seconds from here on; a stamp past milliseconds is a broken save, named once (#212).
-            const rawTime = Number(parsed.UnlockTime);
-            parsed.UnlockTime = parseUnlockTimeSeconds(Number.isFinite(rawTime) ? rawTime : parsed.UnlockTime);
-            if (rawTime >= UNREADABLE_TIME && !badTimeLogged) {
-              badTimeLogged = true;
-              const readAs = parsed.UnlockTime > 0 ? `read as ${new Date(parsed.UnlockTime * 1000).toISOString()}` : 'left undated';
-              debug.warn(`[${appid.appid}] "${game.name}" (${game.source}): ${i} unlock time ${rawTime} is not in seconds or milliseconds, ${readAs}`);
+          // Epoch seconds from here on (saveState.js); a stamp past milliseconds is a broken save, named once (#212).
+          const parsed = { ...item.state };
+          const rawTime = Number(item.rawUnlockTime);
+          if (rawTime >= UNREADABLE_TIME && !badTimeLogged) {
+            badTimeLogged = true;
+            const readAs = parsed.UnlockTime > 0 ? `read as ${new Date(parsed.UnlockTime * 1000).toISOString()}` : 'left undated';
+            debug.warn(`[${appid.appid}] "${game.name}" (${game.source}): ${item.key} unlock time ${rawTime} is not in seconds or milliseconds, ${readAs}`);
+          }
+
+          if (isDuplicate) {
+            if (parsed.Achieved && !achievement.Achieved) {
+              achievement.Achieved = true;
             }
 
-            if (isDuplicate) {
-              if (parsed.Achieved && !achievement.Achieved) {
-                achievement.Achieved = true;
-              }
+            if (
+              (!achievement.CurProgress && parsed.CurProgress > 0) ||
+              (parsed.CurProgress > 0 && parsed.MaxProgress == achievement.MaxProgress && parsed.CurProgress > achievement.CurProgress)
+            ) {
+              achievement.CurProgress = parsed.CurProgress;
+            }
 
-              if (
-                (!achievement.CurProgress && parsed.CurProgress > 0) ||
-                (parsed.CurProgress > 0 && parsed.MaxProgress == achievement.MaxProgress && parsed.CurProgress > achievement.CurProgress)
-              ) {
-                achievement.CurProgress = parsed.CurProgress;
-              }
+            if (!achievement.MaxProgress && parsed.MaxProgress > 0) {
+              achievement.MaxProgress = parsed.MaxProgress;
+            }
 
-              if (!achievement.MaxProgress && parsed.MaxProgress > 0) {
-                achievement.MaxProgress = parsed.MaxProgress;
-              }
-
-              if (option.achievement.timeMergeRecentFirst) {
-                if (!achievement.UnlockTime || achievement.UnlockTime == 0 || parsed.UnlockTime > achievement.UnlockTime) {
-                  achievement.UnlockTime = parsed.UnlockTime;
-                }
-              } else {
-                if (!achievement.UnlockTime || achievement.UnlockTime == 0 || (parsed.UnlockTime > 0 && parsed.UnlockTime < achievement.UnlockTime)) {
-                  achievement.UnlockTime = parsed.UnlockTime;
-                }
+            if (option.achievement.timeMergeRecentFirst) {
+              if (!achievement.UnlockTime || achievement.UnlockTime == 0 || parsed.UnlockTime > achievement.UnlockTime) {
+                achievement.UnlockTime = parsed.UnlockTime;
               }
             } else {
-              Object.assign(achievement, parsed);
+              if (!achievement.UnlockTime || achievement.UnlockTime == 0 || (parsed.UnlockTime > 0 && parsed.UnlockTime < achievement.UnlockTime)) {
+                achievement.UnlockTime = parsed.UnlockTime;
+              }
             }
-            appliedFromThisSource = true;
-          } catch (err) {
-            if (err === 'ACH_NOT_FOUND_IN_SCHEMA') {
-              schemaMissCount++;
-            } else {
-              debug.error(`[${appid.appid}] Unexpected Error: ${err}`);
-            }
+          } else {
+            Object.assign(achievement, parsed);
+          }
+          appliedFromThisSource = true;
+        } catch (err) {
+          if (err === 'ACH_NOT_FOUND_IN_SCHEMA') {
+            schemaMissCount++;
+          } else {
+            debug.error(`[${appid.appid}] Unexpected Error: ${err}`);
           }
         }
       }
