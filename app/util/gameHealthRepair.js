@@ -13,6 +13,7 @@ const path = require('path');
 const unrealLayout = require('./unrealLayout.js');
 const crackLoaderDetect = require('./crackLoaderDetect.js');
 const gbeSchemaFiles = require('../parser/gbeSchema.js');
+const steamApiCallers = require('../parser/steamApiCallers.js');
 
 function sameDir(a, b) {
   if (!a || !b) return false;
@@ -323,9 +324,10 @@ async function switchToSupportedRuntime({
   crack has replaced Valve's dll nothing may be left to generate it from: Dark Souls III over CODEX
   then closed three seconds after every launch. Tried before anything changes, in a throwaway folder.
 */
-async function switchInterfacesReady({ gbeInstaller, plan, cacheDir, steamSettings = null, appid = '', log } = {}) {
+async function switchInterfacesReady({ gbeInstaller, plan, cacheDir, steamSettings = null, gameDir = '', appid = '', log } = {}) {
   if (steamSettings && fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) return { ready: true, reason: '' };
   if (plan.native) return { ready: true, reason: '' };
+  if (steamApiCallers.namesItsInterfaces(gameDir)) return { ready: true, reason: '' };
   const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir, log });
   try {
     const result = await gbeInstaller.tryGenerateInterfaces({

@@ -2185,6 +2185,7 @@ async function runGameHealthAction(appid, action, button) {
           plan,
           cacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'),
           steamSettings,
+          gameDir: game.gameDir,
           appid: ghWritableAppid(appid, game),
           log: debug,
         });

@@ -342,6 +342,35 @@ test('a download failure aborts the install instead of reporting a partial succe
     assert.match(result.reason, /generator exploded/);
   });
 
+  // A game built on SDK 1.37 or later names each interface version itself, so GBE needs no list
+  // (Probably Stolen over CODEX, 2026-11-23: refused as "an older game").
+  test('a game that names its own interface versions switches without steam_interfaces.txt', async () => {
+    const gameDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-switch-modern-'));
+    try {
+      fs.mkdirSync(path.join(gameDir, 'Game_Data', 'Managed'), { recursive: true });
+      fs.writeFileSync(path.join(gameDir, 'Game_Data', 'Managed', 'com.rlabrecque.steamworks.net.dll'), Buffer.from('MZ....SteamAPI_SteamUserStats_v013\0'));
+      fs.writeFileSync(path.join(gameDir, 'steam_api64.dll'), Buffer.from('MZ SteamAPI_SteamUserStats_v013 from the crack itself'));
+      const stub = stubWith(async () => ({ generated: false, reason: 'no-interfaces' }));
+      const plan = planRuntimeInstall({ gbeInstaller: stub, gameDir: 'C:/Jeux/DS3', arch: 'x64' });
+      assert.deepEqual(await switchInterfacesReady({ gbeInstaller: stub, plan, gameDir, cacheDir: 'C:/cache', steamSettings: null }), { ready: true, reason: '' });
+    } finally {
+      fs.rmSync(gameDir, { recursive: true, force: true });
+    }
+  });
+
+  test('an older game whose only versioned names are in the crack dll still needs the list', async () => {
+    const gameDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-switch-old-'));
+    try {
+      fs.writeFileSync(path.join(gameDir, 'Game.exe'), Buffer.from('MZ....SteamUserStats\0SteamAPI_Init\0'));
+      fs.writeFileSync(path.join(gameDir, 'steam_api64.dll'), Buffer.from('MZ SteamAPI_SteamUserStats_v013'));
+      const stub = stubWith(async () => ({ generated: false, reason: 'no-interfaces' }));
+      const plan = planRuntimeInstall({ gbeInstaller: stub, gameDir: 'C:/Jeux/DS3', arch: 'x64' });
+      assert.deepEqual(await switchInterfacesReady({ gbeInstaller: stub, plan, gameDir, cacheDir: 'C:/cache', steamSettings: null }), { ready: false, reason: 'no-interfaces' });
+    } finally {
+      fs.rmSync(gameDir, { recursive: true, force: true });
+    }
+  });
+
   test('a steam_interfaces.txt already in steam_settings is enough, without running the generator', async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-switch-ready-'));
     try {
