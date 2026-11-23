@@ -731,13 +731,15 @@ module.exports.unlocksForSchema = async (appid, schemaList, lang, { forceRecheck
   const remedyEarned = data.runeEpic && remedyAchievements.isAlanWake2(data) ? remedyAchievements.readRemedyAlanWake2Unlocks() : {};
   const unlocks = await module.exports.getAchievements(appid, { forceRecheck, lang });
   const earned = {};
-  Object.assign(earned, remedyEarned);
+  const schema = await resolveSchema(appid?.data?.namespace, lang);
+  for (const [name, value] of Object.entries(remedyEarned)) {
+    earned[name] = value;
+  }
   for (const [name, value] of Object.entries(unlocks || {})) {
     if (!value?.earned) continue;
     earned[name] = { Achieved: true, UnlockTime: Number(value.earned_time) || 0 };
   }
   if (Object.keys(earned).length === 0) return {};
-  const schema = await resolveSchema(appid?.data?.namespace, lang);
   return require('../util/crossSchemaUnlocks.js').remapUnlocksOntoSchema(earned, schema?.list || [], schemaList);
 };
 
