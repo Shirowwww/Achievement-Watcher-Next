@@ -123,10 +123,12 @@ Everything runs on parts of Windows, with no third-party media library:
   and without the border where Windows can turn it off (a `log desktop duplication refused` line).
   Duplication also refuses a recorder running on another GPU than the one that drives the screen,
   as on a laptop whose panel hangs off the integrated GPU while a driver profile starts apps on the
-  discrete one. When no choice is stored for `aw-next-clip.exe` in
-  `HKCU\Software\Microsoft\DirectX\UserGpuPreferences` (Settings > Display > Graphics), the recorder
-  stores the screen's GPU there (`gpu.rs`) and exits with code 5; Windows applies it to the next
-  process only, and the Watchdog starts that one at once.
+  discrete one. When the entry for `aw-next-clip.exe` in
+  `HKCU\Software\Microsoft\DirectX\UserGpuPreferences` (Settings > Display > Graphics) names no GPU
+  (missing, "Let Windows decide", or other settings only), the recorder stores the screen's GPU
+  there, keeping the rest of the entry (`gpu.rs`), and exits with code 5; Windows applies it to the
+  next process only, and the Watchdog starts that one at once. Each reason it stays put is logged
+  with a `gpu:` line.
   For development, `--capture graphics` takes that path on any desktop (whole monitor),
   `--capture crop` takes the Windows 10 cropping path on Windows 11, and `--capture crop-graphics`
   crops a Windows Graphics Capture of the monitor.

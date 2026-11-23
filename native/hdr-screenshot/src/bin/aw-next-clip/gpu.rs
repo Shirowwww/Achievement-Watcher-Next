@@ -15,6 +15,8 @@ use windows::Win32::System::LibraryLoader::{GetProcAddress, LOAD_LIBRARY_SEARCH_
 use windows::Win32::System::Registry::*;
 use windows::core::*;
 
+use crate::log;
+
 // Where Settings > Display > Graphics keeps its per-app choices, one "GpuPreference=N;" per path.
 const PREFERENCES_KEY: PCWSTR = w!("Software\\Microsoft\\DirectX\\UserGpuPreferences");
 const POWER_SAVING: u32 = 1;
@@ -103,22 +105,55 @@ fn hardware_gpus() -> Vec<(Ids, bool)> {
         .collect()
 }
 
-// Stores `preference` for this executable unless a choice is already there: one made in Settings
-// is the user's, and an earlier one of ours already had its chance.
-fn store(exe: &Path, preference: u32) -> Result<bool> {
+// The value to store for `preference` given what the executable's entry holds now, or None when it
+// already names a GPU: one picked in Settings is the user's, and an earlier one of ours had its
+// chance. "Let Windows decide" (0) and other settings in the entry (Windows 11 keeps windowed-game
+// optimizations there) are no GPU choice: the first is replaced, the others kept.
+pub fn merged_preference(existing: Option<&str>, preference: u32) -> Option<String> {
+    let parts: Vec<&str> = existing.unwrap_or("").split(';').map(str::trim).filter(|part| !part.is_empty()).collect();
+    let chosen = parts.iter().filter_map(|part| part.strip_prefix("GpuPreference=")).any(|value| value.trim() != "0");
+    if chosen {
+        return None;
+    }
+    let kept: String = parts.iter().filter(|part| !part.starts_with("GpuPreference=")).map(|part| format!("{part};")).collect();
+    Some(format!("{kept}GpuPreference={preference};"))
+}
+
+fn read_value(key: HKEY, name: &HSTRING) -> Option<String> {
+    let mut size = 0u32;
+    if unsafe { RegQueryValueExW(key, name, None, None, None, Some(&mut size)) } != ERROR_SUCCESS {
+        return None;
+    }
+    let mut buffer = vec![0u16; (size as usize).div_ceil(2) + 1];
+    let mut bytes = (buffer.len() * 2) as u32;
+    if unsafe { RegQueryValueExW(key, name, None, None, Some(buffer.as_mut_ptr().cast()), Some(&mut bytes)) } != ERROR_SUCCESS {
+        return None;
+    }
+    Some(text(&buffer))
+}
+
+// Stores `preference` for this executable when its entry names no GPU yet (merged_preference).
+// Ok(None) when stored, Ok(Some(entry)) with the entry left as it is otherwise.
+fn store(exe: &Path, preference: u32) -> Result<Option<String>> {
     let mut key = HKEY::default();
     unsafe {
         RegCreateKeyExW(HKEY_CURRENT_USER, PREFERENCES_KEY, None, PCWSTR::null(), REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE | KEY_SET_VALUE, None, &mut key, None).ok()?;
     }
     let name = HSTRING::from(exe.as_os_str());
-    let stored = if unsafe { RegQueryValueExW(key, &name, None, None, None, None) } == ERROR_SUCCESS {
-        Ok(false)
-    } else {
-        let value: Vec<u8> = format!("GpuPreference={preference};").encode_utf16().chain([0]).flat_map(u16::to_le_bytes).collect();
-        unsafe { RegSetValueExW(key, &name, None, REG_SZ, Some(&value)) }.ok().map(|()| true)
+    let existing = read_value(key, &name);
+    let stored = match merged_preference(existing.as_deref(), preference) {
+        None => Ok(Some(existing.unwrap_or_default())),
+        Some(entry) => {
+            let value: Vec<u8> = entry.encode_utf16().chain([0]).flat_map(u16::to_le_bytes).collect();
+            unsafe { RegSetValueExW(key, &name, None, REG_SZ, Some(&value)) }.ok().map(|()| None)
+        }
     };
     let _ = unsafe { RegCloseKey(key) };
     stored
+}
+
+fn ids_text((vendor, device): Ids) -> String {
+    format!("{vendor:04x}:{device:04x}")
 }
 
 // After duplication was refused: when the display hangs off another GPU than `device`'s, asks Windows
@@ -129,12 +164,41 @@ pub fn follow_display(device: &ID3D11Device, display: &[u16]) -> bool {
         let adapter: IDXGIAdapter1 = unsafe { device.cast::<IDXGIDevice>()?.GetAdapter()? }.cast()?;
         unsafe { adapter.GetDesc1() }
     })();
-    let (Ok(current), Some(gpu)) = (current, display_gpu(display)) else { return false };
-    if gpu == (current.VendorId, current.DeviceId) {
+    // Each way out is logged: a laptop that keeps the yellow frame otherwise says nothing (22/11/2026).
+    let Ok(current) = current else {
+        log("gpu: the recorder's own GPU could not be read, staying on it");
+        return false;
+    };
+    let own = (current.VendorId, current.DeviceId);
+    let Some(gpu) = display_gpu(display) else {
+        log(&format!("gpu: no GPU found for display {}, staying on {}", text(display), ids_text(own)));
+        return false;
+    };
+    if gpu == own {
+        log(&format!("gpu: the screen hangs off the recorder's own GPU ({}), nothing to change", ids_text(gpu)));
         return false;
     }
-    let Some(preference) = preference_for(gpu, &hardware_gpus()) else { return false };
-    std::env::current_exe().ok().is_some_and(|exe| store(&exe, preference).unwrap_or(false))
+    let gpus = hardware_gpus();
+    let Some(preference) = preference_for(gpu, &gpus) else {
+        let listed: Vec<String> = gpus.iter().map(|&(ids, integrated)| format!("{}{}", ids_text(ids), if integrated { " integrated" } else { "" })).collect();
+        log(&format!("gpu: no Windows choice lands on the screen's GPU {} (GPUs: {})", ids_text(gpu), listed.join(", ")));
+        return false;
+    };
+    let Ok(exe) = std::env::current_exe() else {
+        log("gpu: the recorder's own path could not be read");
+        return false;
+    };
+    match store(&exe, preference) {
+        Ok(None) => true,
+        Ok(Some(entry)) => {
+            log(&format!("gpu: Windows already holds a GPU choice for the recorder ({entry}), left as it is"));
+            false
+        }
+        Err(error) => {
+            log(&format!("gpu: the GPU choice could not be stored: {}", error.message()));
+            false
+        }
+    }
 }
 
 #[cfg(test)]
@@ -168,5 +232,30 @@ mod tests {
         assert_eq!(preference_for(NVIDIA, &[(NVIDIA, false)]), None, "one GPU: nothing to choose");
         assert_eq!(preference_for(NVIDIA, &[(NVIDIA, false), (AMD, false)]), None, "two discrete GPUs");
         assert_eq!(preference_for(INTEL, &[(NVIDIA, false)]), None, "a GPU DXCore does not list");
+    }
+
+    #[test]
+    fn a_gpu_picked_in_settings_is_kept() {
+        assert_eq!(merged_preference(Some("GpuPreference=2;"), POWER_SAVING), None);
+        assert_eq!(merged_preference(Some("SwapEffectUpgradeEnable=1;GpuPreference=1;"), HIGH_PERFORMANCE), None);
+    }
+
+    #[test]
+    fn no_entry_or_let_windows_decide_takes_the_screens_gpu() {
+        assert_eq!(merged_preference(None, POWER_SAVING).as_deref(), Some("GpuPreference=1;"));
+        assert_eq!(merged_preference(Some("GpuPreference=0;"), POWER_SAVING).as_deref(), Some("GpuPreference=1;"));
+        assert_eq!(merged_preference(Some(""), HIGH_PERFORMANCE).as_deref(), Some("GpuPreference=2;"));
+    }
+
+    #[test]
+    fn other_settings_in_the_entry_are_kept() {
+        assert_eq!(
+            merged_preference(Some("SwapEffectUpgradeEnable=1;"), POWER_SAVING).as_deref(),
+            Some("SwapEffectUpgradeEnable=1;GpuPreference=1;")
+        );
+        assert_eq!(
+            merged_preference(Some("GpuPreference=0;SwapEffectUpgradeEnable=1;"), POWER_SAVING).as_deref(),
+            Some("SwapEffectUpgradeEnable=1;GpuPreference=1;")
+        );
     }
 }

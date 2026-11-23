@@ -30,6 +30,9 @@ renamed in 3.9.0 and the history is kept under one file.
   achievement file from the Achievements mod's list, it read that file instead of the mod and
   showed question marks: the mod's icons were never copied next to it. The mod's list is read
   first now, and a repair copies its icons.
+- **The clip recorder moves to the screen's graphics card in more cases.** A laptop where Windows
+  is set to "Let Windows decide" for the recorder, or where Windows 11 keeps other settings for it,
+  still got the yellow frame. The log now also says why the recorder stays on its card.
 
 ## 3.12.8 - 2026-11-22
 
