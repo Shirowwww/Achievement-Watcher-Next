@@ -282,6 +282,19 @@ function titleIdForGpd(gpdPath) {
 
 const titleIdFromPath = (gpdPath) => titleIdForGpd(gpdPath) || path.basename(gpdPath, path.extname(gpdPath));
 
+/*
+  Every Xenia profile keeps its own copy of a title's GPD, so the Watchdog's unlock baseline is kept
+  per profile: one baseline shared by two profiles announced a profile's old unlocks on switching.
+*/
+function baselineKeyForGpd(gpdPath) {
+  const titleId = titleIdFromPath(gpdPath);
+  const parent = path.dirname(gpdPath);
+  const profile = path.basename(parent) === '00000001' ? path.basename(path.dirname(path.dirname(parent))) : path.basename(parent);
+  return HEX16.test(profile) ? `${titleId}_${profile}` : titleId;
+}
+
+module.exports.baselineKeyForGpd = baselineKeyForGpd;
+
 // Relative to a content root, then relative to a folder picked inside the tree (a guide often
 // points at the profile folder holding the .gpd files rather than at the emulator).
 const CONTENT_GLOBS = ['*/*/00000001/*.gpd', '*/FFFE07D1/00010000/*/*.gpd'];
@@ -331,8 +344,7 @@ async function configuredStorageRoots(dir) {
 module.exports.scan = async (dir) => {
   // Lazy-require fast-glob to keep parity with the other parsers (already a dependency).
   const glob = require('fast-glob');
-  const data = [];
-  const seen = new Set();
+  const order = [];
 
   const contentRoots = [];
   const pushRoot = (root) => {
@@ -348,22 +360,27 @@ module.exports.scan = async (dir) => {
   const searches = contentRoots.map((cwd) => ({ cwd, patterns: CONTENT_GLOBS }));
   if (contentRoots.length === 0) searches.push({ cwd: dir, patterns: INNER_GLOBS });
 
+  // With several profiles a title has one GPD each; the one written last is the profile being played.
+  const newest = new Map();
   for (const { cwd, patterns } of searches) {
     let gpds;
     try {
-      gpds = await glob(patterns, { cwd, onlyFiles: true, absolute: true, caseSensitiveMatch: false, suppressErrors: true });
+      gpds = await glob(patterns, { cwd, onlyFiles: true, absolute: true, caseSensitiveMatch: false, suppressErrors: true, stats: true });
     } catch {
       continue;
     }
-    for (const gpd of gpds) {
+    for (const { path: gpd, stats } of gpds) {
       const titleId = titleIdForGpd(gpd);
-      if (!titleId || seen.has(titleId.toUpperCase())) continue;
-      seen.add(titleId.toUpperCase());
-      data.push({ appid: titleId, source: 'Xenia Emulator', data: { type: 'xenia', path: path.normalize(gpd) } });
+      if (!titleId) continue;
+      const key = titleId.toUpperCase();
+      const mtime = stats ? stats.mtimeMs : 0;
+      const known = newest.get(key);
+      if (!known) order.push(key);
+      if (!known || mtime > known.mtime) newest.set(key, { titleId, gpd, mtime });
     }
   }
 
-  return data;
+  return order.map((key) => newest.get(key)).map(({ titleId, gpd }) => ({ appid: titleId, source: 'Xenia Emulator', data: { type: 'xenia', path: path.normalize(gpd) } }));
 };
 
 function exists(p) {

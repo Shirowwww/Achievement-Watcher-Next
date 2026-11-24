@@ -34,6 +34,17 @@ test('both Xenia layouts are watched, dashboard GPDs are not', () => {
   assert.deepEqual(targets.map((t) => t.titleId).sort(), ['4D5307E6', 'ABCD1234']);
 });
 
+// Only the first profile's copy of a title was watched, so unlocks on a second profile never notified.
+test('a title is watched in every profile, each with a baseline of its own', () => {
+  const root = makeTempDir('aw-xenia-watch-');
+  const gpdIn = (xuid) => path.join('content', xuid, 'FFFE07D1', '00010000', xuid, '4D5307E6.gpd');
+  tree(root, [gpdIn('E0300000AAAAAAAA'), gpdIn('E0300000BBBBBBBB')]);
+
+  const targets = discover(config(root, [root]));
+  assert.deepEqual(targets.map((t) => t.titleId), ['4D5307E6', '4D5307E6']);
+  assert.deepEqual(targets.map((t) => t.key).sort(), ['4D5307E6_E0300000AAAAAAAA', '4D5307E6_E0300000BBBBBBBB']);
+});
+
 // Every watcher reads the saved folders through userDirEntries.js; Xenia once read a disabled one anyway.
 test('a saved folder that is turned off is not watched', () => {
   const root = makeTempDir('aw-xenia-watch-');

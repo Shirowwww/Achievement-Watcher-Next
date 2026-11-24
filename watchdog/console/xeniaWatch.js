@@ -59,10 +59,12 @@ function discover(configFile = kit.userDirFile()) {
       return [];
     }
   };
+  // Every profile's copy of a title is watched: only the first one found was, so an unlock on any
+  // other profile never notified.
   const add = (titleId, dataDir, gpdPath) => {
-    if (seen.has(titleId.toLowerCase())) return;
-    targets.push({ titleId, dataDir, gpdPath });
-    seen.add(titleId.toLowerCase());
+    if (seen.has(gpdPath.toLowerCase())) return;
+    targets.push({ titleId, dataDir, gpdPath, key: xenia.baselineKeyForGpd(gpdPath) });
+    seen.add(gpdPath.toLowerCase());
   };
   // Older builds: <titleID>/00000001/<titleID>.gpd. Only the title's own GPD carries its achievements.
   const legacyTitle = (titleDir) => {
@@ -119,7 +121,7 @@ async function handleChange(target, ctx) {
     const gameName = data.title || target.titleId;
 
     const achievedNow = data.list.filter((a) => a.achieved);
-    const cache = cacheLoad(target.titleId);
+    const cache = cacheLoad(target.key);
     const isFirstObservation = !cache || !Array.isArray(cache.unlocked);
 
     // First observation: record the baseline silently so a pre-existing profile full of earned
@@ -129,7 +131,7 @@ async function handleChange(target, ctx) {
       let delay = 0;
       for (const a of achievedNow) {
         if (prev.has(String(a.id))) continue;
-        if (isDuplicateUnlock(target.titleId, a.id)) continue;
+        if (isDuplicateUnlock(target.key, a.id)) continue;
         debug.log(`[xenia] Unlocked: ${gameName} - ${a.displayName}`);
         const iconPath = ensureIcon(target.titleId, a.imageId, data.imagesById);
         await ctx.notify(
@@ -154,9 +156,9 @@ async function handleChange(target, ctx) {
       }
     }
 
-    cacheSave(target.titleId, achievedNow.map((a) => a.id));
+    cacheSave(target.key, achievedNow.map((a) => a.id));
   } catch (err) {
-    debug.warn(`[xenia] handleChange failed for ${target.titleId}: ${err}`);
+    debug.warn(`[xenia] handleChange failed for ${target.key}: ${err}`);
   }
 }
 
@@ -178,12 +180,12 @@ module.exports.start = async (ctx) => {
 
   for (const target of targets) {
     // Seed the baseline up front so we never replay a back-catalogue of unlocks on launch.
-    if (!cacheLoad(target.titleId)) {
+    if (!cacheLoad(target.key)) {
       try {
         const data = read(target.gpdPath);
-        if (data) cacheSave(target.titleId, data.list.filter((a) => a.achieved).map((a) => a.id));
+        if (data) cacheSave(target.key, data.list.filter((a) => a.achieved).map((a) => a.id));
       } catch (err) {
-        debug.warn(`[xenia] baseline seed failed for ${target.titleId}: ${err}`);
+        debug.warn(`[xenia] baseline seed failed for ${target.key}: ${err}`);
       }
     }
     const wantedFile = path.basename(target.gpdPath).toLowerCase();
@@ -191,9 +193,9 @@ module.exports.start = async (ctx) => {
       if (evt !== 'update') return;
       // Only the title's own GPD matters - Xenia touching sibling files must not re-trigger.
       if (String(path.basename(name || '')).toLowerCase() !== wantedFile) return;
-      changes.run(target.titleId, () => handleChange(target, ctx));
+      changes.run(target.key, () => handleChange(target, ctx));
     });
-    if (w) debug.log(`[xenia] watching achievements for ${target.titleId}`);
+    if (w) debug.log(`[xenia] watching achievements for ${target.key}`);
   }
 };
 

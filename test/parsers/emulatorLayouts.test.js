@@ -103,6 +103,22 @@ test('Xenia scans the configured content root, not only <dir>/content', async ()
   assert.deepEqual(found.map((entry) => entry.appid), ['4D5308ED']);
 });
 
+test('with two Xenia profiles, a title is read from the one written last', async () => {
+  const emulator = tmpdir('aw-xenia-profiles-');
+  const gpdIn = (xuid) => path.join(emulator, 'content', xuid, 'FFFE07D1', '00010000', xuid, '4D5307E6.gpd');
+  for (const [xuid, when] of [
+    ['E0300000AAAAAAAA', 1700000000],
+    ['E0300000BBBBBBBB', 1800000000],
+  ]) {
+    fs.mkdirSync(path.dirname(gpdIn(xuid)), { recursive: true });
+    fs.writeFileSync(gpdIn(xuid), Buffer.alloc(4));
+    fs.utimesSync(gpdIn(xuid), when, when);
+  }
+
+  const found = await xenia.scan(emulator);
+  assert.deepEqual(found.map((entry) => [entry.appid, entry.data.path]), [['4D5307E6', path.normalize(gpdIn('E0300000BBBBBBBB'))]]);
+});
+
 test('Xenia still works with no config file at all', async () => {
   const emulator = tmpdir('aw-xenia-plain-');
   const gpdDir = path.join(emulator, 'content', '0009041500000000', 'ABCD1234', '00000001');

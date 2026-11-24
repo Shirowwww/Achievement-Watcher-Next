@@ -25,6 +25,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Xenia achievements notify on every profile.** With two Xenia profiles, only the first one found
+  was watched, so unlocks on the other never showed a popup, and the library could show the wrong
+  profile. Every profile is watched now, and the library shows the profile played last.
 - **Driveclub played with DCport now shows its trophies (#226).** DCport keeps the game folder in
   `dcport-launcher.json`, which PS4 Recomp did not read, so the port was listed as an unknown game
   instead. A launcher's settings named after it are now read too.

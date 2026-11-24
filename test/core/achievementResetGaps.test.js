@@ -132,6 +132,15 @@ test('the console baseline is emptied, not deleted, so the next unlock is not ta
   assert.deepEqual(JSON.parse(String(after.get(baseline))), { unlocked: [] });
 });
 
+test('a Xenia reset empties the baseline of the profile the game is read from', () => {
+  const profile = tempProfile();
+  const xuid = 'E0300000DEADBEEF';
+  const gpd = write(path.join(profile, 'content', xuid, 'FFFE07D1', '00010000', xuid, '4D5307E6.gpd'), Buffer.alloc(4));
+  const baseline = write(path.join(profile, 'steam_cache', 'console', `xenia-4D5307E6_${xuid}.json`), JSON.stringify({ unlocked: [1, 2] }));
+  const { after } = resetAndRestore({ appid: '4D5307E6', source: 'Xenia Emulator', dataPaths: [{ source: 'Xenia Emulator', path: gpd }] }, [baseline]);
+  assert.deepEqual(JSON.parse(String(after.get(baseline))), { unlocked: [] });
+});
+
 test('the app names console baselines exactly as the Watchdog does', () => {
   const dir = makeTempDir('aw-baseline-names-');
   for (const [prefix, key] of [

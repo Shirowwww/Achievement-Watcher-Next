@@ -113,7 +113,7 @@ function consoleKeys(game, source) {
   const appid = String(game.appid || '');
   const roots = dataRoots(game, source);
   if (source === 'rpcs3 emulator') return roots.map((root) => path.basename(root));
-  if (source === 'xenia emulator') return [appid, ...roots.map((root) => path.parse(root).name)];
+  if (source === 'xenia emulator') return [appid, ...roots.flatMap((root) => [path.parse(root).name, lazy('xenia.js').baselineKeyForGpd(root)])];
   if (source === 'xlivelessness') return [appid.replace(/^xlln-/i, '')];
   return [appid];
 }
