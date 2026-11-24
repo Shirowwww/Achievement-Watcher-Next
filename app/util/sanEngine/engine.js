@@ -193,6 +193,15 @@
     return Math.max(Math.round(num(percent, 0) * 10) / 10, 0.1);
   }
 
+  // SAN always has a rate. With none (an emulator, a test), the score reads like SAN's own test popup.
+  const UNKNOWN_RATE = 50;
+  function knownRate(percent) {
+    return num(percent, null) !== null;
+  }
+  function scoreRate(percent) {
+    return knownRate(percent) ? percentValue(percent) : UNKNOWN_RATE;
+  }
+
   /*
     Every custom property SAN's page sets, from one customisation. `ctx.url(value)` turns a theme
     asset into something a stylesheet can load; nothing here touches the DOM.
@@ -357,7 +366,7 @@
 
   // The " (12.3%)" SAN appends to a line, or '' when its setting says not to.
   function percentSuffix(customisation, ctx) {
-    if (customisation && customisation.percentbadge) return '';
+    if ((customisation && customisation.percentbadge) || !knownRate(ctx.percent)) return '';
     const show = ctx.showpercent || 'rareonly';
     const type = ctx.type;
     const shown = ((type === 'main' || type === 'semi') && show === 'all') || (type === 'rare' && show !== 'off');
@@ -447,7 +456,7 @@
 
     const percent = percentValue(info.percent);
     const thresholds = opts.thresholds || {};
-    if (c.percentbadge) {
+    if (c.percentbadge && knownRate(info.percent)) {
       for (const wrapper of doc.querySelectorAll('.wrapper#achiconwrapper')) {
         const badge = doc.createElement('span');
         badge.id = 'badge';
@@ -476,7 +485,7 @@
 
     const props = computeProperties(c, {
       url: url,
-      percent: percent,
+      percent: scoreRate(info.percent),
       tier: PICTURE_TIERS.indexOf(opts.tier) !== -1 ? opts.tier : STATE_TIER[type],
       thresholds: thresholds,
       background: background,
@@ -574,6 +583,7 @@
     customisationFor: customisationFor,
     textLines: textLines,
     percentValue: percentValue,
+    scoreRate: scoreRate,
     percentSuffix: percentSuffix,
     computeProperties: computeProperties,
     bodyAttributes: bodyAttributes,

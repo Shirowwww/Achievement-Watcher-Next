@@ -25,6 +25,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **An imported SAN theme no longer scores an unlock with no known rate as the rarest.** The Xbox
+  360 and GFWL cards printed 100G for a test popup or an emulator unlock; they now print what SAN's
+  own test shows, and no made-up rate appears in the text.
 - **Opening the window no longer wakes the controller with pad navigation off (#217).** 3.12.8
   stopped the window's own navigation from listening for pads, but Settings and Help still read
   them to name buttons, so an Xbox controller could still drop when the window opened. Every part

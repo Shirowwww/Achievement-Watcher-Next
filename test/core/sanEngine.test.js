@@ -126,6 +126,17 @@ test('the three lines follow the theme custom text, the game title, and the comp
   assert.equal(engine.textLines({ customtextunlockmsg: 'GG' }, info, strings).unlockmsg, 'Unlocked');
 });
 
+// SAN always knows the rate; AW Next often does not (emulators, tests). Read as 0.1%, every such
+// unlock printed 100G and "(0.1%)" like the rarest one (a Discord report on the Xbox 360 card).
+test('an unknown unlock rate scores and prints as an ordinary unlock, never as the rarest', () => {
+  for (const unknown of [null, undefined, '', 'n/a']) {
+    assert.equal(engine.scoreRate(unknown), 50, `${String(unknown)} scores like SAN's own test popup`);
+    assert.equal(engine.percentSuffix({}, { type: 'main', percent: unknown, showpercent: 'all' }), '', 'no made-up rate in the text');
+  }
+  assert.equal(engine.scoreRate(4.26), 4.3, 'a known rate is used as it is');
+  assert.equal(engine.scoreRate(0), 0.1);
+});
+
 test('the unlock rate is printed the way SAN prints it, only when its setting says so', () => {
   assert.equal(engine.percentValue(12.345), 12.3);
   assert.equal(engine.percentValue(0), 0.1);
