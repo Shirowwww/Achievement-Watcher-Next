@@ -37,11 +37,12 @@ function readAttributes(text) {
   return attrs;
 }
 
-// Grant is local time without a zone; a value that carries one is read as written.
+// Grant is UTC without a zone (a real file said 17:55:15, written at 19:55:15 in Paris, UTC+2);
+// a value that carries a zone is read as written. Read as local time, unlocks were hours off (#229).
 function grantSeconds(value) {
   const text = String(value || '').trim();
-  const local = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})$/.exec(text);
-  const ms = local ? new Date(+local[1], local[2] - 1, +local[3], +local[4], +local[5], +local[6]).getTime() : Date.parse(text);
+  const utc = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})$/.exec(text);
+  const ms = utc ? Date.UTC(+utc[1], utc[2] - 1, +utc[3], +utc[4], +utc[5], +utc[6]) : Date.parse(text);
   return Number.isFinite(ms) && ms > 0 ? Math.floor(ms / 1000) : 0;
 }
 

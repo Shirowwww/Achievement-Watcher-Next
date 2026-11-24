@@ -25,6 +25,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **EA games cracked by anadius show the right unlock time, and notify again (#229).** anadius writes
+  the time in UTC and AW Next read it as local time, so east of UTC unlocks looked hours old and were
+  skipped as too old to announce. Times already recorded correct themselves.
 - **Xenia achievements notify on every profile.** With two Xenia profiles, only the first one found
   was watched, so unlocks on the other never showed a popup, and the library could show the wrong
   profile. Every profile is watched now, and the library shows the profile played last.

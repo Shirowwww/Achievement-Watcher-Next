@@ -13,7 +13,8 @@ const SAMPLE = `<Achievements GameName="EA SPORTS FC 24" ContentId="198235">
     <Achievement Id="38" Count="1" Progress="1" Grant="2023-10-21T17:55:15" Name="European Legend"/>
 </Achievements>
 `;
-const SAMPLE_GRANT = Math.floor(new Date(2023, 9, 21, 17, 55, 15).getTime() / 1000);
+// A real LSX file: written at 19:55:15 in Paris (UTC+2 that day), it says 17:55:15. Grant is UTC.
+const SAMPLE_GRANT = Date.UTC(2023, 9, 21, 17, 55, 15) / 1000;
 const FC24_NAMES = { 'European Legend': 'ACH_EUROPEAN_LEGEND', 'Hat-Trick Hero': 'ACH_HATTRICK' };
 
 function tempDir(t) {
@@ -29,7 +30,14 @@ function seedNative(root, xmlName, text) {
   return nativeDir;
 }
 
-test('the LSX sample is read with its game, id, name and Grant as local time', () => {
+// #229: read as local time, a player at UTC+5 saw every unlock 5 hours early and no popup at all.
+test('the LSX sample is read with its game, id, name and Grant as UTC, whatever the time zone', (t) => {
+  const zone = process.env.TZ;
+  process.env.TZ = 'Asia/Karachi';
+  t.after(() => {
+    if (zone === undefined) delete process.env.TZ;
+    else process.env.TZ = zone;
+  });
   const parsed = anadius.parseNativeXml(`\uFEFF${SAMPLE}`);
 
   assert.equal(parsed.gameName, 'EA SPORTS FC 24');
@@ -223,6 +231,6 @@ test('the offline conversion writes a new unlock from the stored map', async (t)
 
   assert.equal(result.status, 'written');
   const save = await readSaveFile(anadius.exportFile(nativeDir, '2195250'));
-  assert.equal(Number(normalizeSaveEntry(save.ACH_HATTRICK).UnlockTime), Math.floor(new Date(2024, 0, 2, 3, 4, 5).getTime() / 1000));
+  assert.equal(Number(normalizeSaveEntry(save.ACH_HATTRICK).UnlockTime), Date.UTC(2024, 0, 2, 3, 4, 5) / 1000);
   assert.equal(anadius.convertFromMap({ xmlPath: path.join(nativeDir, 'achievement-9.xml'), mapFile }).status, 'unmapped');
 });
