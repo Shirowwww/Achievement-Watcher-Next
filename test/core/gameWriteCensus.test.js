@@ -111,9 +111,9 @@ function actionFiles() {
 
 function callsIn(source, writer) {
   const name = writer.split('.').pop();
-  const escaped = writer.replace(/\./g, '\\.');
+  const escaped = writer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const call = new RegExp(`(^|[^\\w.$])${escaped}\\(|\\.${escaped}\\(`);
-  const definition = new RegExp(`function\\s+${name}\\(`);
+  const definition = new RegExp(`function\\s+${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\(`);
   return source.split('\n').filter((line) => call.test(line) && !definition.test(line)).length;
 }
 

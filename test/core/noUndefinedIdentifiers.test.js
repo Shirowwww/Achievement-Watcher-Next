@@ -84,7 +84,7 @@ function guarded(finding) {
   const line = Number(finding.line);
   if (!Number.isInteger(line)) return false;
   const text = fs.readFileSync(finding.absolute, 'utf8').split('\n')[line - 1] || '';
-  return new RegExp(`typeof\\s+${finding.name.replace(/[$]/g, '\\$')}\\b`).test(text);
+  return new RegExp(`typeof\\s+${finding.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(text);
 }
 const describe = (finding) => `${finding.file}:${finding.line} ${finding.name}`;
 
