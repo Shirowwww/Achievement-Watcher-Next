@@ -62,4 +62,14 @@ function isOfflineError(err) {
   return OFFLINE_MESSAGE.test(message.split('\n', 1)[0]);
 }
 
-module.exports = { isChecksumMismatchError, isMissingLinuxFeed, isOfflineError, summarizeUpdaterError };
+/*
+  Whether an updater failure goes unreported: only an automatic check that never reached the
+  network, and its second report (electron-updater emits 'error', then rejects the check). A check
+  the user asked for, a download, or an update already waiting keep their report.
+*/
+function silencedOfflineFailure({ message, manual = false, phase = '', silencedMessage = '' }) {
+  if (manual || !isOfflineError(message)) return false;
+  return phase === 'checking' || (silencedMessage !== '' && message === silencedMessage);
+}
+
+module.exports = { isChecksumMismatchError, isMissingLinuxFeed, isOfflineError, silencedOfflineFailure, summarizeUpdaterError };

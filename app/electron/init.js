@@ -178,7 +178,7 @@ const updateGate = require(path.join(__dirname, '../util/updateGate.js'));
 const { resolveSteamMetadata } = require(path.join(__dirname, '../util/steamMetadata.js'));
 const sourceIdentity = require(path.join(__dirname, '../util/sourceIdentity.js'));
 const dataLayout = require(path.join(__dirname, '../util/dataLayout.js'));
-const { isChecksumMismatchError, isMissingLinuxFeed, isOfflineError, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
+const { isChecksumMismatchError, isMissingLinuxFeed, silencedOfflineFailure, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
 const { verifyPendingInstaller } = require(path.join(__dirname, '../util/pendingInstallerGuard.js'));
 const { launchAfterExit } = require(path.join(__dirname, '../util/appImageRelaunch.js'));
 const { clearUpdaterCacheDir: clearCacheDirForHelper } = require(path.join(__dirname, '../util/updateCacheClear.js'));
@@ -595,15 +595,16 @@ function cancelUpdateDownload() {
   return true;
 }
 
+// The failure of the current automatic check that was left unreported for lack of network.
+let offlineCheckMessage = '';
 function notifyUpdateError(message) {
   debug.log(`[updater] ${message}`);
   // No network on an automatic check (a PC waking up, Wi-Fi down): the next check retries, so
-  // there is nothing to tell. A check the user asked for still says why it failed.
-  if (isOfflineError(message) && !manualUpdateCheckPending) {
-    updateProgressLogged = -1;
-    updateDownloadCancellation = null;
-    updateDownloading = false;
-    if (currentUpdateStatus.phase !== 'idle') setUpdateStatus({ type: 'reset' });
+  // there is nothing to tell. A check the user asked for, a download, or an update already waiting
+  // to install keep the usual report.
+  if (silencedOfflineFailure({ message, manual: manualUpdateCheckPending, phase: currentUpdateStatus.phase, silencedMessage: offlineCheckMessage })) {
+    offlineCheckMessage = message;
+    if (currentUpdateStatus.phase === 'checking') setUpdateStatus({ type: 'reset' });
     return;
   }
   updateProgressLogged = -1;
@@ -7796,6 +7797,7 @@ try {
   registerUpdaterEvents = (autoUpdater) => {
     autoUpdater.on('checking-for-update', () => {
       debug.log('[updater] checking for updates');
+      offlineCheckMessage = '';
       setUpdateStatus({ type: 'checking' });
     });
     autoUpdater.on('update-available', async (info) => {

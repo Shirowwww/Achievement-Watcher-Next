@@ -27,6 +27,17 @@ test('isOfflineError spots a check that never reached the network, and only that
   assert.equal(isOfflineError(new Error('HttpError: 504\nbody mentions net::ERR_NAME_NOT_RESOLVED')), false);
 });
 
+test('only an automatic check with no network goes unreported, both times electron-updater reports it', () => {
+  const { silencedOfflineFailure } = require('../../app/util/updateChecksum.js');
+  const offline = 'net::ERR_NAME_NOT_RESOLVED';
+  assert.equal(silencedOfflineFailure({ message: offline, phase: 'checking' }), true, 'the first report');
+  assert.equal(silencedOfflineFailure({ message: offline, phase: 'idle', silencedMessage: offline }), true, 'the second report of the same check');
+  assert.equal(silencedOfflineFailure({ message: offline, phase: 'checking', manual: true }), false, 'a check the user asked for still says why');
+  assert.equal(silencedOfflineFailure({ message: `download failed: ${offline}`, phase: 'downloading' }), false, 'a download that drops is reported');
+  assert.equal(silencedOfflineFailure({ message: offline, phase: 'ready' }), false, 'an update waiting to install keeps its state');
+  assert.equal(silencedOfflineFailure({ message: 'HttpError: 404', phase: 'checking' }), false, 'a real failure is reported');
+});
+
 test('isChecksumMismatchError recognizes electron-updater checksum failures', () => {
   assert.equal(isChecksumMismatchError({ code: 'ERR_CHECKSUM_MISMATCH', message: 'anything' }), true);
   assert.equal(
