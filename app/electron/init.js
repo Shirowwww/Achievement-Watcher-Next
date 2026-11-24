@@ -7856,6 +7856,10 @@ try {
           if (manual) openUpdateWindow();
           return;
         }
+        // On the nightly channel the window opens once a day at most (updateGate.isNightlyOfferedToday).
+        if (updateChannel.channelOfVersion(info.version) === 'nightly') {
+          await applyGeneralPatch(updateGate.nightlyOfferPatch()).catch((err) => debug.log(`[updater] could not record the nightly offer: ${err.message || err}`));
+        }
         const answer = await askAboutUpdate(offer, { manual });
         if (answer === 'install') {
           debug.log(`[updater] user accepted download of ${info.version}${manual ? ' (manual check)' : ''}`);

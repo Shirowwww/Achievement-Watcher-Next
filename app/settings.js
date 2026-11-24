@@ -115,6 +115,10 @@ function normalize(parsed) {
   if (typeof options.general.updatePostponedUntil !== 'number' || !Number.isFinite(options.general.updatePostponedUntil)) {
     options.general.updatePostponedUntil = Number(options.general.updatePostponedUntil) || 0;
   }
+  // When the update window last offered a nightly: it opens once a day at most on that channel.
+  if (typeof options.general.nightlyOfferedAt !== 'number' || !Number.isFinite(options.general.nightlyOfferedAt)) {
+    options.general.nightlyOfferedAt = Number(options.general.nightlyOfferedAt) || 0;
+  }
   if (typeof options.general.autoUpdate !== 'boolean') {
     options.general.autoUpdate = false;
   }
@@ -704,6 +708,7 @@ function defaults() {
       skippedVersion: 'none',
       updatePostponedVersion: '',
       updatePostponedUntil: 0,
+      nightlyOfferedAt: 0,
       autoUpdate: false,
       updateChannel: '',
       onboardingCompleted: false,
@@ -935,7 +940,7 @@ module.exports.load = () => {
   it had loaded and silently undid "skip this version". The main process passes
   { keepMainOwnedKeys: false } when it is the one changing them.
 */
-const MAIN_OWNED_GENERAL_KEYS = ['skippedVersion', 'updatePostponedVersion', 'updatePostponedUntil', 'autoUpdateInstalled', 'autoUpdateHidden'];
+const MAIN_OWNED_GENERAL_KEYS = ['skippedVersion', 'updatePostponedVersion', 'updatePostponedUntil', 'nightlyOfferedAt', 'autoUpdateInstalled', 'autoUpdateHidden'];
 
 function carryMainOwnedKeys(options) {
   let onDisk;

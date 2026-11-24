@@ -18,6 +18,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Nightly testers see the update window once a day at most.** Every push publishes a nightly,
+  sometimes three a day, and each one opened the window. A newer nightly now waits for the next
+  day's offer; Check for updates in Settings still finds it at once, and stable releases are not
+  affected.
 - **No more "Update check failed" balloon when the PC has no network.** An automatic check made
   with no connection, for example right after the PC wakes up, now waits quietly for the next one.
   A check started from Settings still says why it failed.

@@ -17,6 +17,28 @@ const HOUR = 60 * 60 * 1000;
 const T0 = Date.parse('2026-08-11T12:00:00Z');
 const fresh = () => ({ skippedVersion: 'none', updatePostponedVersion: '', updatePostponedUntil: 0 });
 
+/*
+  Every push to dev publishes a nightly, sometimes three a day, and each one opened the update window
+  on the testers' screens. On the nightly channel the window opens at most once a day: a newer
+  nightly in between waits for it, an explicit check still answers, and stable is not affected.
+*/
+test('the nightly channel offers its window at most once a day', () => {
+  const nightly = (extra) => ({ ...fresh(), updateChannel: 'nightly', ...extra });
+  const current = '3.12.9-nightly.13';
+  const ask = (general, offered, opts) => gate.shouldSuppressUpdatePrompt(general, offered, { now: T0, currentVersion: current, ...opts });
+
+  assert.deepEqual(ask(nightly({}), '3.12.9-nightly.14'), { suppress: false, reason: '' }, 'the first nightly is offered');
+  const offered = nightly(gate.nightlyOfferPatch(T0 - 3 * HOUR));
+  assert.deepEqual(ask(offered, '3.12.9-nightly.15'), { suppress: true, reason: 'nightly-daily' }, 'a newer nightly the same day waits');
+  assert.deepEqual(ask(offered, '3.12.9-nightly.15', { manual: true }), { suppress: false, reason: '' }, 'Check for updates still answers');
+  assert.deepEqual(ask(nightly(gate.nightlyOfferPatch(T0 - 25 * HOUR)), '3.12.9-nightly.15'), { suppress: false, reason: '' }, 'a day later it is offered');
+  assert.deepEqual(
+    gate.shouldSuppressUpdatePrompt({ ...fresh(), updateChannel: 'stable', ...gate.nightlyOfferPatch(T0 - HOUR) }, '3.13.0', { now: T0, currentVersion: '3.12.8' }),
+    { suppress: false, reason: '' },
+    'a stable release is never held back by it'
+  );
+});
+
 test('a first offer is shown', () => {
   assert.deepEqual(gate.shouldSuppressUpdatePrompt(fresh(), '3.9.0', { now: T0 }), { suppress: false, reason: '' });
 });

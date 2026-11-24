@@ -96,7 +96,27 @@ function shouldSuppressUpdatePrompt(general, offered, { manual = false, now = Da
   if (isBlockedAsNotNewer(offered, currentVersion, general)) return { suppress: true, reason: 'not-newer' };
   if (isVersionSkipped(general, offered)) return { suppress: true, reason: 'skipped' };
   if (!manual && isUpdatePostponed(general, offered, now)) return { suppress: true, reason: 'postponed' };
+  if (!manual && isNightlyOfferedToday(general, offered, now)) return { suppress: true, reason: 'nightly-daily' };
   return { suppress: false, reason: '' };
+}
+
+/*
+  Every push to dev publishes a nightly, often several a day: on that channel the update window opens
+  at most once a day, and a newer nightly published in between simply waits for the next one.
+*/
+const NIGHTLY_OFFER_GAP_MS = 24 * 60 * 60 * 1000;
+
+function isNightlyOfferedToday(general, offered, now = Date.now()) {
+  if (normalizeChannel(general && general.updateChannel, String(offered || '')) !== 'nightly') return false;
+  const version = coerce(offered);
+  if (!version || !semver.prerelease(version)) return false;
+  const at = Number(general && general.nightlyOfferedAt) || 0;
+  return at > 0 && now - at < NIGHTLY_OFFER_GAP_MS;
+}
+
+// The general-section patch that records a nightly offer shown now.
+function nightlyOfferPatch(now = Date.now()) {
+  return { nightlyOfferedAt: now };
 }
 
 /*
@@ -163,6 +183,7 @@ module.exports = {
   shouldSuppressUpdatePrompt,
   shouldHoldInstall,
   postponePatch,
+  nightlyOfferPatch,
   clearPostponePatch,
   autoInstallEnabled,
   autoInstallPatch,
