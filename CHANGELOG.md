@@ -18,6 +18,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **No more "Update check failed" balloon when the PC has no network.** An automatic check made
+  with no connection, for example right after the PC wakes up, now waits quietly for the next one.
+  A check started from Settings still says why it failed.
 - **Games played in Xenia, RPCS3 and shadPS4 get their play time.** Every game runs inside the
   same emulator, so AW Next never saw one start. It now reads the game the emulator boots from its
   log, counts the time until the emulator closes or another game boots, and shows the play time

@@ -2,7 +2,30 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { isChecksumMismatchError, isMissingLinuxFeed, summarizeUpdaterError } = require('../../app/util/updateChecksum.js');
+const { isChecksumMismatchError, isMissingLinuxFeed, isOfflineError, summarizeUpdaterError } = require('../../app/util/updateChecksum.js');
+
+// A check made while the PC has no network (asleep, Wi-Fi down) is no failure to report: the next
+// automatic check retries. It raised an "Update check failed" balloon at night (24/11/2026).
+test('isOfflineError spots a check that never reached the network, and only that', () => {
+  for (const message of [
+    'net::ERR_NAME_NOT_RESOLVED',
+    'net::ERR_INTERNET_DISCONNECTED',
+    'Error: net::ERR_NETWORK_CHANGED',
+    'net::ERR_CONNECTION_TIMED_OUT',
+    'getaddrinfo ENOTFOUND github.com',
+    'getaddrinfo EAI_AGAIN github.com',
+    'connect ETIMEDOUT 140.82.121.4:443',
+  ]) {
+    assert.equal(isOfflineError(new Error(message)), true, message);
+    assert.equal(isOfflineError(message), true, `${message} (summary text)`);
+  }
+  assert.equal(isOfflineError({ code: 'ENOTFOUND', message: 'whatever' }), true);
+  for (const message of ['HttpError: 404', 'sha512 checksum mismatch, expected A, got B', 'Cannot parse releases feed', '']) {
+    assert.equal(isOfflineError(new Error(message)), false, message);
+  }
+  // Remote text after the first line never counts.
+  assert.equal(isOfflineError(new Error('HttpError: 504\nbody mentions net::ERR_NAME_NOT_RESOLVED')), false);
+});
 
 test('isChecksumMismatchError recognizes electron-updater checksum failures', () => {
   assert.equal(isChecksumMismatchError({ code: 'ERR_CHECKSUM_MISMATCH', message: 'anything' }), true);

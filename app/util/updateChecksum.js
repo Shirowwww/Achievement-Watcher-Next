@@ -49,4 +49,17 @@ function isMissingLinuxFeed(err, platform = process.platform) {
   return platform === 'linux' && !!err && err.code === 'ERR_UPDATER_CHANNEL_FILE_NOT_FOUND';
 }
 
-module.exports = { isChecksumMismatchError, isMissingLinuxFeed, summarizeUpdaterError };
+// A check that never reached the network (no connection, DNS down, a sleeping Wi-Fi): Chromium's net
+// errors and Node's socket codes, read from the first line only, since later lines can be remote text.
+const OFFLINE_CODES = new Set(['ENOTFOUND', 'EAI_AGAIN', 'ETIMEDOUT', 'ECONNREFUSED', 'ECONNRESET', 'ENETUNREACH', 'EHOSTUNREACH']);
+const OFFLINE_MESSAGE =
+  /\bnet::ERR_(?:NAME_NOT_RESOLVED|NAME_RESOLUTION_FAILED|INTERNET_DISCONNECTED|NETWORK_CHANGED|NETWORK_IO_SUSPENDED|ADDRESS_UNREACHABLE|TIMED_OUT|CONNECTION_(?:TIMED_OUT|REFUSED|RESET|CLOSED|ABORTED|FAILED)|PROXY_CONNECTION_FAILED)\b|\b(?:ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNREFUSED|ECONNRESET|ENETUNREACH|EHOSTUNREACH)\b/;
+
+function isOfflineError(err) {
+  if (!err) return false;
+  if (err.code && OFFLINE_CODES.has(err.code)) return true;
+  const message = typeof err === 'string' ? err : typeof err.message === 'string' ? err.message : String(err);
+  return OFFLINE_MESSAGE.test(message.split('\n', 1)[0]);
+}
+
+module.exports = { isChecksumMismatchError, isMissingLinuxFeed, isOfflineError, summarizeUpdaterError };

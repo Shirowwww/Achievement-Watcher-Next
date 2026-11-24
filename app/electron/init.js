@@ -178,7 +178,7 @@ const updateGate = require(path.join(__dirname, '../util/updateGate.js'));
 const { resolveSteamMetadata } = require(path.join(__dirname, '../util/steamMetadata.js'));
 const sourceIdentity = require(path.join(__dirname, '../util/sourceIdentity.js'));
 const dataLayout = require(path.join(__dirname, '../util/dataLayout.js'));
-const { isChecksumMismatchError, isMissingLinuxFeed, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
+const { isChecksumMismatchError, isMissingLinuxFeed, isOfflineError, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
 const { verifyPendingInstaller } = require(path.join(__dirname, '../util/pendingInstallerGuard.js'));
 const { launchAfterExit } = require(path.join(__dirname, '../util/appImageRelaunch.js'));
 const { clearUpdaterCacheDir: clearCacheDirForHelper } = require(path.join(__dirname, '../util/updateCacheClear.js'));
@@ -597,6 +597,15 @@ function cancelUpdateDownload() {
 
 function notifyUpdateError(message) {
   debug.log(`[updater] ${message}`);
+  // No network on an automatic check (a PC waking up, Wi-Fi down): the next check retries, so
+  // there is nothing to tell. A check the user asked for still says why it failed.
+  if (isOfflineError(message) && !manualUpdateCheckPending) {
+    updateProgressLogged = -1;
+    updateDownloadCancellation = null;
+    updateDownloading = false;
+    if (currentUpdateStatus.phase !== 'idle') setUpdateStatus({ type: 'reset' });
+    return;
+  }
   updateProgressLogged = -1;
   updateDownloadCancellation = null;
   setUpdateStatus({ type: 'error', message });
