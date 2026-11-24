@@ -631,7 +631,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     function fillControllerBindingSelect(select, allowedButtons, includeNone) {
       const layout = $('#option_controllerLayout').val() || 'auto';
-      const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+      const gamepads = window.AWGamepads ? window.AWGamepads.read() : [];
       const locale = String(
         (window.app && window.app.config && window.app.config.achievement && window.app.config.achievement.lang) ||
           'english'
@@ -680,8 +680,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return buttons.length ? buttons.join('+') : fallback;
     }
 
-    window.addEventListener('gamepadconnected', populateControllerBindingOptions);
-    window.addEventListener('gamepaddisconnected', populateControllerBindingOptions);
+    // controller.js says when a pad comes or goes, and only while navigation by pad is on (#217).
+    document.addEventListener('aw-gamepads-changed', populateControllerBindingOptions);
     document.addEventListener('locale-labels-changed', populateControllerBindingOptions);
     // The Help tab writes its text itself, whether or not Settings is open.
     document.addEventListener('locale-labels-changed', () => window.AchievementHelp.render($));

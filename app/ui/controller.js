@@ -459,6 +459,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
 
     // A pad already awake when watching starts is reported straight away; otherwise the connect
     // event is what starts the loop.
+    let watching = false;
     const watchGamepads = createGamepadWatch({
       target: window,
       gamepads: () => (navigator.getGamepads ? navigator.getGamepads() : []),
@@ -469,10 +470,17 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         }
         padConnected = connected;
         updatePollingState();
+        document.dispatchEvent(new Event('aw-gamepads-changed'));
       },
     });
+    // Settings and Help name buttons after the pad in use: they read it here, so with navigation by
+    // pad off they see none and Chromium never starts reading the pads (#217).
+    window.AWGamepads = {
+      read: () => (watching && navigator.getGamepads ? Array.from(navigator.getGamepads()) : []),
+    };
     const followSettings = () => {
-      watchGamepads(isAppControllerEnabled());
+      watching = isAppControllerEnabled();
+      watchGamepads(watching);
       updatePollingState();
     };
     window.addEventListener('pointerdown', leaveControllerMode, { passive: true });

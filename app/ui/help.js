@@ -75,11 +75,10 @@ function selectedText($, selector) {
   return selected.length ? selected.text().trim() : '';
 }
 
+// Read through controller.js, which sees no pad while navigation by pad is off (#217).
 function gamepads() {
   try {
-    if (typeof navigator !== 'undefined' && typeof navigator.getGamepads === 'function') {
-      return navigator.getGamepads() || [];
-    }
+    if (typeof window !== 'undefined' && window.AWGamepads) return window.AWGamepads.read() || [];
   } catch {}
   return [];
 }

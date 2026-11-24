@@ -18,6 +18,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Opening the window no longer wakes the controller with pad navigation off (#217).** 3.12.8
+  stopped the window's own navigation from listening for pads, but Settings and Help still read
+  them to name buttons, so an Xbox controller could still drop when the window opened. Every part
+  of the window now asks the same switch, and none of them touches the pad while navigation by pad
+  is off.
 - **Switching a Unity game to the supported emulator now replaces the file the game loads.** A Unity
   game loads its Steam file from `<Game>_Data\Plugins`, but the switch put the emulator beside the
   exe, so RUNE kept running there and Game Health kept naming it. The emulator and its settings now
