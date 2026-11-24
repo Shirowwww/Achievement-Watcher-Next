@@ -28,7 +28,7 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Games played in Xenia, RPCS3 and shadPS4 get their play time.** Every game runs inside the
   same emulator, so AW Next never saw one start. It now reads the game the emulator boots from its
   log, counts the time until the emulator closes or another game boots, and shows the play time
-  popup like for a PC game.
+  popup like for a PC game. Game Health's launch detection row names the log it follows.
 - **An imported SAN theme no longer scores an unlock with no known rate as the rarest.** The Xbox
   360 and GFWL cards printed 100G for a test popup or an emulator unlock; they now print what SAN's
   own test shows, and no made-up rate appears in the text.

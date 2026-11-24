@@ -212,11 +212,25 @@ test('a game with no gameIndex entry is only flagged when the process monitor is
   const console = deriveHealth(
     healthyGame({ system: 'playstation', source: 'RPCS3 Emulator', emulated: false, goldberg: null, processTracking: false, tracking: { indexed: false, binary: '' } })
   );
-  assert.equal(checkFor(console, 'tracking'), undefined, 'no live-tracking row for a console record');
   assert.equal(console.state, STATE.READY);
+  const kyty = deriveHealth(healthyGame({ system: 'playstation', source: 'KytyPS5 Emulator', emulated: false, goldberg: null, processTracking: false, tracking: { indexed: false, binary: '' } }));
+  assert.equal(checkFor(kyty, 'tracking'), undefined, 'no row for an emulator whose launches AW Next cannot see');
 
   const pc = deriveHealth(healthyGame({ tracking: { indexed: false, binary: '' } }));
   assert.equal(checkFor(pc, 'tracking').level, LEVEL.WARN, 'a PC game still gets the row');
+});
+
+// Xenia, RPCS3 and shadPS4 games are seen starting through the emulator's log (the Watchdog's
+// emulatorCurrent.js), so the row says which log is followed, and offers no executable to pick.
+test('an emulator game whose launches are read from the emulator log names that log', () => {
+  for (const [source, log] of [['Xenia Emulator', 'xenia.log'], ['RPCS3 Emulator', 'RPCS3.log'], ['ShadPS4 Emulator', 'shad_log.txt']]) {
+    const health = deriveHealth(healthyGame({ system: 'xbox', source, emulated: false, goldberg: null, processTracking: false, tracking: { indexed: false, binary: '' }, exe: '', exeExists: false }));
+    const row = checkFor(health, 'tracking');
+    assert.equal(row && row.level, LEVEL.OK, source);
+    assert.deepEqual(row.params, { binary: log }, source);
+    assert.deepEqual(row.actions, [], `${source}: there is no executable to choose`);
+    assert.equal(health.state, STATE.READY);
+  }
 });
 
 test('a console emulator game is never asked for a Windows executable or its game files', () => {

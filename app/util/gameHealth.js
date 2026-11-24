@@ -750,10 +750,15 @@ function sameBinary(file, binary) {
 
 // Live tracking means the watchdog's process monitor matched a running binary; console emulators
 // and official platform libraries use their own watchers, so a missing entry there is normal.
+// The log the Watchdog reads to see these emulators boot a game (watchdog/console/emulatorCurrent.js).
+const EMULATOR_LAUNCH_LOGS = { 'Xenia Emulator': 'xenia.log', 'RPCS3 Emulator': 'RPCS3.log', 'ShadPS4 Emulator': 'shad_log.txt' };
+
 function trackingCheck(signals) {
   // The process monitor exists to catch unlocks. With no achievement to catch, a game missing from
   // the index is not a gap, and playtime alone has never been worth a warning row.
   if (hasNoAchievements(signals)) return null;
+  const launchLog = EMULATOR_LAUNCH_LOGS[String(signals.source || '')];
+  if (launchLog) return { ...check('tracking', LEVEL.OK, { params: { binary: launchLog } }), trailing: true };
   if (signals.processTracking === false) return null;
   const tracking = signals.tracking || {};
   // AW Next picks the executable by itself and cannot always tell which is right, so a game that is
