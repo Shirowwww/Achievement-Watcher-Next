@@ -115,4 +115,4 @@ function currentGame({ processes, emulatorDirs, targets, env, home, platform, re
   }
 }
 
-module.exports = { currentGame, titleFromLog, matchTrophySet, logCandidates, newestLog, normalizeTitle };
+module.exports = { currentGame, titleFromLog, matchTrophySet, logCandidates, newestLog, normalizeTitle, readTail, PROCESS_NAME };

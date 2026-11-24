@@ -139,6 +139,64 @@ test('a session opens when a game boots, holds, moves to the next game and close
   ]);
 });
 
+test('a read that cannot tell keeps the running session; only another game or a stop ends it', async () => {
+  const { state, events, sessions } = harness();
+  state.rows = [{ process: 'xenia_canary.exe', pid: 42 }];
+  state.game = { appid: '555307E5', name: 'Naruto' };
+  await sessions.tick();
+  state.game = undefined; // the boot line scrolled out of the log tail, or the titles failed to load
+  await sessions.tick();
+  assert.deepEqual(events, [['start', '555307E5', 'Naruto', 'Xenia Emulator']], 'still one session');
+  state.game = null; // RPCS3 logged "Stopping emulator"
+  await sessions.tick();
+  assert.deepEqual(events.at(-1), ['stop', '555307E5']);
+});
+
+test('titles that fail to load are not remembered as none, and keep the session', async () => {
+  let calls = 0;
+  let clock = 0;
+  const events = [];
+  const sessions = createEmulatorSessions({
+    listProcesses: async () => [{ process: 'xenia_canary.exe', pid: 7 }],
+    processPath: () => '',
+    targets: {
+      xenia: () => {
+        calls += 1;
+        if (calls === 2) throw new Error('disk busy');
+        return [{ titleId: '555307E5' }];
+      },
+    },
+    emulatorDirs: () => [],
+    now: () => clock,
+    emulators: [{ id: 'xenia', source: 'Xenia Emulator', process: /^xenia_canary\.exe$/i, current: ({ targets }) => (targets().length ? { appid: '555307E5', name: 'N' } : null) }],
+    start: (game) => events.push(['start', game.appid]),
+    stop: (appid) => events.push(['stop', appid]),
+  });
+  for (let i = 0; i < 3; i += 1) {
+    clock += 120_000; // past the titles' cache each time
+    await sessions.tick();
+  }
+  assert.deepEqual(events, [['start', '555307E5']], 'the failed read neither closed nor reopened the session');
+  assert.equal(calls, 3, 'the failure was not cached');
+});
+
+test('a shadPS4 trophy set title is read with its XML entities decoded', (t) => {
+  const dir = tmp(t);
+  const exePath = write(path.join(dir, 'shadps4.exe'), '');
+  write(path.join(dir, 'user', 'log', 'shad_log.txt'), 'Run: Game id: CUSA00001 Title: Ratchet & Clank\n');
+  const xmlDir = path.join(dir, 'trophy', 'NPWR10000_00', 'Xml');
+  write(path.join(xmlDir, 'TROP.XML'), '<trophyconf><title-name>Ratchet &amp; Clank</title-name></trophyconf>');
+  const game = current.shadps4Game({ exePath, env: {}, platform: 'win32', targets: () => [{ appid: 'NPWR10000_00', xmlDir }] });
+  assert.deepEqual(game, { appid: 'NPWR10000_00', name: 'Ratchet & Clank' });
+});
+
+test('a log that no longer shows the boot cannot tell, it does not mean the game stopped', (t) => {
+  const dir = tmp(t);
+  const exePath = write(path.join(dir, 'xenia_canary.exe'), '');
+  write(path.join(dir, 'xenia.log'), 'i> 00001FAC some later line\n');
+  assert.equal(current.xeniaGame({ exePath, targets: () => [{ titleId: '555307E5' }] }), undefined);
+});
+
 test('an unreadable log or process list never throws out of the check', async () => {
   const { state, events, sessions } = harness();
   state.rows = [{ process: 'xenia_canary.exe', pid: 42 }];
