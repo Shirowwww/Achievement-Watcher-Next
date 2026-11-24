@@ -12,6 +12,7 @@ const { findByReadingContentOfKnownConfigfilesIn } = require('./steam_appid_find
 const { loadSteamData } = require('../steam.js');
 const { buildBinaryIndex, buildSeededSessions, getBinaryMatches, mergeGameIndexes, pickGameForProcess, snapshotActiveGames } = require('./seed.js');
 const { createPollingProcessMonitor } = require('./pollingProcessMonitor.js');
+const { createEmulatorSessions } = require('./emulatorSessions.js');
 const { userDataDir } = require('../util/userData.js');
 const { configuredExecutable, appidForExecutable } = require(sharedAppModulePath('parser/exeList.js'));
 const { isLaunchBootstrapper } = require(sharedAppModulePath('util/launchBootstrappers.js'));
@@ -489,6 +490,8 @@ function relatedNames(name, folder) {
 }
 
 const PLAYTIME_SAVE_INTERVAL_MS = 60_000;
+// How often a running console emulator's log is read for the game it boots.
+const EMULATOR_POLL_MS = 10_000;
 
 function saveSessionProgress(game) {
   const seconds = game.timer.checkpoint();
@@ -509,6 +512,43 @@ async function init() {
   // Saves what the running sessions played since the last save; also called on the way out.
   emitter.saveActiveSessions = () => Promise.all(nowPlaying.map(saveSessionProgress));
   setInterval(emitter.saveActiveSessions, PLAYTIME_SAVE_INTERVAL_MS).unref();
+
+  function endSession(game) {
+    debug.log(`Stop playing ${game.name}(${game.appid})`);
+    game.timer.stop();
+    const playedtime = game.timer.played;
+    const index = nowPlaying.indexOf(game);
+    if (index !== -1) nowPlaying.splice(index, 1);
+    debug.log('playtime: ' + Math.floor(playedtime / 60) + 'min');
+    saveSessionProgress(game);
+    emitter.emit('disable-overlay');
+    // Emit the raw played seconds; the watchdog formats & localizes the notification text.
+    emitter.emit('notify', [game, playedtime]);
+  }
+
+  // Console games run inside their emulator's process: their sessions follow its log instead.
+  const emulatorSessions = createEmulatorSessions({
+    listProcesses: () => tasklist.list(),
+    processPath: (pid) => tasklist.getProcessPath(pid),
+    targets: {
+      xenia: () => require('../console/xeniaWatch.js')._internal.discover(),
+      rpcs3: () => require('../console/rpcs3Watch.js')._internal.discover(),
+      shadps4: () => require('../console/shadps4Watch.js')._internal.discover(),
+    },
+    emulatorDirs: () => require('../console/watcherKit.js').watchedFolders(),
+    start: (game) => {
+      debug.log(`DB Hit for ${game.name}(${game.appid}) [${game.binary}, ${game.source}]`);
+      nowPlaying.push(Object.assign(game, { pids: new Set(), timer: new Timer(), exePath: '', gameDir: '', launchAppid: '', emulatorSession: true }));
+      emitter.emit('enable-overlay', game.appid);
+      emitter.emit('notify', [game]);
+    },
+    stop: (appid) => {
+      const game = nowPlaying.find((g) => g.emulatorSession && g.appid === appid);
+      if (game) endSession(game);
+    },
+    log: (line) => debug.log(line),
+  });
+  setInterval(() => emulatorSessions.tick(), EMULATOR_POLL_MS).unref();
   // The app re-seeds cfg/gameIndex.json after a library scan (e.g. a freshly installed non-Steam
   // game); reloading here lets the monitor track it without a full Watchdog restart.
   emitter.reloadGameIndex = async () => {
@@ -718,21 +758,7 @@ async function init() {
       }
     }
 
-    debug.log(`Stop playing ${game.name}(${game.appid})`);
-    game.timer.stop();
-    const playedtime = game.timer.played;
-
-    let index = nowPlaying.indexOf(game);
-    if (index !== -1) {
-      nowPlaying.splice(index, 1);
-    }
-
-    debug.log('playtime: ' + Math.floor(playedtime / 60) + 'min');
-
-    saveSessionProgress(game);
-    emitter.emit('disable-overlay');
-    // Emit the raw played seconds; the watchdog formats & localizes the notification text.
-    emitter.emit('notify', [game, playedtime]);
+    endSession(game);
   });
 
   return emitter;
