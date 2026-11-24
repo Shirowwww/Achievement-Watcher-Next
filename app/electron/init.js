@@ -5449,6 +5449,8 @@ function showOverlayAfterLoad(info) {
   } else {
     overlayWindow.showInactive();
   }
+  // A game that made itself topmost since the last open stays above a window shown again in place.
+  if (process.platform === 'win32') overlayWindow.moveTop();
   registerOverlayShortcuts();
   notifyMonitorOverlayState(true);
 }
