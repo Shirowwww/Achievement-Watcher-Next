@@ -100,7 +100,12 @@ function gameDirFrom(values, resolve) {
   return '';
 }
 
-const localConfigFiles = (root) => LOCAL_CONFIGS.map((name) => path.join(root, name)).filter(isFile);
+// A launcher may name its settings after itself: DCport keeps the game folder in dcport-launcher.json.
+const NAMED_LAUNCHER_CONFIG = /^[a-z0-9][\w.-]{0,40}[-_]launcher\.(?:json|ini)$/i;
+const localConfigFiles = (root) => [
+  ...LOCAL_CONFIGS.map((name) => path.join(root, name)).filter(isFile),
+  ...listing(root).filter((entry) => entry.isFile() && NAMED_LAUNCHER_CONFIG.test(entry.name)).map((entry) => path.join(root, entry.name)),
+];
 
 // A linked boot image: out/boot-linked.bin, or game/image/[<build>/]*.bin.
 function hasBootImage(root) {

@@ -163,6 +163,7 @@ const coverFit = require(path.join(appPath, 'util/coverFit.js'));
 const { steamAppidOf } = require(path.join(appPath, 'util/platformId.js'));
 const { helpLinks } = require(path.join(appPath, 'util/gameLinks.js'));
 const sourceIdentity = require(path.join(appPath, 'util/sourceIdentity.js'));
+const platformGroups = require(path.join(appPath, 'util/platformGroups.js'));
 const gameIconStore = require(path.join(appPath, 'util/gameIconStore.js'));
 const backgroundStore = require(path.join(appPath, 'util/backgroundStore.js'));
 const localIcons = require(path.join(appPath, 'util/localIcons.js'));
@@ -1161,28 +1162,9 @@ window.refreshProfileStats = refreshProfileStats;
 /*
   The detailed panel behind the profile header's three numbers.
 
-  Platform rows are grouped through sourcePresentationFor(), the same classifier the tile badges use,
-  so a game can never be summarised under a platform its own badge disagrees with. The row labels are
-  the store names themselves, which are proper nouns and stay untranslated.
+  Platform rows are grouped by platformGroups.js from the kind sourcePresentationFor() gives the tile
+  badge, so a game can never be summarised under a platform its own badge disagrees with.
 */
-const PROFILE_STATS_PLATFORMS = {
-  steam: { label: 'Steam', img: 'Steam' },
-  'steam-owned': { label: 'Steam', img: 'Steam' },
-  gog: { label: 'GOG', img: 'gog' },
-  epic: { label: 'Epic Games', img: 'epic' },
-  ubisoft: { label: 'Ubisoft Connect', img: 'ubisoft' },
-  ea: { label: 'EA', img: 'ea' },
-  socialclub: { label: 'Social Club', img: 'Goldberg SocialClub' },
-  playstation: { label: 'PlayStation', img: 'RPCS3 Emulator' },
-  'playstation-3': { label: 'PlayStation 3', img: 'RPCS3 Emulator' },
-  'playstation-4': { label: 'PlayStation 4', img: 'ShadPS4 Emulator' },
-  'playstation-5': { label: 'PlayStation 5', img: 'KytyPS5 Emulator' },
-  xbox: { label: 'Xbox', img: 'Xenia Emulator' },
-  'xbox-360': { label: 'Xbox 360', img: 'Xenia Emulator' },
-  retroachievements: { label: 'RetroAchievements', img: 'RetroAchievements' },
-  pcport: { label: 'PC Port', img: 'PC Port' },
-};
-
 function profileStatsGroupOf(game) {
   let kind = '';
   try {
@@ -1190,18 +1172,14 @@ function profileStatsGroupOf(game) {
   } catch {
     kind = '';
   }
-  // A console family splits by console when the source names one; a manual entry stays generic.
-  const consoleKey = kind === 'playstation' || kind === 'xbox' ? sourceIdentity.consoleGroupOf(game.source) : '';
-  if (consoleKey) kind = consoleKey;
-  const known = PROFILE_STATS_PLATFORMS[kind] || PROFILE_STATS_PLATFORMS.steam;
-  return { key: kind === 'steam-owned' ? 'steam' : kind || 'steam', label: known.label, img: known.img };
+  return platformGroups.platformGroupOf(kind, game && game.source);
 }
 
 function profileStatsIconFor(key) {
-  const known = PROFILE_STATS_PLATFORMS[key];
-  if (!known) return '';
+  const img = platformGroups.platformImgOf(key);
+  if (!img) return '';
   try {
-    return getSourceImg(known.img) || '';
+    return getSourceImg(img) || '';
   } catch {
     return '';
   }

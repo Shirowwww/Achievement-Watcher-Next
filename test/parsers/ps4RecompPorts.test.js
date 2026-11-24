@@ -60,6 +60,25 @@ test('DriveClub Recomp: launcher.ini names the base game, the dated game logs ca
   assert.deepEqual(unlocks(record), [['7', 0], ['8', 0]], 'a log the launcher pruned keeps its unlocks');
 });
 
+// windows/launcher/dcport/paths.py and the bloodborne_pc runtime it patches (trophy_unlock) of BlackLineInteractive/Driveclub-Port (#226).
+test('DCport: dcport-launcher.json names the game, the runtime writes user/trophies.log', () => {
+  const root = dir('dcport', 'DCport-0.5.4-windows');
+  const game = dump('dcport', 'CUSA00003', 'NPWR05522_00', 'DRIVECLUB');
+  fixture.write(path.join(root, 'DriveClub.exe'), 'MZ');
+  fixture.write(path.join(root, 'bin', 'DriveClub.exe'), 'MZ');
+  fixture.write(path.join(root, 'bin', 'dc-prepare.exe'), 'MZ');
+  fixture.write(path.join(root, 'dcport-launcher.json'), JSON.stringify({ game_dir: game, profile: 'default' }, null, 2));
+  fixture.write(path.join(root, 'dcport.ini'), 'show_fps=1\n');
+  fixture.write(path.join(root, 'user', 'trophies.log'), '4 1795000000\n');
+
+  assert.equal(identifyPort(root).port, 'native');
+  assert.equal(ps4Recomp.isPortFolder(root), true, 'never listed again as an unconfigured game');
+  const [record, ...others] = ps4Recomp.scan(root);
+  assert.equal(others.length, 0);
+  assert.equal(record.appid, 'ps4recomp-NPWR05522_00');
+  assert.deepEqual(unlocks(record), [['4', 1795000000]]);
+});
+
 // sotc.py and launcher/sotc_launcher_win.py (open_session_log, CONFIG_FILE) of AjncSystem/ShadowOfTheColossus-PC.
 test('Shadow of the Colossus: user/launcher_settings.json names the game, rotated last_run logs are read and kept', () => {
   const root = dir('sotc', 'SotC-PC');

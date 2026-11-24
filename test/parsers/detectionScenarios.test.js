@@ -252,6 +252,42 @@ test('an overlay injector folder and an emulator a game ships are not games of t
   assert.equal(found.filter((id) => id.startsWith('local-')).length, 1, `found: ${found.join(', ')}`);
 });
 
+// #228: emulator builds kept in folders of their own were listed as games, one per build.
+test('an emulator build in a folder of its own is not a game, whatever exe sorts first', async () => {
+  const dirs = {};
+  const found = await detectIn({
+    build: ({ root }) => {
+      // yuzu-cmd.exe sorts before yuzu.exe, and the build sits one level down.
+      dirs.yuzu = path.join(root, '_Yuzu');
+      for (const exe of ['yuzu-cmd.exe', 'yuzu-room.exe', 'yuzu.exe']) writeBytes(path.join(dirs.yuzu, 'yuzu-windows-msvc', exe));
+      // A Ryujinx release unzipped as is: <zip name>\publish\Ryujinx.exe.
+      dirs.ryujinx = path.join(root, 'ryujinx-1.1.1403-win_x64');
+      writeBytes(path.join(dirs.ryujinx, 'publish', 'Ryujinx.exe'));
+      // The game a shipped emulator runs is still a game.
+      dirs.port = path.join(root, 'Bayonetta 2');
+      writeBytes(path.join(dirs.port, 'cemu', 'Cemu.exe'));
+      // So is a game whose own program sits beside the emulator.
+      dirs.beside = path.join(root, 'Zelda Pack');
+      writeBytes(path.join(dirs.beside, 'Play Zelda.exe'));
+      writeBytes(path.join(dirs.beside, 'yuzu.exe'));
+    },
+  });
+  assert.ok(found.includes(localId(dirs.beside)), `a game beside its emulator is listed (found: ${found.join(', ')})`);
+  assert.ok(!found.includes(localId(dirs.yuzu)), 'the yuzu folder');
+  assert.ok(!found.includes(localId(path.join(dirs.yuzu, 'yuzu-windows-msvc'))), 'the yuzu build');
+  assert.ok(!found.includes(localId(dirs.ryujinx)), 'the Ryujinx release');
+  assert.ok(found.includes(localId(dirs.port)), `the game is listed (found: ${found.join(', ')})`);
+  assert.equal(found.filter((id) => id.startsWith('local-')).length, 2, `found: ${found.join(', ')}`);
+});
+
+test('a tool whose version resource says what it is never becomes a game', () => {
+  const isTool = achievements._internal.isNonGameProduct;
+  for (const product of ['Python', 'QtWebEngine internal process', 'RTPatch Executable', 'Blake3 Hasher']) assert.equal(isTool(product), true, product);
+  for (const product of ['Hollow Knight', 'Carbon', 'Python Adventure', '']) assert.equal(isTool(product), false, product);
+  // Unreal's root stub names the engine, not the game: the folder does better.
+  assert.equal(achievements._internal.unconfiguredDisplayName('Hollow Game', 'HollowGame.exe', 'BootstrapPackagedGame'), 'Hollow Game');
+});
+
 test('a version resource that names a tool never becomes the game title', () => {
   const name = achievements._internal.unconfiguredDisplayName;
   assert.equal(name('Need For Speed Carbon Remastered', 'NFSC.exe', 'CDKey'), 'Need For Speed Carbon Remastered');

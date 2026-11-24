@@ -18,6 +18,16 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Driveclub played with DCport now shows its trophies (#226).** DCport keeps the game folder in
+  `dcport-launcher.json`, which PS4 Recomp did not read, so the port was listed as an unknown game
+  instead. A launcher's settings named after it are now read too.
+- **The platform filter lists Steam once (#228).** Games with no achievements, such as unknown
+  folders or a Ubisoft game with none found, were each listed under another "Steam". They now sit
+  under their own platform, and unknown folders under PC.
+- **Emulator builds and tools are no longer listed as games (#228).** A yuzu or Ryujinx build kept
+  in a folder named after it, or a folder whose first program is yuzu-cmd.exe, gave one tile per
+  build; Python, QtWebEngine's helper, RTPatch and a Blake3 hasher gave theirs. They are left out,
+  and Unreal's startup program no longer names a game "BootstrapPackagedGame".
 - **Nightly testers see the update window once a day at most.** Every push publishes a nightly,
   sometimes three a day, and each one opened the window. A newer nightly now waits for the next
   day's offer; Check for updates in Settings still finds it at once, and stable releases are not

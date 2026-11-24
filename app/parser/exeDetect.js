@@ -58,6 +58,8 @@ const KNOWN_NON_GAME_EXE = new Set([
   'code.exe', 'git.exe', 'node.exe', 'npm.exe', 'npx.exe', 'python.exe', 'java.exe', 'javaw.exe',
   // .NET runtime companion: every self-contained .NET publish drops this CLR crash-dump writer next to the runtime dlls.
   'createdump.exe',
+  // Qt: the web view's helper process and the installer's maintenance tool (yuzu shipped one).
+  'qtwebengineprocess.exe', 'maintenancetool.exe',
   'r.exe', // IBM SPSS Statistics' bundled R runtime (often picked up as a bogus "game" exe)
   'streaming_client.exe', // Steam Remote Play client process
   'diskspd64.exe', // CrystalDiskMark's bundled benchmark tool

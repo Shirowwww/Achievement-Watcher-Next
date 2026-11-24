@@ -1784,7 +1784,35 @@ function desktopRoots() {
   A version resource that describes a tool rather than a game ("Wii U emulator" for the Cemu a port
   ships, "CDKey", "QuickSFV Application") says nothing about the game: the folder name does better.
 */
-const TOOL_PRODUCT_NAME = /\b(?:emulator|cd ?key|keygen|crack|trainer|injector|launcher|loader|installer|setup|uninstall(?:er)?|updater|application|redistributable|runtime|utility|helper)\b/i;
+const TOOL_PRODUCT_NAME = /\b(?:emulator|cd ?key|keygen|crack|trainer|injector|launcher|loader|installer|setup|uninstall(?:er)?|updater|application|redistributable|runtime|utility|helper|bootstrappackagedgame)\b/i;
+
+// Version resources of programs that are never a game, found in game libraries (#228).
+const NON_GAME_PRODUCT = /^(?:python|qtwebengine internal process|rtpatch executable|blake3 hasher)$/i;
+const isNonGameProduct = (name) => NON_GAME_PRODUCT.test(String(name || '').trim());
+
+const lettersOf = (value) => String(value).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+/*
+  The console emulator a folder is, by any of its programs (yuzu-cmd.exe sorts before yuzu.exe), when
+  every other program is one of the emulator's own: a game's exe beside it keeps the folder a game.
+*/
+function consoleEmulatorExeIn(dir) {
+  const programs = (dirCache.readdir(dir) || [])
+    .filter((entry) => entry.isFile() && (/\.(?:exe|appimage)$/i.test(entry.name) || !path.extname(entry.name)))
+    // The programs shallowGameExe() never takes for a game do not count either.
+    .filter((entry) => ![...exeDetect.EXE_EXCLUDE, ...exeDetect.SOFT_PENALTY].some((rule) => rule.test(entry.name)) && !exeDetect.isKnownNonGameExe(entry.name))
+    .map((entry) => entry.name);
+  const emulator = programs.find((name) => consoleEmulatorFor(name));
+  if (!emulator) return '';
+  const prefix = lettersOf(path.basename(emulator, path.extname(emulator)));
+  return programs.every((name) => lettersOf(name).startsWith(prefix)) ? emulator : '';
+}
+
+// "_Yuzu", "ryujinx-1.1.1403-win_x64": a folder named after the emulator it holds is that emulator's.
+function isNamedAfter(dir, exeName) {
+  const emulator = lettersOf(path.basename(exeName, path.extname(exeName)));
+  return !!emulator && lettersOf(path.basename(dir)).includes(emulator);
+}
 
 // Prefer product metadata, then the folder name, then the executable name.
 function unconfiguredDisplayName(folderName, exeName, productName) {
@@ -2329,6 +2357,7 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     // better display name, unless it's a generic descriptor ("Installer", "Application").
     const rawProductName = (pe.readExeProductName(exe.full) || '').trim();
     if (exeDetect.isInstallerProductName(rawProductName)) return; // a repack's installer or update, not the game
+    if (isNonGameProduct(rawProductName)) return;
     const productName = rawProductName && !/^(application|app|launcher|loader|program|game|update|updater|uninstall|uninstaller|config|configuration|service|daemon|tool|tools|client)$/i.test(rawProductName)
       ? rawProductName
       : '';
@@ -2385,9 +2414,10 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     if (ownExe || (isGameFolder(dir, entries) && childGameFolders.length === 0)) {
       // A console emulator is a tool, not a game. Inside a game's folder (Bayonetta 2 ships Cemu in
       // cemu\) the game is that folder; installed on its own it is nothing to list.
-      if (ownExe && consoleEmulatorFor(path.join(dir, exeDetect.shallowGameExe(dir)))) {
+      const emulatorExe = ownExe ? consoleEmulatorExeIn(dir) : '';
+      if (emulatorExe) {
         const parent = path.dirname(dir);
-        if (depth > 1 && !saveRoots.isLibraryLikeFolderName(path.basename(parent))) emit(parent, readEntries(parent));
+        if (depth > 1 && !saveRoots.isLibraryLikeFolderName(path.basename(parent)) && !isNamedAfter(parent, emulatorExe)) emit(parent, readEntries(parent));
         return;
       }
       emit(dir, entries); // game folder
@@ -5348,4 +5378,5 @@ module.exports._internal = {
   NO_RECORD_TO_READ,
   isLibraryLikeFolderName: (name) => saveRoots.isLibraryLikeFolderName(name),
   unconfiguredDisplayName,
+  isNonGameProduct,
 };
