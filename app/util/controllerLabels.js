@@ -754,6 +754,8 @@ function comboPressed(gamepad, binding) {
   all, silently.
 */
 const controllerLabels = {
+  // Dispatched on document by controller.js when a pad comes or goes (only with pad navigation on).
+  GAMEPADS_CHANGED: 'aw-gamepads-changed',
   CONTROLLER_LAYOUTS,
   CONTROLLER_BUTTON_ORDER,
   CONTROLLER_BUTTONS,

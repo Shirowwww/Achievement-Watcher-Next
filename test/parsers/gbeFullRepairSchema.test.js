@@ -125,6 +125,9 @@ test('a switch writes steam_settings beside the dll it installs, not into a fold
   // One beside a dll of the plan is the setup's own and stays.
   const own = path.join(plugins, 'steam_settings');
   assert.equal(gameHealthRepair.switchSettingsDir(plan, own), own);
+  // A plan with no target leaves the switch's own guard to refuse it, instead of a TypeError here.
+  assert.equal(gameHealthRepair.switchSettingsDir({ dirs: [] }, own), own);
+  assert.equal(gameHealthRepair.switchSettingsDir(null, null), null);
 });
 
 test('a switch that fails half way puts every file back', async () => {

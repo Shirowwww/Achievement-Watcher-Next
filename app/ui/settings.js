@@ -681,7 +681,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     // controller.js says when a pad comes or goes, and only while navigation by pad is on (#217).
-    document.addEventListener('aw-gamepads-changed', populateControllerBindingOptions);
+    document.addEventListener(window.ControllerLabels.GAMEPADS_CHANGED, populateControllerBindingOptions);
     document.addEventListener('locale-labels-changed', populateControllerBindingOptions);
     // The Help tab writes its text itself, whether or not Settings is open.
     document.addEventListener('locale-labels-changed', () => window.AchievementHelp.render($));

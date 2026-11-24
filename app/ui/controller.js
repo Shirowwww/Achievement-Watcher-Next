@@ -470,7 +470,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         }
         padConnected = connected;
         updatePollingState();
-        document.dispatchEvent(new Event('aw-gamepads-changed'));
+        document.dispatchEvent(new Event(window.ControllerLabels.GAMEPADS_CHANGED));
       },
     });
     // Settings and Help name buttons after the pad in use: they read it here, so with navigation by

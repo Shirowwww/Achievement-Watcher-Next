@@ -282,6 +282,7 @@ async function installEmulatorRuntime({
   dll the game loads (an engine folder leads the list). A folder left beside the exe is not it.
 */
 function switchSettingsDir(plan, steamSettings = null) {
+  if (!plan || !Array.isArray(plan.dirs) || plan.dirs.length === 0) return steamSettings;
   const target = path.join(plan.dirs[0], 'steam_settings');
   return steamSettings && path.resolve(steamSettings).toLowerCase() === path.resolve(target).toLowerCase() ? steamSettings : target;
 }
