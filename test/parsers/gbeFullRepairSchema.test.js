@@ -110,6 +110,23 @@ test('switching emulators writes the dll and a minimal steam_settings together',
   assert.equal(fs.readFileSync(path.join(gameDir, 'steam_api64.dll'), 'utf8'), 'GBE');
 });
 
+// A Unity game switched to the exe's folder before: that steam_settings is not where the dll now goes.
+test('a switch writes steam_settings beside the dll it installs, not into a folder left elsewhere', async () => {
+  const gameDir = runeGame();
+  const plugins = path.join(gameDir, 'Game_Data', 'Plugins', 'x86_64');
+  fs.mkdirSync(plugins, { recursive: true });
+  fs.mkdirSync(path.join(gameDir, 'steam_settings'), { recursive: true });
+  const plan = { dirs: [plugins], file: 'steam_api64.dll', arch: 'x64', native: false };
+  const stale = path.join(gameDir, 'steam_settings');
+  assert.equal(gameHealthRepair.switchSettingsDir(plan, stale), path.join(plugins, 'steam_settings'));
+  const result = await gameHealthRepair.switchToSupportedRuntime({ goldberg, gbeInstaller: fakeInstaller(), plan, steamSettings: stale, appid: '1903340', schema, dlls: {}, sideline: () => [] });
+  assert.equal(result.steamSettings, path.join(plugins, 'steam_settings'));
+  assert.equal(fs.readFileSync(path.join(plugins, 'steam_settings', 'steam_appid.txt'), 'utf8'), '1903340');
+  // One beside a dll of the plan is the setup's own and stays.
+  const own = path.join(plugins, 'steam_settings');
+  assert.equal(gameHealthRepair.switchSettingsDir(plan, own), own);
+});
+
 test('a switch that fails half way puts every file back', async () => {
   const gameDir = runeGame();
   const userDataPath = path.join(tmp, 'userdata');

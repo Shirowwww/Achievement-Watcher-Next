@@ -2234,7 +2234,7 @@ async function runGameHealthAction(appid, action, button) {
     // successful switch end on "sidelined is not defined", with the game already switched.
     let sidelined = [];
     // A switch writes the dll and a minimal steam_settings as one record (see switchToSupportedRuntime).
-    const switchSettings = switching ? steamSettings || path.join(plan.dirs[0], 'steam_settings') : steamSettings;
+    const switchSettings = switching ? gameHealthRepair.switchSettingsDir(plan, steamSettings) : steamSettings;
     let reference = {};
     if (switching) {
       setGameHealthProgress({ phase: 'fetch' });

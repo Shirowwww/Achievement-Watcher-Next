@@ -18,6 +18,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Switching a Unity game to the supported emulator now replaces the file the game loads.** A Unity
+  game loads its Steam file from `<Game>_Data\Plugins`, but the switch put the emulator beside the
+  exe, so RUNE kept running there and Game Health kept naming it. The emulator and its settings now
+  go into Plugins, where RUNE's files are set aside, even after an earlier switch went to the wrong
+  folder.
 - **An achievement the popup announced no longer stays locked in the library.** A game that saves
   its counter a little past the goal (80.43 of 80 for RUNE's Death Stranding 2) got its popup, while
   the library waited for the exact value. The library and the popups now read a save with the same

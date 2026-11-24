@@ -278,12 +278,22 @@ async function installEmulatorRuntime({
 }
 
 /*
+  Where a switch writes steam_settings: GBE reads the one beside its dll, and the first target is the
+  dll the game loads (an engine folder leads the list). A folder left beside the exe is not it.
+*/
+function switchSettingsDir(plan, steamSettings = null) {
+  const target = path.join(plan.dirs[0], 'steam_settings');
+  return steamSettings && path.resolve(steamSettings).toLowerCase() === path.resolve(target).toLowerCase() ? steamSettings : target;
+}
+
+/*
   Switch a crack-served game to GBE Fork in one step. Installing the dll alone left GBE with no
   steam_settings and no appid, and the game crashed at launch until the second step ran (Clair
   Obscur). The dll, steam_appid.txt and the schema now go in together; the caller runs this inside
   one repairJournal record, so a failure anywhere puts every file back. Downloads (`dlls`, the
   reference) happen before: nothing here waits on the network.
 */
+
 async function switchToSupportedRuntime({
   gbeInstaller,
   goldberg,
@@ -299,7 +309,7 @@ async function switchToSupportedRuntime({
 } = {}) {
   if (!/^[0-9]+$/.test(String(appid || ''))) throw new Error('switchToSupportedRuntime: GBE needs a Steam appid, none is known for this game');
   if (!plan || !Array.isArray(plan.dirs) || plan.dirs.length === 0) throw new Error('switchToSupportedRuntime: no target directory resolved');
-  const target = steamSettings || path.join(plan.dirs[0], 'steam_settings');
+  const target = switchSettingsDir(plan, steamSettings);
   const sidelined = sideline() || [];
   const summary = await installEmulatorRuntime({
     gbeInstaller,
@@ -351,6 +361,7 @@ module.exports = {
   repairAchievementData,
   installEmulatorRuntime,
   switchToSupportedRuntime,
+  switchSettingsDir,
   switchInterfacesReady,
   captureLegacyDlcConfig,
   migrateDlcConfig,

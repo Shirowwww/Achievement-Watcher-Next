@@ -92,6 +92,47 @@ function diagnose(layout) {
   ok(!issue, 'a root-only GBE setup is not flagged');
 }
 
+{
+  // Switching a RUNE release to GBE: the dll goes where Unity loads it, and RUNE's files there are set aside.
+  const gbe = require(path.join(__dirname, '..', '..', 'app', 'parser', 'gbeInstaller.js'));
+  const crack = require(path.join(__dirname, '..', '..', 'app', 'util', 'crackLoaderDetect.js'));
+  const dir = release({
+    'Probably Stolen.exe': 'stub',
+    [`${PLUGINS}/steam_api64.dll`]: 'MZ rune runtime',
+    [`${PLUGINS}/steam_api64.rne`]: VALVE_DLL,
+    [`${PLUGINS}/steam_emu.ini`]: '[Settings]\n',
+  });
+  const plugins = path.join(dir, ...PLUGINS.split('/'));
+  const dirs = gbe.runtimeDllDirs({ gameDir: dir, exePath: path.join(dir, 'Probably Stolen.exe') });
+  ok(dirs.length === 1 && dirs[0] === plugins, `the runtime goes to Plugins, not beside the exe (got ${dirs.map((d) => path.relative(dir, d)).join(', ')})`);
+  const sidelined = crack.disableLoaderMarkers([dir, ...dirs]);
+  ok(sidelined.length === 2, `RUNE's ini and .rne beside the Plugins dll are set aside (got ${sidelined.length})`);
+  fs.writeFileSync(path.join(plugins, 'steam_api64.dll'), GBE_DLL);
+  ok(crack.detectWorkingCrackLoader(dir) === null, 'once switched, the game no longer reads as RUNE');
+}
+
+{
+  // After switches that went beside the exe: GBE and a full steam_settings left at the root, the new
+  // GBE in Plugins. Unity loads Plugins, so its folder is the one AW reads and repairs.
+  const dir = release({
+    'Game.exe': 'stub',
+    'steam_api64.dll': GBE_DLL,
+    ...settings(''),
+    [`${PLUGINS}/steam_api64.dll`]: GBE_DLL,
+    [`${PLUGINS}/steam_settings/steam_appid.txt`]: APPID,
+  });
+  const found = goldberg.findSteamSettings(dir);
+  ok(found && path.relative(dir, found) === path.join(...PLUGINS.split('/'), 'steam_settings'), `the Plugins steam_settings wins over a leftover at the root (got ${found && path.relative(dir, found)})`);
+}
+
+{
+  // The same leftover, with the root dll also among the switch's targets: settings follow the dll Unity loads.
+  const repair = require(path.join(__dirname, '..', '..', 'app', 'util', 'gameHealthRepair.js'));
+  const plugins = path.join('C:/Game', ...PLUGINS.split('/'));
+  const target = repair.switchSettingsDir({ dirs: [plugins, 'C:/Game'] }, path.join('C:/Game', 'steam_settings'));
+  ok(target === path.join(plugins, 'steam_settings'), `a switch writes settings beside the first target, the dll the game loads (got ${target})`);
+}
+
 for (const d of tmpDirs) {
   try {
     fs.rmSync(d, { recursive: true, force: true });

@@ -174,8 +174,10 @@ function findSteamSettings(gameDir, maxDepth = 6) {
   const directExists = fs.existsSync(direct) && fs.statSync(direct).isDirectory();
   // A packaged Unreal build loads its dll from Engine/Binaries/ThirdParty/Steamworks, so its
   // steam_settings belongs there and is scored below alongside the walk's own candidates. It is
-  // also the one folder the walk cannot reach on its own when gameDir is the project folder.
-  const engineDllDirs = unrealLayout.steamworksDllDirs(gameDir);
+  // also the one folder the walk cannot reach on its own when gameDir is the project folder. A Unity
+  // player's Plugins folder with a steam_api dll is loaded first the same way.
+  const engineDllDirs = crackLoaderDetect.engineDllDirs(gameDir);
+  const isEngineDllDir = (dir) => engineDllDirs.some((engineDir) => path.resolve(engineDir).toLowerCase() === path.resolve(dir).toLowerCase());
   // The root folder only short-circuits the walk when the dll is at the root too. Otherwise a
   // nested steam_settings beside the real dll is the one the emulator reads, and returning the root
   // one hid an Unreal game whose whole setup was in a folder nothing ever opened.
@@ -196,7 +198,7 @@ function findSteamSettings(gameDir, maxDepth = 6) {
       produce, and it is inert - so an engine-side folder wins even while it is still incomplete,
       which is then reported as a missing schema and repaired in place.
     */
-    if (unrealLayout.isSteamworksDllDir(parent)) score += 200;
+    if (unrealLayout.isSteamworksDllDir(parent) || isEngineDllDir(parent)) score += 200;
     // A GBE build already running beside it settles the question, even against the engine folder (#167).
     if (crackLoaderDetect.proxyLoadedRuntime(parent)) score += 400;
     try {

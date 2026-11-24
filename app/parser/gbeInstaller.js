@@ -824,9 +824,10 @@ function runtimeDllDirs({ gameDir, dllPaths = [], exePath = null, steamSettings 
     A packaged Unreal build loads steam_api by explicit path from Engine/Binaries/ThirdParty/
     Steamworks, so those folders lead the list and are never treated as auxiliary - they are the
     only ones that decide, whatever sits beside the executable. Listed even when no dll has been
-    detected in them, so an install reaches them on the first pass.
+    detected in them, so an install reaches them on the first pass. Unity Plugins folders with a
+    steam_api dll lead the same way.
   */
-  const engineDirs = unrealLayout.steamworksDllDirs(gameDir || exeDir || fallbackDir);
+  const engineDirs = crackLoaderDetect.engineDllDirs(gameDir || exeDir || fallbackDir);
   const preferred = [...engineDirs, exeDir, settingsDir].filter(Boolean);
   const out = [];
   const add = (dir) => {
