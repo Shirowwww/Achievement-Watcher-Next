@@ -5326,10 +5326,16 @@ let overlayHotkeyPressedAt = 0;
 // toggle the overlay on every key repeat. Ignoring repeats inside one human keypress restores it.
 const OVERLAY_HOTKEY_REPEAT_MS = 250;
 
+let vkForCharOfLayout = null;
+function keyboardVkForChar() {
+  if (!vkForCharOfLayout) vkForCharOfLayout = require('../util/keyboardLayout.js').createVkForChar(path.join(watchdogDir(), 'node_modules', 'koffi'));
+  return vkForCharOfLayout;
+}
+
 function registerOverlayHotkey(value) {
   let accelerator;
   try {
-    accelerator = toAccelerator(value);
+    accelerator = toAccelerator(value, { vkForChar: keyboardVkForChar() });
   } catch (err) {
     debug.log(`[hotkey] ${err.message || err}`);
     return;

@@ -18,6 +18,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **The overlay shortcut works with keys of any keyboard layout.** A shortcut on a key that a US
+  keyboard does not have, such as º on a Spanish keyboard or ù on a French one, was never registered,
+  so the overlay did not open. On Windows it now uses the key that types that character.
 - **EA games cracked by anadius show the right unlock time, and notify again (#229).** anadius writes
   the time in UTC and AW Next read it as local time, so east of UTC unlocks looked hours old and were
   skipped as too old to announce. Times already recorded correct themselves.
