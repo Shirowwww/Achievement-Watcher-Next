@@ -112,6 +112,7 @@ const eaWatch = require('./console/eaWatch.js');
 const gogWatch = require('./console/gogWatch.js');
 const ubisoftWatch = require('./console/ubisoftWatch.js');
 const runeUplayWatch = require('./console/runeUplayWatch.js');
+const remedyEpicWatch = require('./console/remedyEpicWatch.js');
 const retroAchievementsWatch = require('./console/retroAchievementsWatch.js');
 const anadiusWatch = require('./console/anadiusWatch.js');
 const { isWinRTAvailable, canAppShowToast } = require('./util/powertoast');
@@ -274,6 +275,7 @@ const CONSOLE_WATCHERS = [
   { name: 'gog', watcher: gogWatch },
   { name: 'ubisoft', watcher: ubisoftWatch },
   { name: 'rune-uplay', watcher: runeUplayWatch },
+  { name: 'remedy-epic', watcher: remedyEpicWatch },
   { name: 'retroachievements', watcher: retroAchievementsWatch },
   { name: 'anadius', watcher: anadiusWatch },
 ];

@@ -25,6 +25,7 @@ const CONSOLE_PREFIXES = {
   'shadps4 emulator': '',
   'xenia emulator': 'xenia',
   'kytyps5 emulator': 'kytyps5',
+  'epic-official': 'remedy-epic',
   xlivelessness: 'xlln',
   [SOURCE_LABEL.X360_RECOMP]: 'x360recomp',
 };

@@ -11,6 +11,8 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **Alan Wake 2 achievements track live for RUNE/Epic installs.** New unlocks are detected from
+  Remedy's local achievement data and can show a popup.  
 - **Consoles & ports has its own page in Settings (#226).** The console emulators, the PC ports of
   console games and the community game fixes left Sources for a page next to Steam / GBE Fork and
   Ubisoft. Each switch that is on says how many games it found in your library, or, when it found
@@ -18,6 +20,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Alan Wake 2 achievements map to the right names and progress.** Remedy records now map by their
+  position in the achievement schema, and progress-based achievements wait for their required
+  totals.
 - **The overlay shortcut works with keys of any keyboard layout.** A shortcut on a key that a US
   keyboard does not have, such as º on a Spanish keyboard or ù on a French one, was never registered,
   so the overlay did not open. On Windows it now uses the key that types that character.
