@@ -385,12 +385,19 @@ function isInstalledSteamRecord(record) {
   return !!data && data.type === 'steamAPI' && data.installed !== false;
 }
 
+// Reads Steam stats records, scanning Steam's install manifests once for all of them.
+function steamStatsReader() {
+  let installs = null;
+  const readInstalls = () => (installs = installs || steam.scanLocalInstalls());
+  return (appid) => steam.steamStatsRecord(appid, { readInstalls });
+}
+
 /*
   The same Friend's Pass on a game Steam never installed here (Split Fiction): no Steam record is
   listed, so the empty OnlineFix folder was all the card read and the unlocks only showed while
   Steam rewrote its stats file. The Steam client's own stats for that appid are the save then.
 */
-async function addSteamStatsForEmptyOnlineFix(data, { statsRecord = (appid) => steam.steamStatsRecord(appid) } = {}) {
+async function addSteamStatsForEmptyOnlineFix(data, { statsRecord = steamStatsReader() } = {}) {
   const withSteam = new Set(data.filter((record) => record?.data?.type === 'steamAPI').map((record) => String(record.appid)));
   const wanted = new Set();
   for (const record of data) {
@@ -417,7 +424,7 @@ async function addSteamStatsForEmptyOnlineFix(data, { statsRecord = (appid) => s
   official-games setting does not cover it: with that setting off it had no record at all, and Steam's
   own stats file, the only place its unlocks are kept, was never read.
 */
-async function addSteamStatsForLuaGames(data, { luaAppids = () => steam.luaAddedAppids(), statsRecord = (appid) => steam.steamStatsRecord(appid) } = {}) {
+async function addSteamStatsForLuaGames(data, { luaAppids = () => steam.luaAddedAppids(), statsRecord = steamStatsReader() } = {}) {
   let appids = [];
   try {
     appids = await luaAppids();
@@ -2938,7 +2945,9 @@ async function discoverInScope(source, steamAccFilter, scope) {
 
   if (!scope && source.gog) {
     try {
-      data = data.concat(await gog.scan({ skipUniverseLanIds: universeLanRepaired.map((record) => record.data.gogAppId) }));
+      // A recorded id the folder no longer gives holds only the template copied there, not a save.
+      const skipUniverseLanIds = universeLanRepaired.flatMap((record) => [record.data.gogAppId, record.data.recordedGogAppId].filter(Boolean));
+      data = data.concat(await gog.scan({ skipUniverseLanIds }));
     } catch (err) {
       debug.error(err);
     }

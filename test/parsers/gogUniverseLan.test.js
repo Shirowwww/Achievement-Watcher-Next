@@ -38,6 +38,50 @@ test('findGogAppId reads the id out of goggame-<id>.info', (t) => {
   assert.equal(gogUniverseLan.findGogAppId(gameDir), '1207658930');
 });
 
+/*
+  Cyberpunk 2077 (GOG rip, Discord 26/11/2026) keeps goggame-1256837418.info (Phantom Liberty) beside
+  its own goggame-1423049311.info. UniverseLAN names its data folder after the rootGameId inside the
+  first info file (MachineInfo.cxx), so AW must take the same id or it reads a folder never written.
+*/
+function cyberpunkRoot(t) {
+  const gameDir = tmpDir(t);
+  const info = (gameId, extra = {}) => JSON.stringify({ gameId, rootGameId: '1423049311', name: 'Cyberpunk 2077', ...extra });
+  fs.writeFileSync(path.join(gameDir, 'goggame-1256837418.info'), info('1256837418', { name: 'Cyberpunk 2077 Phantom Liberty' }));
+  fs.writeFileSync(path.join(gameDir, 'goggame-1423049311.info'), info('1423049311'));
+  fs.writeFileSync(path.join(gameDir, 'goggame-1597316373.info'), info('1597316373', { name: 'REDmod' }));
+  return gameDir;
+}
+
+test('findGogAppId takes the root game id UniverseLAN names its folder after, not a DLC file name', (t) => {
+  assert.equal(gogUniverseLan.findGogAppId(cyberpunkRoot(t)), '1423049311');
+});
+
+test('findGogAppId falls back to gameId, then to the file name, when the info file says less', (t) => {
+  const withGameId = tmpDir(t);
+  fs.writeFileSync(path.join(withGameId, 'goggame-1.info'), 'not json');
+  fs.writeFileSync(path.join(withGameId, 'goggame-2.info'), JSON.stringify({ gameId: 2 }));
+  assert.equal(gogUniverseLan.findGogAppId(withGameId), '2');
+  const unreadable = tmpDir(t);
+  fs.writeFileSync(path.join(unreadable, 'goggame-77.info'), '');
+  assert.equal(gogUniverseLan.findGogAppId(unreadable), '77');
+});
+
+test('scan reads the save under the root game id for an install recorded under a DLC id', (t) => {
+  const gameDir = cyberpunkRoot(t);
+  const userDataPath = tmpDir(t);
+  const localAppData = tmpDir(t);
+  gogUniverseLan.recordInstall({ userDataPath, gameDir, gogAppId: '1256837418' });
+  const ini = gogUniverseLan.achievementsIniPath({ localAppData, gogAppId: '1423049311' });
+  fs.mkdirSync(path.dirname(ini), { recursive: true });
+  fs.writeFileSync(ini, '[ACH_1]\nUnlocked = 1\nUnlockTime = 1764150000\n');
+
+  const [record] = gogUniverseLan.scan({ userDataPath, localAppData });
+  assert.equal(record.appid, '1423049311');
+  assert.equal(record.data.gogAppId, '1423049311');
+  assert.equal(record.data.recordedGogAppId, '1256837418', 'the old id is kept so the generic GOG scan skips its folder too');
+  assert.equal(record.name, 'Cyberpunk 2077');
+});
+
 test('findGogAppId returns null with no marker file', (t) => {
   assert.equal(gogUniverseLan.findGogAppId(tmpDir(t)), null);
 });
@@ -62,10 +106,26 @@ test('findGogInstallRoot gives up beyond three folders up', (t) => {
   assert.equal(gogUniverseLan.findGogInstallRoot(''), null);
 });
 
-test('versionsMatch tolerates dot and comma-space separated version strings', () => {
+// UniverseLAN names Galaxy SDKs with three numbers (its table and sha1_hashes.txt); a dll's fourth
+// FileVersion number is only GOG's build of that SDK.
+test('versionsMatch tolerates dot and comma-space separated version strings and the build number', () => {
   assert.equal(gogUniverseLan.versionsMatch('1.152.6.0', '1, 152, 6, 0'), true);
-  assert.equal(gogUniverseLan.versionsMatch('1.152.6.0', '1.152.6.1'), false);
+  assert.equal(gogUniverseLan.versionsMatch('1.152.6.0', '1.152.6.1'), true);
+  assert.equal(gogUniverseLan.versionsMatch('1.152.6.0', '1.152.5.0'), false);
+  assert.equal(gogUniverseLan.versionsMatch('1.92', '1.92.1'), false);
   assert.equal(gogUniverseLan.versionsMatch('', '1.0.0.0'), false);
+});
+
+// Seen on 2026-11-26: Cyberpunk 2077's GOG Galaxy64.dll reports 1.152.2.1, and the fix said no
+// UniverseLAN build supported it although release 1.152.2 does.
+test('a Galaxy dll whose FileVersion carries a build number still finds its UniverseLAN release', () => {
+  const table = [
+    { release: '1.152.1', sdkVersions: ['1.152.1'] },
+    { release: '1.152.2', sdkVersions: ['1.152.2'] },
+  ];
+  assert.equal(gogUniverseLan.releaseForSdkVersion(table, '1.152.2.1'), '1.152.2');
+  const builds = [{ name: 'UniverseLAN-1.152.2-Build-813-x64_x86', dir: 'C:/cache/1.152.2' }];
+  assert.equal(gogUniverseLan.matchBuild({ builds, compatTable: table, sdkVersion: '1.152.2.1' }).build.dir, 'C:/cache/1.152.2');
 });
 
 test('buildVersionFromFolderName extracts the release version', () => {
@@ -171,6 +231,13 @@ test('readAchievementsIni parses Unlocked/UnlockTime per achievement section', (
   assert.deepEqual(parsed.Untouched, { earned: false, earned_time: 0 });
 });
 
+// UniverseLAN saves the flag with SimpleIni's SetBoolValue, which writes true/false (IniData.cxx).
+test('readAchievementsIni reads the true/false flag UniverseLAN itself writes', () => {
+  const parsed = gogUniverseLan.readAchievementsIni('[Act1]\nUnlocked = true\nUnlockTime = 0\n\n[Act2]\nUnlocked = false\nUnlockTime = 0\n');
+  assert.deepEqual(parsed.Act1, { earned: true, earned_time: 0 });
+  assert.deepEqual(parsed.Act2, { earned: false, earned_time: 0 });
+});
+
 test('readAchievements returns null when no save exists yet, and reads it once it does', (t) => {
   const root = tmpDir(t);
   const localAppData = path.join(root, 'LocalAppData');
@@ -213,19 +280,49 @@ test('repairInstallation installs a matched build, writes the ini, merges data a
   assert.ok(fs.existsSync(path.join(localAppData, 'UniverseLAN', '1207658930', 'UniverseLANData', 'Achievements.ini')));
 });
 
-test('repairInstallation leaves an unmatched dll untouched and reports it', (t) => {
+/*
+  Cyberpunk 2077's Galaxy SDK is in the 1.149.x range UniverseLAN lists with no release. Nothing was
+  installed, yet the fix said "applied" and recorded the game (Discord 26/11/2026): it must fail
+  instead, naming the version, and leave the game as it was.
+*/
+test('repairInstallation fails, naming the SDK version, when no dll has a UniverseLAN build', (t) => {
   const root = tmpDir(t);
   const gameDir = path.join(root, 'game');
   fs.mkdirSync(gameDir, { recursive: true });
   fs.writeFileSync(path.join(gameDir, 'goggame-42.info'), '{}');
   fs.writeFileSync(path.join(gameDir, 'Galaxy64.dll'), 'original');
+  const localAppData = path.join(root, 'LocalAppData');
 
-  const builds = { list: [], sdkVersionOf: () => '9.9.9.9' };
-  const result = gogUniverseLan.repairInstallation({ gameDir, builds, compatTable: [], localAppData: path.join(root, 'LocalAppData') });
+  const builds = { list: [{ name: 'UniverseLAN-1.149.0-Build-813-x64_x86', dir: root }], sdkVersionOf: () => '1.149.17.0' };
+  const compatTable = gogUniverseLan.parseCompatTable('| UniverseLAN Release | Galaxy SDK |\n|---|---|\n| 1.149.0 | 1.149.0 |\n| - | 1.149.12 <br> 1.149.16 |\n');
+  assert.throws(
+    () => gogUniverseLan.repairInstallation({ gameDir, builds, compatTable, localAppData }),
+    (err) => /1\.149\.17\.0/.test(err.message) && err.unmatched.length === 1
+  );
 
-  assert.equal(result.unmatched.length, 1);
   assert.equal(fs.readFileSync(path.join(gameDir, 'Galaxy64.dll'), 'utf8'), 'original');
   assert.equal(fs.existsSync(path.join(gameDir, 'Galaxy64.dll.BAK')), false);
+  assert.equal(fs.existsSync(path.join(gameDir, gogUniverseLan.BACKUP_DIR_NAME)), false);
+  assert.equal(fs.existsSync(localAppData), false, 'no ini and no data folder written');
+});
+
+test('repairInstallation still installs the dlls that match and reports the others', (t) => {
+  const root = tmpDir(t);
+  const gameDir = path.join(root, 'game');
+  const buildDir = path.join(root, 'UniverseLAN-1.152.11-Build-813-x64_x86');
+  fs.mkdirSync(path.join(gameDir, 'x86'), { recursive: true });
+  fs.mkdirSync(buildDir, { recursive: true });
+  fs.writeFileSync(path.join(buildDir, 'Galaxy64.dll'), 'universelan');
+  fs.writeFileSync(path.join(gameDir, 'goggame-42.info'), '{}');
+  fs.writeFileSync(path.join(gameDir, 'Galaxy64.dll'), 'original');
+  fs.writeFileSync(path.join(gameDir, 'x86', 'Galaxy.dll'), 'original x86');
+
+  const builds = { list: [{ name: path.basename(buildDir), dir: buildDir }], sdkVersionOf: (file) => (/Galaxy64/.test(file) ? '1.152.11.0' : '1.149.17.0') };
+  const result = gogUniverseLan.repairInstallation({ gameDir, builds, compatTable: [], localAppData: path.join(root, 'LocalAppData') });
+
+  assert.equal(result.installed.length, 1);
+  assert.deepEqual(result.unmatched.map((entry) => entry.sdkVersion), ['1.149.17.0']);
+  assert.equal(fs.readFileSync(path.join(gameDir, 'x86', 'Galaxy.dll'), 'utf8'), 'original x86');
 });
 
 test('repairInstallation rejects a folder with no goggame-<id>.info', (t) => {

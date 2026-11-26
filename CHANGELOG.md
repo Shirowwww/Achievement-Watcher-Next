@@ -31,6 +31,15 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Game Health says when a switch to GBE did not take.** If the crack it replaced keeps writing its
   saves afterwards, the game is not loading the new file, and the report names the crack and its
   folder instead of saying nothing was recorded yet.
+- **Games added to Steam through LuaTools or SteamTools no longer count as installed once Steam has
+  uninstalled them,** so "Show installed only" hides them again.
+- **The GOG achievement fix (UniverseLAN) reads more games, and says when it cannot apply.** It reads
+  the save of games whose folder also holds a DLC's GOG file, such as Cyberpunk 2077 with Phantom
+  Liberty, and every unlock UniverseLAN writes; an install fixed with an earlier version is read
+  without applying the fix again. When UniverseLAN has no build for the game's Galaxy version, the fix
+  now says which version is missing and leaves the game untouched, instead of saying it was applied.
+  A Galaxy file whose version carries GOG's build number, as in Cyberpunk 2077's GOG copy, now finds
+  its UniverseLAN build.
 - **Imported SAN themes glow and size their text as in SAN.** The glow of a theme imported from Steam
   Achievement Notifier was cut off at the edge of the notification, leaving a hard rectangle with
   filled corners instead of a soft halo. At a size other than 100%, its text was also drawn slightly

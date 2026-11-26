@@ -316,9 +316,23 @@ module.exports.scanLegit = async (listingType = 0, steamAccFilter = '0') => {
 /*
   The Steam reader for one game this client keeps stats for, whoever installed it. scanLegit() only
   lists what Steam installed, so a crack that leaves its achievements to the Steam client (OnlineFix's
-  Friend's Pass) is read through this instead.
+  Friend's Pass) is read through this instead. A stats file outlives the game (LuaTools leaves its
+  script too), so only a Steam install manifest whose folder is on disk makes the game installed.
 */
-module.exports.steamStatsRecord = async (appid, { readSteamPath = () => getSteamPath(), readUsers = () => getSteamUsersList() } = {}) => {
+async function steamInstallOf(appid, readInstalls) {
+  try {
+    const local = (await readInstalls()).get(String(appid));
+    if (local && local.gameDir && fs.existsSync(local.gameDir)) return { gameDir: local.gameDir, installed: true };
+  } catch {
+    /* no readable steamapps folder: nothing proves an install */
+  }
+  return { installed: false };
+}
+
+module.exports.steamStatsRecord = async (
+  appid,
+  { readSteamPath = () => getSteamPath(), readUsers = () => getSteamUsersList(), readInstalls = () => module.exports.scanLocalInstalls() } = {}
+) => {
   let steamPath;
   try {
     steamPath = await readSteamPath();
@@ -331,7 +345,7 @@ module.exports.steamStatsRecord = async (appid, { readSteamPath = () => getSteam
   const users = (await readUsers()) || [];
   for (const bin of bins) {
     const user = users.find((u) => String(u.user) === bin.accountId);
-    if (user) return { appid: String(appid), source: `Steam (${user.name})`, data: { type: 'steamAPI', userID: user, cachePath, installed: true } };
+    if (user) return { appid: String(appid), source: `Steam (${user.name})`, data: { type: 'steamAPI', userID: user, cachePath, ...(await steamInstallOf(appid, readInstalls)) } };
   }
   return null;
 };

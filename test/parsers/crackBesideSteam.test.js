@@ -72,15 +72,20 @@ test('a game Steam keeps stats for is read through the account those stats belon
   fs.mkdirSync(stats, { recursive: true });
   fs.writeFileSync(path.join(stats, 'UserGameStats_274782616_1392860.bin'), '');
   const user = { user: '274782616', name: 'Shirow' };
-  const options = { readSteamPath: async () => steamPath, readUsers: async () => [{ user: '1', name: 'Other' }, user] };
+  const options = { readSteamPath: async () => steamPath, readUsers: async () => [{ user: '1', name: 'Other' }, user], readInstalls: async () => new Map() };
 
   const record = await steam.steamStatsRecord('1392860', options);
   assert.deepEqual(record, {
     appid: '1392860',
     source: 'Steam (Shirow)',
-    data: { type: 'steamAPI', userID: user, cachePath: path.join(steamPath, 'appcache/stats'), installed: true },
+    data: { type: 'steamAPI', userID: user, cachePath: path.join(steamPath, 'appcache/stats'), installed: false },
   });
   assert.equal(await steam.steamStatsRecord('480', options), null, 'no stats file for that game');
+  assert.equal(
+    (await steam.steamStatsRecord('1392860', { ...options, readInstalls: async () => Promise.reject(new Error('no steamapps')) })).data.installed,
+    false,
+    'no readable install is no install'
+  );
   assert.equal(await steam.steamStatsRecord('1392860', { ...options, readUsers: async () => [] }), null, 'stats of an account not on this PC');
   assert.equal(await steam.steamStatsRecord('1392860', { readSteamPath: async () => Promise.reject(new Error('no Steam')) }), null);
 });
@@ -107,6 +112,43 @@ test('the games LuaTools or SteamTools added to Steam are listed from config/stp
   assert.deepEqual((await steam.luaAddedAppids({ readSteamPath: async () => steamPath })).sort(), ['1091500', '1245620', '648800']);
   assert.deepEqual(await steam.luaAddedAppids({ readSteamPath: async () => sandbox(t) }), [], 'no stplug-in folder');
   assert.deepEqual(await steam.luaAddedAppids({ readSteamPath: async () => Promise.reject(new Error('no Steam')) }), []);
+});
+
+/*
+  A LuaTools game Steam uninstalled keeps its script and its stats file, so it is still read, but
+  only a Steam install manifest whose folder is on disk makes it installed (cs.rin, 26/11/2026: every
+  uninstalled game came back under "installed only").
+*/
+test('a game read from Steam stats is installed only while Steam has its folder on disk', async (t) => {
+  const steamPath = sandbox(t);
+  const stats = path.join(steamPath, 'appcache', 'stats');
+  fs.mkdirSync(stats, { recursive: true });
+  for (const appid of ['648800', '1091500', '1245620']) fs.writeFileSync(path.join(stats, `UserGameStats_274782616_${appid}.bin`), '');
+  const raft = path.join(steamPath, 'steamapps', 'common', 'Raft');
+  fs.mkdirSync(raft, { recursive: true });
+  const installs = new Map([
+    ['648800', { name: 'Raft', gameDir: raft }],
+    ['1245620', { name: 'ELDEN RING', gameDir: path.join(steamPath, 'steamapps', 'common', 'ELDEN RING') }], // manifest left, folder gone
+  ]);
+  let scans = 0;
+  const options = {
+    readSteamPath: async () => steamPath,
+    readUsers: async () => [{ user: '274782616', name: 'Shirow' }],
+    readInstalls: async () => {
+      scans++;
+      return installs;
+    },
+  };
+
+  const installed = await steam.steamStatsRecord('648800', options);
+  assert.equal(installed.data.installed, true);
+  assert.equal(installed.data.gameDir, raft, 'the Steam folder is handed on for exe detection');
+  for (const appid of ['1091500', '1245620']) {
+    const record = await steam.steamStatsRecord(appid, options);
+    assert.equal(record.data.installed, false, `${appid} has stats but no install`);
+    assert.equal(record.data.gameDir, undefined);
+  }
+  assert.ok(scans > 0);
 });
 
 test('a LuaTools game is read from the Steam client stats whatever the official-games setting', async () => {

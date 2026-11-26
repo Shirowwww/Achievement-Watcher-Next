@@ -12,6 +12,7 @@ const path = require('path');
 const emuIni = require('../util/emuIni.js');
 const winHosts = require('../util/winHosts.js');
 const { replaceFileSync, unlinkForce } = require('../util/replaceFile.js');
+const { isTruthyFlag } = require('./emuSave.js');
 
 const noopLog = { log() {}, error() {} };
 
@@ -91,21 +92,46 @@ function hasGalaxyDll(gameDir, now = Date.now()) {
   return value;
 }
 
-// The GOG App ID from the install's own goggame-<id>.info marker (its presence is what proves this
-// is a real GOG-published install, not just any folder that happens to carry a Galaxy dll).
-function findGogAppId(gameDir) {
-  const pick = (() => {
-    try {
-      return fs.readdirSync(gameDir, { withFileTypes: true });
-    } catch {
-      return [];
+const INFO_FILE = /^goggame-(\d+)\.info$/i;
+const MAX_INFO_BYTES = 1024 * 1024;
+
+// rootGameId, else gameId, of one goggame-<id>.info: a DLC's file names its base game there.
+function infoGameId(file) {
+  try {
+    if (fs.statSync(file).size > MAX_INFO_BYTES) return null;
+    const info = JSON.parse(fs.readFileSync(file, 'utf8'));
+    for (const key of ['rootGameId', 'gameId']) {
+      const id = String(info?.[key] ?? '').trim();
+      if (/^\d+$/.test(id)) return id;
     }
-  })().find((entry) => entry.isFile() && /^goggame-\d+\.info$/i.test(entry.name));
-  if (pick) {
-    const m = pick.name.match(/^goggame-(\d+)\.info$/i);
-    if (m) return m[1];
+  } catch {
+    /* not JSON: the next file, or the file name, answers */
   }
   return null;
+}
+
+/*
+  The GOG App ID of an install, from its goggame-<id>.info markers (their presence is what proves a
+  GOG-published install). UniverseLAN's own rule, since its data folder is named after it: the first
+  file in name order that holds an id, its rootGameId first (MachineInfo.cxx). Cyberpunk 2077 lists
+  Phantom Liberty's file before its own.
+*/
+function findGogAppId(gameDir) {
+  let names = [];
+  try {
+    names = fs
+      .readdirSync(gameDir, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && INFO_FILE.test(entry.name))
+      .map((entry) => entry.name)
+      .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  } catch {
+    return null;
+  }
+  for (const name of names) {
+    const id = infoGameId(path.join(gameDir, name));
+    if (id) return id;
+  }
+  return names.length > 0 ? names[0].match(INFO_FILE)[1] : null;
 }
 
 const GOG_ROOT_MAX_CLIMB = 3;
@@ -136,6 +162,10 @@ function versionParts(value) {
   return parts;
 }
 
+// The numbers that name a Galaxy SDK: UniverseLAN's table and hashes use three, and a dll's fourth
+// FileVersion number is GOG's build of that SDK (Cyberpunk 2077's GOG Galaxy64.dll: 1.152.2.1).
+const SDK_VERSION_PARTS = 3;
+
 // Tolerant of "1.152.6.0" as well as "1, 152, 6, 0" (how UniverseLAN's own dlls report FileVersion).
 function versionsMatch(a, b) {
   if (!a || !b) return false;
@@ -143,9 +173,8 @@ function versionsMatch(a, b) {
   const pa = versionParts(a);
   const pb = versionParts(b);
   if (!pa || !pb) return false;
-  const len = Math.max(pa.length, pb.length);
-  for (let i = 0; i < len; i++) {
-    if ((pa[i] || 0) !== (pb[i] || 0)) return false;
+  for (let i = 0; i < SDK_VERSION_PARTS; i++) {
+    if (pa[i] !== pb[i]) return false;
   }
   return true;
 }
@@ -399,6 +428,13 @@ function repairInstallation({ gameDir, builds, compatTable, localAppData, log = 
     }
     plans.push({ dll, build: picked.build, tier: picked.tier });
   }
+  // Nothing to install is a failure the user must see, never an "applied" fix (Cyberpunk 2077: 1.149.x).
+  if (plans.length === 0) {
+    const versions = [...new Set(unmatched.map((entry) => entry.sdkVersion || 'unreadable'))].join(', ');
+    const error = new Error(`no UniverseLAN build supports this game's Galaxy SDK version (${versions}); the game was left as it was`);
+    error.unmatched = unmatched;
+    throw error;
+  }
 
   const touched = [];
   for (const plan of plans) {
@@ -406,7 +442,7 @@ function repairInstallation({ gameDir, builds, compatTable, localAppData, log = 
     const serverName = SERVER_NAMES[plan.dll.arch];
     touched.push(path.join(path.dirname(plan.dll.file), serverName));
   }
-  const snapshot = touched.length > 0 ? createSetupBackup({ gameDir, files: touched }) : null;
+  const snapshot = createSetupBackup({ gameDir, files: touched });
 
   try {
     const installed = [];
@@ -414,8 +450,8 @@ function repairInstallation({ gameDir, builds, compatTable, localAppData, log = 
       installed.push({ ...installBuildFiles({ galaxyDll: plan.dll, buildDir: plan.build.dir }), tier: plan.tier });
       log.log(`[gog-universelan] installed ${plan.build.name} for ${path.basename(plan.dll.file)} (${plan.tier})`);
     }
-    const ini = plans.length > 0 ? writeUniverseLanIniIfMissing({ buildDir: plans[0].build.dir, localAppData }) : { wrote: false };
-    const data = plans.length > 0 ? mergeDataFolders({ buildDir: plans[0].build.dir, localAppData, gogAppId }) : { copied: [], skipped: [] };
+    const ini = writeUniverseLanIniIfMissing({ buildDir: plans[0].build.dir, localAppData });
+    const data = mergeDataFolders({ buildDir: plans[0].build.dir, localAppData, gogAppId });
     return { gameDir, gogAppId, installed, ini, data, unmatched, backupDir: snapshot && snapshot.backupDir };
   } catch (error) {
     if (snapshot) {
@@ -446,7 +482,8 @@ function readAchievementsIni(text) {
   for (const section of doc.sections) {
     const values = emuIni.readIniSectionValues(doc, section.header.replace(/^\[|\]$/g, ''));
     const earnedTime = parseInt(values.unlocktime, 10) || 0;
-    const unlockedFlag = String(values.unlocked || '').trim() === '1';
+    // UniverseLAN writes true/false (SimpleIni SetBoolValue); hand-made files may hold 1/0.
+    const unlockedFlag = isTruthyFlag(values.unlocked);
     out[section.header.replace(/^\[|\]$/g, '')] = { earned: unlockedFlag || earnedTime > 0, earned_time: earnedTime };
   }
   return out;
@@ -555,20 +592,31 @@ function scan({ userDataPath, localAppData = null }) {
   for (const entry of readInstalls(userDataPath)) {
     if (!fs.existsSync(entry.gameDir)) continue;
     const candidates = localAppData ? [localAppData] : winHosts.hostsFor(entry.gameDir).map((host) => winHosts.hostPath(host, 'LOCALAPPDATA'));
-    const found = candidates.find((dir) => dir && fs.existsSync(achievementsIniPath({ localAppData: dir, gogAppId: entry.gogAppId })));
+    // Read again from the folder: an older version may have recorded a DLC's id (Cyberpunk 2077).
+    const ids = [...new Set([findGogAppId(entry.gameDir), entry.gogAppId].filter(Boolean))];
+    let found = null;
+    for (const gogAppId of ids) {
+      const dir = candidates.find((root) => root && fs.existsSync(achievementsIniPath({ localAppData: root, gogAppId })));
+      if (dir) {
+        found = { gogAppId, dir };
+        break;
+      }
+    }
     if (!found) continue;
+    const title = readGogGameTitle(entry.gameDir, found.gogAppId);
     out.push({
-      appid: entry.gogAppId,
+      appid: found.gogAppId,
       // gog.js's label for every other UniverseLAN save: a GOG game, but not a Galaxy-owned copy,
       // so no purchase badge and the local save can be reset.
       source: 'gog',
-      name: readGogGameTitle(entry.gameDir, entry.gogAppId),
+      name: title,
       data: {
         type: 'gogUniverseLan',
-        title: readGogGameTitle(entry.gameDir, entry.gogAppId),
-        gogAppId: entry.gogAppId,
+        title,
+        gogAppId: found.gogAppId,
+        ...(found.gogAppId !== entry.gogAppId ? { recordedGogAppId: entry.gogAppId } : {}),
         gameDir: entry.gameDir,
-        localAppData: found,
+        localAppData: found.dir,
       },
     });
   }
