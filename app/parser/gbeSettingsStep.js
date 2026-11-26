@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const goldberg = require(path.join(__dirname, 'goldberg.js'));
+const { canonicalSteamAppid } = require(path.join(__dirname, '..', 'util', 'steamAppid.js'));
 const gbeEffectiveConfig = require(path.join(__dirname, 'gbeEffectiveConfig.js'));
 const awManagedConfig = require(path.join(__dirname, '..', 'util', 'awManagedConfig.js'));
 const winHosts = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
@@ -103,8 +104,9 @@ async function apply({ plan: planned, appid, fetchDlc = null, replaceIdentity = 
   const result = { steamSettings, backupDir: null, written: [], created: [], removedLaunchAppIds: [] };
   const writes = new Set(planned.writes);
 
-  if (writes.has('steam_appid.txt') && /^[0-9]+$/.test(String(appid ?? '')) && !fs.existsSync(path.join(steamSettings, 'steam_appid.txt'))) {
-    fs.writeFileSync(path.join(steamSettings, 'steam_appid.txt'), String(appid));
+  const plainAppid = canonicalSteamAppid(appid);
+  if (writes.has('steam_appid.txt') && plainAppid && !fs.existsSync(path.join(steamSettings, 'steam_appid.txt'))) {
+    fs.writeFileSync(path.join(steamSettings, 'steam_appid.txt'), plainAppid);
   }
   if (writes.has('configs.app.ini')) {
     let dlcs = [];

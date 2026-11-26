@@ -19,6 +19,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { makeTempDir } = require('../helpers/tempDir');
+const { signedPe } = require('../helpers/fakePe');
 
 const gbe = require(path.join(__dirname, '..', '..', 'app', 'parser', 'gbeInstaller.js'));
 const goldberg = require(path.join(__dirname, '..', '..', 'app', 'parser', 'goldberg.js'));
@@ -26,7 +27,8 @@ const goldberg = require(path.join(__dirname, '..', '..', 'app', 'parser', 'gold
 // 'steam_settings' is the marker every Goldberg/GSE build carries and no Valve steam_api dll has.
 const AW_BUILD = 'gbe fork steam_settings build';
 const FOREIGN_EMULATOR = 'some other emu steam_settings build';
-const VALVE_ORIGINAL = 'valve original steam api';
+// Valve's own dll is the one Valve signed (pe.isValveSignedImage); a crack's runtime is not.
+const VALVE_ORIGINAL = signedPe({ body: 'valve original steam api' });
 
 const SCHEMA = { achievement: { total: 1, list: [{ name: 'FIRST', displayName: 'First', description: 'First one', hidden: 0 }] } };
 

@@ -7,6 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const gbe = require(path.join(__dirname, '..', '..', 'app', 'parser', 'gbeInstaller.js'));
+const { signedPe } = require(path.join(__dirname, '..', 'helpers', 'fakePe.js'));
 
 (async () => {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gse-interfaces-test-'));
@@ -18,7 +19,7 @@ const gbe = require(path.join(__dirname, '..', '..', 'app', 'parser', 'gbeInstal
     fs.mkdirSync(tools, { recursive: true });
     const dll = path.join(game, 'steam_api64.dll');
     fs.writeFileSync(dll, 'replacement');
-    fs.writeFileSync(`${dll}.bak`, 'original-steam-api');
+    fs.writeFileSync(`${dll}.bak`, signedPe({ body: 'original-steam-api' }));
 
     const shim = path.join(tools, 'generate_interfaces_x64.js');
     fs.writeFileSync(

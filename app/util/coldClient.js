@@ -15,6 +15,7 @@ const path = require('path');
 const pe = require('./pe.js');
 const emuIni = require('./emuIni.js');
 const { hostsFor, pathKey } = require('./winHosts.js');
+const { canonicalSteamAppid } = require('./steamAppid.js');
 
 const INI_FILE = 'coldclientloader.ini';
 const MAX_INI_BYTES = 256 * 1024;
@@ -73,7 +74,8 @@ function readAppIdFile(dir) {
   const name = dir ? entryNamed(dir, ['steam_appid.txt']) : '';
   if (!name) return '';
   try {
-    return fs.readFileSync(path.join(dir, name), 'utf8').trim();
+    const text = fs.readFileSync(path.join(dir, name), 'utf8').trim();
+    return canonicalSteamAppid(text) || text;
   } catch {
     return '';
   }
@@ -82,7 +84,7 @@ function readAppIdFile(dir) {
 // The appid the loader hands the game: AppId=, else the first steam_appid.txt in its documented order.
 function effectiveAppId(values, loaderDir, exe, runDir) {
   const fromIni = String(values.appid || '').trim();
-  if (fromIni) return fromIni;
+  if (fromIni) return canonicalSteamAppid(fromIni) || fromIni;
   const dirs = [loaderDir, exe ? path.dirname(exe) : '', runDir].filter(Boolean);
   for (const dir of [...dirs.map((d) => path.join(d, 'steam_settings')), ...dirs]) {
     const found = readAppIdFile(dir);
@@ -111,7 +113,7 @@ function readConfig(loaderDir) {
   return {
     file,
     exe,
-    appIdFromIni: String(values.appid || '').trim(),
+    appIdFromIni: canonicalSteamAppid(values.appid) || String(values.appid || '').trim(),
     appId: effectiveAppId(values, loaderDir, exe, runDir),
     clients: {
       x64: resolveFromLoader(loaderDir, values[CLIENT_KEYS.x64] || DEFAULT_CLIENTS.x64),

@@ -309,7 +309,7 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   // their saves in completely different places, and none of them wants a steam_settings folder.
   const saveSources = (Array.isArray(game.dataPaths) && game.dataPaths.length ? game.dataPaths : game.dataPath ? [{ source, path: game.dataPath }] : [])
     .filter((entry) => entry && entry.path)
-    .map((entry) => ({ source: entry.source || source, path: entry.path }));
+    .map((entry) => ({ source: entry.source || source, path: entry.path, exists: fs.existsSync(entry.path) }));
   const readsGoldbergSave = saveSources.some((entry) => /[\\/](gse saves|goldberg steamemu saves)[\\/]/i.test(entry.path));
 
   // A repaired Uplay R1/R2 game writes unlocks to a GSE Saves folder AW Next picked itself, so that

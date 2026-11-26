@@ -5,6 +5,7 @@
   → boolean. Pure header reads shared by the auto-fix, the right-click fix and exe detection.
 */
 
+const crypto = require('crypto');
 const fs = require('fs');
 
 // Read a PE executable's machine type from its COFF header → 'x64' | 'x86' | null. Used to pick the
@@ -71,29 +72,32 @@ function isExecutableImage(exePath) {
 // tell). Read-only, offline. When present, a plain steam_api DLL swap usually fails because the stub
 // runs first - so the caller strips it with Steamless before replacing the DLL. Returns true/false.
 function detectSteamStub(exePath) {
+  return readSectionNames(exePath).includes('.bind');
+}
+
+// The section names of a PE image, in table order; [] when the file is not one or cannot be read.
+function readSectionNames(file) {
   let fd;
   try {
-    fd = fs.openSync(exePath, 'r');
+    fd = fs.openSync(file, 'r');
     const head = Buffer.alloc(64);
     fs.readSync(fd, head, 0, 64, 0);
-    if (head.readUInt16LE(0) !== 0x5a4d) return false; // 'MZ'
+    if (head.readUInt16LE(0) !== 0x5a4d) return []; // 'MZ'
     const peOff = head.readUInt32LE(0x3c);
     const coff = Buffer.alloc(24);
     fs.readSync(fd, coff, 0, 24, peOff);
-    if (coff.readUInt32LE(0) !== 0x00004550) return false; // 'PE\0\0'
+    if (coff.readUInt32LE(0) !== 0x00004550) return []; // 'PE\0\0'
     const numSections = coff.readUInt16LE(6);
     const sizeOptHdr = coff.readUInt16LE(20);
-    if (numSections <= 0 || numSections > 96) return false;
+    if (numSections <= 0 || numSections > 96) return [];
     const tableOff = peOff + 24 + sizeOptHdr;
     const table = Buffer.alloc(numSections * 40);
     fs.readSync(fd, table, 0, table.length, tableOff);
-    for (let i = 0; i < numSections; i++) {
-      const name = table.toString('latin1', i * 40, i * 40 + 8).replace(/\0+$/, '');
-      if (name === '.bind') return true;
-    }
-    return false;
+    const names = [];
+    for (let i = 0; i < numSections; i++) names.push(table.toString('latin1', i * 40, i * 40 + 8).replace(/\0+$/, ''));
+    return names;
   } catch {
-    return false;
+    return [];
   } finally {
     if (fd !== undefined) {
       try {
@@ -527,4 +531,58 @@ function readExeFileVersion(exePath) {
   }
 }
 
-module.exports = { exeArch, isExecutableImage, detectSteamStub, readExeProductName, readExeFileVersion, readExportName, readImportNames };
+const MAX_SIGNED_IMAGE_BYTES = 64 * 1024 * 1024;
+const SECURITY_DIRECTORY = 4;
+const AUTHENTICODE_DIGESTS = ['sha256', 'sha1', 'md5'];
+
+/*
+  The Authenticode hash ranges of a PE image: everything but the checksum field, the certificate
+  table's directory entry and the certificate table itself. Returns null for a file that is not a
+  PE image, and { ranges: [], cert: null } for one that carries no signature.
+*/
+function authenticodeLayout(buf) {
+  if (buf.length < 64 || buf.readUInt16LE(0) !== 0x5a4d) return null;
+  const peOff = buf.readUInt32LE(0x3c);
+  if (peOff + 24 + 96 > buf.length || buf.readUInt32LE(peOff) !== 0x00004550) return null;
+  const opt = peOff + 24;
+  const magic = buf.readUInt16LE(opt);
+  if (magic !== 0x10b && magic !== 0x20b) return null;
+  const countOff = opt + (magic === 0x20b ? 108 : 92);
+  const entry = countOff + 4 + SECURITY_DIRECTORY * 8;
+  if (entry + 8 > buf.length || buf.readUInt32LE(countOff) <= SECURITY_DIRECTORY) return { ranges: [], cert: null };
+  const certOff = buf.readUInt32LE(entry);
+  const certSize = buf.readUInt32LE(entry + 4);
+  if (!certOff || !certSize || certOff < entry + 8 || certOff + certSize > buf.length) return { ranges: [], cert: null };
+  const checksum = opt + 64;
+  const ranges = [
+    [0, checksum],
+    [checksum + 4, entry],
+    [entry + 8, certOff],
+    [certOff + certSize, buf.length],
+  ];
+  return { ranges, cert: buf.subarray(certOff, certOff + certSize) };
+}
+
+/*
+  Whether a PE image is the very file Valve signed: its certificate table names Valve and holds the
+  Authenticode digest of these exact bytes. A crack keeps no signature, and one that patched a signed
+  dll no longer matches its digest. This is not a trust-chain check (Windows does that); it only
+  tells Valve's own dll from anything put in its place, offline and on every system.
+*/
+function isValveSignedImage(file) {
+  try {
+    if (fs.statSync(file).size > MAX_SIGNED_IMAGE_BYTES) return false;
+    const buf = fs.readFileSync(file);
+    const layout = authenticodeLayout(buf);
+    if (!layout || !layout.cert || !layout.cert.includes('Valve', 0, 'latin1')) return false;
+    return AUTHENTICODE_DIGESTS.some((algorithm) => {
+      const hash = crypto.createHash(algorithm);
+      for (const [start, end] of layout.ranges) if (end > start) hash.update(buf.subarray(start, end));
+      return layout.cert.includes(hash.digest());
+    });
+  } catch {
+    return false;
+  }
+}
+
+module.exports = { exeArch, isExecutableImage, detectSteamStub, readExeProductName, readExeFileVersion, readExportName, readImportNames, isValveSignedImage, readSectionNames };

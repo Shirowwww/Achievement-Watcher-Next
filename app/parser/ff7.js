@@ -18,6 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const { isFile } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
+const { canonicalSteamAppid } = require(path.join(__dirname, '..', 'util', 'steamAppid.js'));
 
 const APPID = '39140';
 const STATE_FILE = 'achievement.dat';
@@ -41,8 +42,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
 
 function readAppidFile(dir) {
   try {
-    const value = fs.readFileSync(path.join(dir, 'steam_appid.txt'), 'utf8').replace(/^\uFEFF/, '').trim();
-    return /^\d+$/.test(value) ? value : '';
+    return canonicalSteamAppid(fs.readFileSync(path.join(dir, 'steam_appid.txt'), 'utf8'));
   } catch {
     return '';
   }

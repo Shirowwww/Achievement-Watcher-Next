@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const { interpolate } = require('../locale/t.js');
+const { canonicalSteamAppid } = require('./steamAppid.js');
 
 /*
   Console emulators by executable name. `reader` says how their achievements reach AW Next: a
@@ -60,7 +61,7 @@ function consoleEmulatorFor(exePath) {
   return CONSOLE_EMULATORS.find((entry) => entry.test.test(base)) || null;
 }
 
-const digits = (value) => (/^\d+$/.test(String(value || '').trim()) ? String(value).trim() : '');
+const digits = canonicalSteamAppid;
 
 async function attempt(read, fallback) {
   try {
@@ -174,8 +175,8 @@ function loaderAppid(loader) {
   const texts = (loader.markers || []).filter((name) => /\.ini$/i.test(name)).map((name) => readMarker(loader.dir, name));
   for (const pattern of [/^\s*RealAppId\s*=\s*(\d+)\s*$/im, /^\s*App_?Id\s*=\s*(\d+)\s*$/im]) {
     for (const text of texts) {
-      const match = text.match(pattern);
-      if (match) return match[1];
+      const id = digits((text.match(pattern) || [])[1]);
+      if (id) return id;
     }
   }
   return digits(readText(path.join(loader.dir, 'steam_appid.txt')));

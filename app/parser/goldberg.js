@@ -21,6 +21,7 @@ const awManagedConfig = require(path.join(__dirname, '..', 'util', 'awManagedCon
 const gbeEffectiveConfig = require(path.join(__dirname, 'gbeEffectiveConfig.js'));
 const gbeSchema = require(path.join(__dirname, 'gbeSchema.js'));
 const { isSteamId64 } = require(path.join(__dirname, '..', 'util', 'steamId64.js'));
+const { canonicalSteamAppid } = require(path.join(__dirname, '..', 'util', 'steamAppid.js'));
 
 const APPID_CONFIG_FILES = new Set([
   'steam_appid.txt',
@@ -77,8 +78,8 @@ function parseAppidFromConfig(file) {
   try {
     const content = fs.readFileSync(file, 'utf8');
     if (path.basename(file).toLowerCase() === 'steam_appid.txt') {
-      const match = content.match(/^\s*([0-9]+)/);
-      return match ? match[1] : null;
+      const match = content.replace(/^﻿/, '').match(/^\s*([0-9]+)/);
+      return (match && canonicalSteamAppid(match[1])) || null;
     }
     const patterns = [
       /^\s*app(?:id|ID)\s*=\s*([0-9]+)/im,
@@ -88,8 +89,8 @@ function parseAppidFromConfig(file) {
       /^\s*id\s*=\s*([0-9]+)/im,
     ];
     for (const pattern of patterns) {
-      const match = content.match(pattern);
-      if (match) return match[1];
+      const appid = canonicalSteamAppid((content.match(pattern) || [])[1]);
+      if (appid) return appid;
     }
   } catch {
     /* ignore unreadable config */
@@ -300,8 +301,9 @@ function keepOriginal(file, backupDir) {
 // copies Steam reads beside the dll and the shortcut targets (launchDirs) are corrected with it.
 function writeSteamAppId({ steamSettings, appid, launchDirs = [] }) {
   if (!steamSettings) throw new Error('writeSteamAppId: steamSettings path is required');
-  const value = String(appid == null ? '' : appid).trim();
-  if (!/^[0-9]+$/.test(value)) throw new Error(`writeSteamAppId: "${value}" is not a Steam appid`);
+  // The plain number: GBE names its save folder after this text (GSE Saves\0000358090 otherwise).
+  const value = canonicalSteamAppid(appid);
+  if (!value) throw new Error(`writeSteamAppId: "${String(appid ?? '').trim()}" is not a Steam appid`);
 
   const file = path.join(steamSettings, 'steam_appid.txt');
   const previous = fs.existsSync(file) ? fs.readFileSync(file, 'utf8').trim() : null;
@@ -1270,7 +1272,7 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   const loaderNamesAppid = Boolean(loaderConfig && loaderConfig.appIdFromIni);
   if (!loaderNamesAppid && fs.existsSync(appidTxt)) {
     const onDisk = fs.readFileSync(appidTxt, 'utf8').trim();
-    if (report.appid && onDisk && onDisk !== report.appid) {
+    if (report.appid && onDisk && (canonicalSteamAppid(onDisk) || onDisk) !== (canonicalSteamAppid(report.appid) || String(report.appid))) {
       add(
         'warning',
         'APPID_MISMATCH',

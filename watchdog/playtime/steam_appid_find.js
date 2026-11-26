@@ -6,6 +6,8 @@ const fs = require(sharedAppModulePath('util/fsAsync.js'));
 // Only used when an unrecognised process needs its directory searched for an emulator config.
 const glob = require('../util/lazyRequire.js').lazyRequire('fast-glob');
 const ini = require(sharedAppModulePath('util/ini.js'));
+// A scene config may pad the id (RELOADED: 0000358090); the game list knows it as 358090.
+const { canonicalSteamAppid } = require(sharedAppModulePath('util/steamAppid.js'));
 
 async function findByReadingContentOfKnownConfigfilesIn(dirPath, exeDir) {
   const files = [
@@ -52,6 +54,7 @@ async function findByReadingContentOfKnownConfigfilesIn(dirPath, exeDir) {
         else throw 'ERROR_UNEXPECTED_CONTENT';
       }
       appid = String(appid || '').trim();
+      appid = canonicalSteamAppid(appid) || appid;
       if (appid) found.push({ appid, dir: key(path.dirname(file)) });
     } catch (err) {
       /*Do Nothing; Try next file if any*/

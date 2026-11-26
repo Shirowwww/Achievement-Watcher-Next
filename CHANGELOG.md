@@ -154,6 +154,18 @@ renamed in 3.9.0 and the history is kept under one file.
 - **The clip recorder moves to the screen's graphics card in more cases.** A laptop where Windows
   is set to "Let Windows decide" for the recorder, or where Windows 11 keeps other settings for it,
   still got the yellow frame. The log now also says why the recorder stays on its card.
+- **A game whose crack writes its appid with zeros in front is listed once.** RELOADED's
+  steam_api.ini on D4: Dark Dreams Don't Die says `0000358090`, and AW Next showed a second game
+  under that id beside the real 358090, with an empty Goldberg save, and tracked play time under it.
+  Every place that reads an appid from a game's files now reads the plain number, and the
+  steam_appid.txt AW Next writes holds that number too.
+- **Switching a crack to the supported emulator no longer breaks games that need their interface
+  list.** The list was read from the crack's own steam_api dll when it carried no Goldberg mark,
+  and D4 then closed three seconds after launch. AW Next now reads it from the dll Valve signed, or
+  from an unsigned one only when it shows no trace of a crack, checks that the result holds real
+  interface versions, and refuses the switch with an explanation when nothing fits. Game Health also stops
+  offering the switch after a short session when the crack already keeps a save AW Next reads; an
+  hour with nothing recorded still brings it back.
 
 ## 3.12.8 - 2026-11-22
 

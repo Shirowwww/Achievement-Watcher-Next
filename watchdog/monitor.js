@@ -5,6 +5,7 @@ const path = require('path');
 const ini = require(sharedAppModulePath('util/ini.js'));
 const parentFind = require(sharedAppModulePath('util/findUp.js'));
 const fs = require(sharedAppModulePath('util/fsAsync.js'));
+const { canonicalSteamAppid } = require(sharedAppModulePath('util/steamAppid.js'));
 const debug = require('./util/log.js');
 const { signatureWatchEntries } = require('./util/rootCascade.js');
 const { SOCIALCLUB_ACHIEVEMENT_FILES, isUnderSocialClubRoot } = require(sharedAppModulePath('parser/socialclubNames.js'));
@@ -70,8 +71,9 @@ function documentsFor(dirPath, hosts, docsByHost) {
   return docsByHost.get(winHosts.hostsFor(dirPath, hosts)[0]) || null;
 }
 
+// The id is made canonical here, as in the library (userDir.js): a padded AppId= is the same game.
 function saveWatch(dir, appid, file, extra = {}) {
-  return { dir, options: { appid, ...extra, recursive: false, file } };
+  return { dir, options: { appid: canonicalSteamAppid(appid) || appid, ...extra, recursive: false, file } };
 }
 
 // The nearest folder at or above `cwd` holding `relative`, joined with it; undefined when none does.

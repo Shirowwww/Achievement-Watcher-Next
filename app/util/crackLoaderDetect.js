@@ -9,6 +9,7 @@ const path = require('path');
 const unrealLayout = require('./unrealLayout.js');
 const unityLayout = require('./unityLayout.js');
 const pe = require('./pe.js');
+const { canonicalSteamAppid } = require('./steamAppid.js');
 
 /*
   Every Goldberg/GSE build reads its configuration from a steam_settings folder and carries that
@@ -208,6 +209,21 @@ function disableLoaderMarkers(dirs) {
 }
 
 const SIDELINED_MARKERS = new Set(KNOWN_CRACK_LOADERS.filter((loader) => loader.replaceable).flatMap((loader) => loader.markers.map((marker) => `${marker}.bak`)));
+
+const LOADER_MARKERS = new Set([...KNOWN_CRACK_LOADERS.flatMap((loader) => loader.markers), ...SIDELINED_MARKERS]);
+const LOADER_SUFFIXES = KNOWN_CRACK_LOADERS.flatMap((loader) => loader.suffixes || []);
+
+// Any crack loader's file in `dir`, live or set aside by a switch: whatever runtime is there may be its.
+function holdsLoaderFiles(dir) {
+  try {
+    return fs.readdirSync(dir).some((name) => {
+      const lower = name.toLowerCase();
+      return LOADER_MARKERS.has(lower) || LOADER_SUFFIXES.some((suffix) => lower.endsWith(suffix));
+    });
+  } catch {
+    return false;
+  }
+}
 
 function sidelinedMarkersIn(dir) {
   try {
@@ -457,7 +473,7 @@ function runsAsSpacewar(dirs) {
   for (const dir of dirs || []) {
     if (!dir) continue;
     try {
-      if (fs.readFileSync(path.join(dir, 'steam_appid.txt'), 'utf8').trim() === SPACEWAR_APPID) return true;
+      if (canonicalSteamAppid(fs.readFileSync(path.join(dir, 'steam_appid.txt'), 'utf8')) === SPACEWAR_APPID) return true;
     } catch {
       /* no steam_appid.txt in this folder */
     }
@@ -465,4 +481,4 @@ function runsAsSpacewar(dirs) {
   return false;
 }
 
-module.exports = { steamApiKeptBy, runsAsSpacewar, detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, switchedLoaderStillSaving, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, engineDllDirs, EMULATOR_DLL_MARKER, STEAM_API_DLLS };
+module.exports = { steamApiKeptBy, runsAsSpacewar, holdsLoaderFiles, detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, switchedLoaderStillSaving, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, engineDllDirs, EMULATOR_DLL_MARKER, STEAM_API_DLLS };

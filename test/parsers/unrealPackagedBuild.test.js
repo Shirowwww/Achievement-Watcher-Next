@@ -17,7 +17,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { makeTempDir } = require('../helpers/tempDir');
-const { peWithImports } = require('../helpers/fakePe');
+const { peWithImports, signedPe } = require('../helpers/fakePe');
 
 const unrealLayout = require(path.join(__dirname, '..', '..', 'app', 'util', 'unrealLayout.js'));
 const exeDetect = require(path.join(__dirname, '..', '..', 'app', 'parser', 'exeDetect.js'));
@@ -233,12 +233,12 @@ test('steam_interfaces.txt is never generated from a dll that is itself an emula
   const dir = tmpdir('aw-ue-interfaces-');
   // The marker every Goldberg/GSE build carries and no Valve steam_api does.
   const emu = write(path.join(dir, 'root', 'steam_api64.dll'), 'gbe steam_settings marker');
-  const original = write(path.join(dir, 'engine', 'steam_api64.dll'), 'valve-original-x64');
+  const original = write(path.join(dir, 'engine', 'steam_api64.dll'), signedPe({ body: 'valve-original-x64' }));
 
   assert.deepEqual(gbe.interfaceSourceFor(emu), { file: '', reason: 'emulator-dll' });
   assert.deepEqual(gbe.interfaceSourceFor(emu, [original]), { file: original, reason: '' }, 'an intact copy elsewhere is used instead');
 
-  const bak = write(`${emu}.bak`, 'valve-original-x64');
+  const bak = write(`${emu}.bak`, signedPe({ body: 'valve-original-x64' }));
   assert.deepEqual(gbe.interfaceSourceFor(emu, [original]), { file: bak, reason: '' }, "AW's own backup still wins");
   assert.deepEqual(gbe.interfaceSourceFor(path.join(dir, 'missing', 'steam_api64.dll')), { file: '', reason: 'missing-dll' });
 });

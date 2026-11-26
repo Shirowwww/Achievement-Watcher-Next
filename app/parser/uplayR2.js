@@ -15,6 +15,7 @@ const ubisoftFiles = require(path.join(__dirname, 'ubisoftFiles.js'));
 const liveKeys = require(path.join(__dirname, 'uplayR2Live.js'));
 const { derivePrefixedIds, OBJECTIVE_MAP_FILE } = liveKeys;
 const { replaceFileSync, unlinkForce } = require(path.join(__dirname, '..', 'util', 'replaceFile.js'));
+const { canonicalSteamAppid } = require(path.join(__dirname, '..', 'util', 'steamAppid.js'));
 
 const {
   FLAVOURS,
@@ -395,8 +396,8 @@ function findSteamAppidHints(gameDir, { maxDepth = 4, maxDirectories = 600 } = {
     const marker = entries.find((entry) => entry.isFile() && entry.name.toLowerCase() === 'steam_appid.txt');
     if (marker) {
       try {
-        const appid = fs.readFileSync(path.join(dir, marker.name), 'utf8').trim();
-        if (/^\d+$/.test(appid) && !found.some((entry) => entry.appid === appid)) {
+        const appid = canonicalSteamAppid(fs.readFileSync(path.join(dir, marker.name), 'utf8'));
+        if (appid && !found.some((entry) => entry.appid === appid)) {
           found.push({ appid, file: path.join(dir, marker.name) });
         }
       } catch {

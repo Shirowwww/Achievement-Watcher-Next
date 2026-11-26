@@ -9,6 +9,7 @@ const { isElf } = require(path.join(__dirname, '..', 'util', 'elf.js'));
 const { isExecutableImage } = require(path.join(__dirname, '..', 'util', 'pe.js'));
 const saveRoots = require(path.join(__dirname, 'saveRoots.js'));
 const { ANTI_CHEAT_BOOTSTRAPPERS, battlEyeHandsOverTo } = require(path.join(__dirname, '..', 'util', 'launchBootstrappers.js'));
+const { canonicalSteamAppid } = require(path.join(__dirname, '..', 'util', 'steamAppid.js'));
 
 // Hard-exclude: never a game executable (installers, redists, crash handlers, …).
 const EXE_EXCLUDE = [
@@ -268,7 +269,8 @@ function declaredAppidIn(dir, entries) {
     let id = '';
     if (name === 'steam_appid.txt') id = readSmallText(path.join(dir, e.name)).trim();
     else if (name === 'coldclientloader.ini') id = (/^\s*AppId\s*=\s*(\d+)\s*$/im.exec(readSmallText(path.join(dir, e.name))) || [])[1] || '';
-    if (/^\d+$/.test(id) && id !== PLACEHOLDER_APPID) ids.add(id);
+    id = canonicalSteamAppid(id);
+    if (id && id !== PLACEHOLDER_APPID) ids.add(id);
   }
   if (ids.size > 1) return CONFLICTING_APPIDS;
   return ids.size === 1 ? [...ids][0] : '';

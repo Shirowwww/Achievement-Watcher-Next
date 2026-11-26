@@ -457,7 +457,7 @@ async function downloadAndCache(cacheDir, tag, assetUrl, log, linuxUrl = null) {
   steam_api64.rne beside its own runtime (1.1 MB emulator, 295 KB original on The Blood of
   Dawnwalker), and a loader swap that sets the crack aside renames that one to .rne.bak in turn.
   CODEX does the same with steam_api64.cdx (Dark Souls III). The name alone proves nothing, so every
-  candidate still goes through the emulator-marker test.
+  candidate still goes through isValveOriginal.
 */
 const PRESERVED_ORIGINAL_SUFFIXES = ['.rne', '.rne.bak', '.cdx', '.cdx.bak'];
 
@@ -500,10 +500,30 @@ function interfaceSourceFor(dllPath, candidates = []) {
   }
   const existing = ordered.filter((file) => fs.existsSync(file));
   if (existing.length === 0) return { file: '', reason: 'missing-dll' };
-  const original = existing.find((file) => !emulatorDll(file));
-  return original ? { file: original, reason: '' } : { file: '', reason: 'emulator-dll' };
+  const original = existing.find(isValveOriginal);
+  if (original) return { file: original, reason: '' };
+  return { file: '', reason: existing.every(emulatorDll) ? 'emulator-dll' : 'unsigned-dll' };
 }
 
+/*
+  Only Valve's own dll describes the game. A scene crack's runtime carries no GBE marker either
+  (RELOADED's on D4: Dark Dreams Don't Die), and the interfaces read out of it made the game close
+  three seconds after launch. So a Windows dll counts when it is the very file Valve signed, which
+  20 of the 21 Valve copies on the test PC are. The other one (SteamVR's tutorial, 2015) is not, so
+  an unsigned dll still counts when it has only a compiler's own sections (RELOADED adds .RLD0-2)
+  and no crack's file sits beside it. libsteam_api.so has no signature: there only the marker test.
+*/
+const COMPILER_SECTIONS = new Set(['.text', '.rdata', '.data', '.pdata', '.idata', '.edata', '.rsrc', '.reloc', '.tls', '_RDATA', '.fptable', '.gfids', '.00cfg', '.didat', '.CRT', '.bss']);
+
+function isValveOriginal(file) {
+  if (emulatorDll(file)) return false;
+  if (isNativeLib(file) || pe.isValveSignedImage(file)) return true;
+  const sections = pe.readSectionNames(file);
+  return sections.length > 0 && sections.every((name) => COMPILER_SECTIONS.has(name)) && !crackLoaderDetect.holdsLoaderFiles(path.dirname(file));
+}
+
+// One versioned interface name (SteamUser019) on a line of the generator's output.
+const INTERFACE_VERSION_LINE = /[A-Za-z_]+\d{3}\s*$/m;
 const SCENE_INTERFACE_LINE = /^\s*Steam\w*\s*=\s*([A-Za-z_]+\d{3})\s*$/;
 
 /*
@@ -629,6 +649,8 @@ async function generateFromDll({ dllPath, steamSettings, dlls, candidates, log }
   if (!source.file) {
     if (source.reason === 'emulator-dll') {
       log.log(`[gbe] steam_interfaces.txt skipped: every candidate for ${path.basename(dllPath)} is itself an emulator dll`);
+    } else if (source.reason === 'unsigned-dll') {
+      log.log(`[gbe] steam_interfaces.txt skipped: no candidate for ${path.basename(dllPath)} is Valve's signed dll`);
     }
     return { generated: false, reason: source.reason };
   }
@@ -667,6 +689,12 @@ async function generateFromDll({ dllPath, steamSettings, dlls, candidates, log }
     if (!fs.existsSync(generated) || fs.statSync(generated).size === 0) {
       log.log(`[gbe] steam_interfaces.txt skipped: generator produced no output for ${path.basename(original)} (${arch})`);
       return { generated: false, reason: 'no-output', original, arch };
+    }
+    // A dll whose version strings are encrypted (RELOADED's wrapped one on D4) yields only a macro
+    // name; GBE then runs its own newer versions and the game closes at launch.
+    if (!INTERFACE_VERSION_LINE.test(fs.readFileSync(generated, 'latin1'))) {
+      log.log(`[gbe] steam_interfaces.txt skipped: no interface version found in ${path.basename(original)} (${arch})`);
+      return { generated: false, reason: 'no-interfaces', original, arch };
     }
     fs.mkdirSync(steamSettings, { recursive: true });
     const dest = path.join(steamSettings, 'steam_interfaces.txt');
@@ -751,7 +779,7 @@ function describeRuntimeDlls({ dllDirs = [], cacheDir = null } = {}) {
       }
       const backup = `${file}.bak`;
       const hasBackup = fs.existsSync(backup);
-      const preserved = preservedOriginalsFor(file).find((candidate) => fs.existsSync(candidate) && !emulatorDll(candidate)) || '';
+      const preserved = preservedOriginalsFor(file).find((candidate) => fs.existsSync(candidate) && isValveOriginal(candidate)) || '';
       out.push({
         dir,
         file: name,
@@ -766,7 +794,7 @@ function describeRuntimeDlls({ dllDirs = [], cacheDir = null } = {}) {
         // A backup that is itself an emulator is the release's dll, not Valve's: steam_interfaces.txt
         // can never be generated from it (see interfaceSourceFor). Beside a scene release's preserved
         // original, the backup is the crack's runtime unless it is that very file.
-        backupOriginal: hasBackup ? !emulatorDll(backup) && (!preserved || sameFileBytes(backup, preserved)) : false,
+        backupOriginal: hasBackup ? isValveOriginal(backup) && (!preserved || sameFileBytes(backup, preserved)) : false,
         preservedOriginal: preserved ? path.basename(preserved) : '',
         settings: fs.existsSync(path.join(dir, 'steam_settings')),
         interfaces: fs.existsSync(path.join(dir, 'steam_settings', 'steam_interfaces.txt')),

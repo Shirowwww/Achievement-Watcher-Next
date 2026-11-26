@@ -9,6 +9,7 @@ const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
 const fs = require('fs');
 const { writeFileAtomicSync, quarantineCorruptFile } = require('../util/replaceFile.js');
+const { canonicalSteamAppid } = require('../util/steamAppid.js');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
 const { appHosts, documentsFolders, documentsFor } = require(path.join(appPath, 'util/appHosts.js'));
 const { hostPath, hostFor, pathKey, expandKnownVariables } = require(path.join(appPath, 'util/winHosts.js'));
@@ -963,8 +964,15 @@ module.exports.scan = async (dir) => {
     console.warn(err);
   }
 
-  return result;
+  return result.map(withCanonicalAppid);
 };
+
+// The save paths above keep the id as the config spells it (the emulator builds them from that
+// text); only the game's identity is made canonical, so a padded id is not a second game.
+function withCanonicalAppid(record) {
+  const appid = record && canonicalSteamAppid(record.appid);
+  return appid && appid !== record.appid ? { ...record, appid } : record;
+}
 
 // Exposed so the library scan can point a scene-emulator game at the folder its release actually
 // writes to, instead of the %APPDATA% root that only the Goldberg family uses.

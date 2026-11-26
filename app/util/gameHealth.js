@@ -366,6 +366,12 @@ function readsOnlyForeignGoldbergSaves(signals) {
   return saves.every((entry) => entry && GOLDBERG_SAVE_PATH.test(String(entry.path || '')));
 }
 
+// A save on disk that is not a Goldberg one: the loader serving the game writes its own record.
+function writesOwnSave(signals) {
+  const saves = Array.isArray(signals.saveSources) ? signals.saveSources : [];
+  return saves.some((entry) => entry && entry.exists === true && !GOLDBERG_SAVE_PATH.test(String(entry.path || '')));
+}
+
 /*
   Games whose unlocks are granted by the publisher's servers and never through the Steam API, so no
   offline emulator can record one. Verified appids only: a forced unlock through the crack has to
@@ -516,7 +522,9 @@ function emulatorCheck(rawSignals) {
     // An hour in with nothing recorded is no longer "early": the crack most likely never reports.
     const stalled = idle && playedSeconds >= STALLED_CRACK_SECONDS && !signals.crackLoader.fromSave;
     // ...and only where that runtime IS the steam_api dll: see crackLoaderDetect's `replaceable`.
-    const canSwitch = idle && signals.crackLoader.replaceable === true;
+    // A crack whose own save folder exists does report: a short session with no unlock is not a
+    // reason to replace it (RELOADED on D4, 18 seconds in). Only the hour above still is.
+    const canSwitch = idle && signals.crackLoader.replaceable === true && (stalled || !writesOwnSave(signals));
     // Every save read is a Goldberg one, which this loader never writes: left by another copy of
     // the game, so the card shows that copy's unlocks and none of this one's.
     const oldSave = readsOnlyForeignGoldbergSaves(signals);

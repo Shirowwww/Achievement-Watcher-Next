@@ -54,6 +54,21 @@ test('a crack that ran and recorded nothing is offered the supported runtime, on
   assert.notEqual(gameHealth.ACTION.SWITCH_RUNTIME, gameHealth.ACTION.INSTALL_RUNTIME, 'restoring a missing file and replacing a working one are different sentences');
 });
 
+test('a crack whose own save AW reads is not offered a switch after a short session', () => {
+  // RELOADED on D4: Dark Dreams Don't Die wrote C:\ProgramData\Steam\Player\358090 at its first launch.
+  const saveSources = [{ source: 'Reloaded - 3DM', path: 'C:\\ProgramData\\Steam\\Player\\358090', exists: true }];
+  const early = signalsFor({ appid: 358090, saveSources, playtime: { total: 18, lastPlayed: 1789280171 } });
+  assert.deepEqual(emulatorRow(early).actions, [], 'nothing unlocked yet is not a crack that never reports');
+
+  const gseOnly = [{ source: 'Goldberg', path: 'C:\\Users\\x\\AppData\\Roaming\\GSE Saves\\358090', exists: true }];
+  assert.deepEqual(emulatorRow(signalsFor({ saveSources: gseOnly })).actions, [gameHealth.ACTION.SWITCH_RUNTIME], "a Goldberg save is not this crack's");
+  const pending = [{ source: 'Rune', path: 'C:\\Users\\Public\\Documents\\Steam\\RUNE\\2149010', exists: false }];
+  assert.deepEqual(emulatorRow(signalsFor({ saveSources: pending })).actions, [gameHealth.ACTION.SWITCH_RUNTIME], 'a folder the crack never wrote proves nothing');
+
+  const stalled = signalsFor({ saveSources, playtime: { total: 3600, lastPlayed: 1789280171 } });
+  assert.deepEqual(emulatorRow(stalled).actions, [gameHealth.ACTION.SWITCH_RUNTIME], 'an hour with nothing still is');
+});
+
 test('a crack that has recorded something is left alone', () => {
   const working = signalsFor({ achievements: { total: 22, unlocked: 7 } });
   assert.deepEqual(emulatorRow(working).actions, [], 'this one is delivering - swapping it out would lose the unlocks');

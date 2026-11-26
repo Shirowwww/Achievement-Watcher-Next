@@ -90,3 +90,11 @@ test('a nested marker is kept for a launcher in the game folder, dropped for an 
   assert.equal(nestedMarkerFitsExe(name, path.join('D:\\', 'Downloads', 'MillenniumInstaller-Windows.exe')), false);
   assert.equal(nestedMarkerFitsExe(name, path.join('D:\\', 'Downloads', 'setup.exe')), false);
 });
+
+test(
+  "a padded appid in a RELOADED steam_api.ini is the game the library lists (D4: Dark Dreams Don't Die)",
+  withTmp(async (dir) => {
+    put(path.join(dir, 'steam_api.ini'), '[Settings]\r\nAppId=0000358090\r\n');
+    assert.deepEqual(await findByReadingContentOfKnownConfigfilesIn(dir), { appid: '358090', nested: false });
+  })
+);
