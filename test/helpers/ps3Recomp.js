@@ -119,4 +119,46 @@ function writeInstalledUnlocks(dir, unlocks, title = TITLE) {
   write(path.join(dir, 'trophies.txt'), `# RACiT trophies: ${title} (${NPCOMMID})\n# <trophy id> <unlocked at, unix seconds UTC> <name>\n${lines.map((line) => line + '\n').join('')}`);
 }
 
-module.exports = { NPCOMMID, TITLE_ID, TITLE, TROPHIES, write, sfm, buildTrp, trophyFiles, makeGame, makePort, writeUnlocks, makeInstalledSet, writeInstalledUnlocks, png: ps4.png };
+/*
+  A port as RecompLauncher installs it (Vajra's layout): the exe and recomplauncher.json declaring
+  the disc's title ids, {data} = recompdata (or the port's own folder when run on its own), and the
+  game path the port keeps in <data>/<name>_paths.ini: the PS3_GAME folder of a disc kept outside
+  the port, or a decrypted .iso. Returns where the runtime writes its unlocks.
+*/
+function makeLauncherPort(root, { disc = 'folder', standalone = false, titleIds = [TITLE_ID], titleId = TITLE_ID, gamePath = true } = {}) {
+  const { buildIso } = require(path.join(__dirname, 'iso9660.js'));
+  write(path.join(root, 'Game.exe'), 'MZ');
+  const manifest = {
+    format: 1,
+    name: `${TITLE} Port`,
+    inputs: [{ id: 'game', formats: [{ type: 'file', extensions: ['iso'] }, { type: 'folder' }], check: { ids: titleIds } }],
+    start: { program: ['Game.exe'], args: ['--data', '{data}', '--game={input:game}'] },
+  };
+  write(path.join(root, 'recomplauncher.json'), JSON.stringify(manifest, null, 2));
+  const data = standalone ? root : path.join(root, 'recompdata');
+  fs.mkdirSync(path.join(data, 'user'), { recursive: true });
+  const discs = path.join(path.dirname(root), 'discs');
+  let game = '';
+  if (disc === 'iso') {
+    game = path.join(discs, 'odyssey.iso');
+    const files = { 'PS3_DISC.SFB': 'sfb', 'PS3_GAME/PARAM.SFO': ps4.buildSfo({ TITLE, TITLE_ID: titleId }), 'PS3_GAME/USRDIR/EBOOT.BIN': 'elf' };
+    files[`PS3_GAME/TROPDIR/${NPCOMMID}/TROPHY.TRP`] = buildTrp(trophyFiles());
+    write(game, buildIso(files));
+  } else {
+    game = makeGame(path.join(discs, 'Odyssey'), { titleId });
+  }
+  if (gamePath) write(path.join(data, 'odyssey_paths.ini'), `game=${game}\nupdate=${path.join(discs, 'update.pkg')}\n`);
+  const trophies = path.join(data, 'user', 'trophies');
+  return { data, game, trophies, progressFile: path.join(trophies, `${NPCOMMID}.json`) };
+}
+
+// PS3 RTC ticks: microseconds since 0001-01-01, as Redgrave961/ps3recomp's sceNpTrophy.c stores them.
+const RTC_TICK_UNIX_EPOCH = 62135596800000000n;
+const tickOf = (unix) => String(RTC_TICK_UNIX_EPOCH + BigInt(unix) * 1000000n + 123456n);
+
+// That runtime's file: one { "id", "tick" } row per line, named after the whole set id.
+function writeTicks(file, rows) {
+  write(file, `{\n  "trophies": [${rows.map(([id, unix]) => `\n    { "id": ${id}, "tick": ${tickOf(unix)} }`).join(',')}\n  ]\n}\n`);
+}
+
+module.exports = { NPCOMMID, TITLE_ID, TITLE, TROPHIES, write, sfm, buildTrp, trophyFiles, makeGame, makePort, writeUnlocks, makeInstalledSet, writeInstalledUnlocks, makeLauncherPort, writeTicks, tickOf, png: ps4.png };

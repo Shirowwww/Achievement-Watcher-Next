@@ -21,14 +21,14 @@ const ps3Recomp = require(path.join(appDir, 'parser', 'ps3Recomp.js'));
 
 const RUNTIME_FILE = '{\n  "trophies": [\n    { "id": 1, "timestamp": 1793643005 },\n    { "id": 2, "timestamp": 1793643100 }\n  ]\n}\n';
 
-function port(t, content = RUNTIME_FILE) {
+function port(t, content = RUNTIME_FILE, name = 'NPWR00104.json') {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-ps3-relock-'));
   t.after(() => fs.rmSync(profile, { recursive: true, force: true }));
   achievementReset.setUserDataPath(profile);
   manualUnlock.setUserDataPath(profile);
   const dir = path.join(profile, 'simpsons', 'gamedata', 'trophies');
   fs.mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, 'NPWR00104.json');
+  const file = path.join(dir, name);
   fs.writeFileSync(file, content);
   const game = { appid: 'ps3recomp-NPWR00104_00', name: 'Test Odyssey', source: 'PS3 Recomp', dataPath: dir, dataPaths: [{ source: 'PS3 Recomp', path: dir }] };
   return { game, file };
@@ -79,4 +79,15 @@ test('an unlock file that is not the JSON the runtime writes makes the relock un
   const plan = relock.plan(game, '1', { gameRunning: false });
   assert.equal(plan.refusal.reason, 'uncertain');
   assert.equal(plan.refusal.file, file);
+});
+
+// RecompLauncher ports (Vajra) run Redgrave961/ps3recomp: <set>.json, PS3 RTC ticks in "tick".
+const TICK_FILE = '{\n  "trophies": [\n    { "id": 1, "tick": 63930096000123456 },\n    { "id": 2, "tick": 63930096300654321 }\n  ]\n}\n';
+
+test("a RecompLauncher port's <set>.json is reset and relocked, its ticks kept as written", (t) => {
+  const { game, file } = port(t, TICK_FILE, 'NPWR00104_00.json');
+  assert.deepEqual(achievementReset.plan(game).files.map((entry) => entry.path), [file]);
+  const result = relock.run(relock.plan(game, '2', { gameRunning: false }), { gameRunning: false });
+  assert.deepEqual(result.errors, []);
+  assert.equal(fs.readFileSync(file, 'utf8'), '{\n  "trophies": [\n    { "id": 1, "tick": 63930096000123456 }\n  ]\n}\n');
 });

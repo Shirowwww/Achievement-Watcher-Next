@@ -148,6 +148,30 @@ test("a RACiT set's trophies.txt is watched where it is installed, a new line an
   }
 });
 
+test('a RecompLauncher port on a disc image is followed in <data>/user/trophies, a new tick row announced', async () => {
+  const root = path.join(temp, 'launcher', 'Odyssey');
+  const port = fixture.makeLauncherPort(root, { disc: 'iso' });
+  writeDb([root]);
+  const ctx = context();
+  await watcher.start(ctx);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    fs.mkdirSync(port.trophies, { recursive: true });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    fixture.writeTicks(port.progressFile, [[2, 1795100000]]);
+    assert.ok(await waitFor(() => ctx.sent.length > 0), 'the first unlock written after start is announced');
+    assert.equal(ctx.sent[0].achievementDisplayName, 'Secret Ending');
+    assert.equal(ctx.sent[0].time, 1795100000);
+    fixture.writeTicks(port.progressFile, [[2, 1795100000], [1, 1795100060]]);
+    assert.ok(await waitFor(() => ctx.sent.length > 1), 'a trophy added to the json later is announced too');
+    assert.equal(ctx.sent.length, 2, 'the first one is not replayed');
+    assert.equal(ctx.sent[1].achievementDisplayName, 'First Step');
+    assert.equal(ctx.sent[1].trophyGrade, 'bronze');
+  } finally {
+    watcher.stop();
+  }
+});
+
 test('the source switched off watches nothing', async () => {
   const ctx = context();
   ctx.options.achievement_source.ps3recomp = false;

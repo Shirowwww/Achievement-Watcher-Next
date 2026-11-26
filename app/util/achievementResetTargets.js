@@ -26,7 +26,7 @@ const path = require('path');
 const { SAVE_ROOTS, SAVE_FILE_NAMES, RAZOR1911_FILE } = require(path.join(__dirname, '..', 'parser', 'emuSaveRoots.js'));
 const { SOURCE_LABEL, purchasedPlatformOf, isLaunchable } = require(path.join(__dirname, 'sourceIdentity.js'));
 
-const PS3_RECOMP_UNLOCKS = /^npwr\d{5}\.json$/;
+const PS3_RECOMP_UNLOCKS = /^npwr\d{5}(?:_\d{2})?\.json$/;
 
 /*
   Emulator save files: the names the Watchdog watches, from the same table. SocialClub's are left

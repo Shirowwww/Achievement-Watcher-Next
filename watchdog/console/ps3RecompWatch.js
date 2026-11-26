@@ -1,7 +1,7 @@
 'use strict';
 
 /*
-  Notifies on the trophies PS3Recomp ports save in <gamedata>/trophies/<NPWRnnnnn>.json, read by
+  Notifies on the trophies PS3Recomp ports save in <gamedata>/trophies/<NPWRnnnnn[_NN]>.json, read by
   the app's own parser so the library and the notifications agree. The runtime creates that folder
   with the first unlock: its nearest existing parent is watched until it appears. File events, no
   polling.

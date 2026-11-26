@@ -64,7 +64,7 @@ function x360Format(name) {
 function formatFor(fileName, source = '') {
   const name = String(fileName || '').toLowerCase();
   if (String(source).trim().toLowerCase() === X360_SOURCE) return x360Format(name);
-  if (String(source).trim().toLowerCase() === PS3_SOURCE) return /^npwr\d{5}\.json$/.test(name) ? 'ps3recomp-json' : name === 'trophies.txt' ? 'ps3recomp-txt' : null;
+  if (String(source).trim().toLowerCase() === PS3_SOURCE) return /^npwr\d{5}(?:_\d{2})?\.json$/.test(name) ? 'ps3recomp-json' : name === 'trophies.txt' ? 'ps3recomp-txt' : null;
   if (REFUSED_FILES[name]) return `refuse:${REFUSED_FILES[name]}`;
   if (name === 'stats.json') return 'stats-json';
   if (INI_FILES.has(name)) return 'ini';

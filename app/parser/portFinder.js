@@ -24,6 +24,7 @@ const FILES = [
   ['**/installer/launch.txt', /(^|\/)installer\/launch\.txt$/i, 1], // PS3Recomp
   ['**/ps3recomp.toml', /(^|\/)ps3recomp\.toml$/i, 0],
   ['**/RaCACiT Launcher.exe', /(^|\/)RaCACiT Launcher\.exe$/i, 0], // RACiT, its sets in data/dev_hdd0
+  ['**/recomplauncher.json', /(^|\/)recomplauncher\.json$/i, 0], // a RecompLauncher port; its reader checks the console
 ];
 // Programs: Windows, AppImage and bare Linux binaries, kept only when a port table names them.
 const PROGRAM_GLOBS = ['**/*.{exe,appimage,x86_64,arm64}', '**/!(*.*)'];

@@ -4,7 +4,7 @@
   PC ports of PS3 games built with PS3Recomp (sp00nznet/ps3recomp). A port is recognised from what
   it declares as data (installer/launch.txt, ps3recomp.toml, the runtime's sceNpTrophy.c), never by
   running anything. Its trophy list is the original game's TROPDIR/<NPWR>/TROPHY.TRP; its unlocks
-  are the runtime's <PS3_GAMEDATA_ROOT or gamedata>/trophies/<NPWRnnnnn>.json. Dependency-free past
+  are the runtime's <PS3_GAMEDATA_ROOT or gamedata>/trophies/<NPWRnnnnn[_NN]>.json. Dependency-free past
   the PS4 recomp readers, so the Watchdog loads it through sharedAppModule.
 
   RACiT (HighDrexler/RACiT) runs on a patched ps3recomp that installs the set the way a console does,
@@ -12,6 +12,10 @@
   unlocks there in trophies.txt. Its launcher gives each game <folder>/data/dev_hdd0 (Into the Nexus:
   nexus/data/dev_hdd0). Such a set is read on its own, without the disc; an RPCS3 set holds
   TROPUSR.DAT and is left to the RPCS3 reader.
+
+  A port RecompLauncher installs (recomplauncher.json naming PS3 discs) is found by
+  ps3RecompLauncher.js. Its runtime fork names the unlock file after the whole set and stores PS3
+  RTC ticks (microseconds since year 1) in "tick" rows, where upstream writes unix "timestamp"s.
 */
 
 const fs = require('fs');
@@ -21,12 +25,14 @@ const { hostsFor } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const { isElf } = require(path.join(__dirname, '..', 'util', 'elf.js'));
 const formats = require(path.join(__dirname, 'ps4RecompTrophies.js'));
 const schema = require(path.join(__dirname, 'ps4RecompSchema.js'));
+const launcher = require(path.join(__dirname, 'ps3RecompLauncher.js'));
+const iso = require(path.join(__dirname, '..', 'util', 'iso9660.js'));
 
 const SOURCE = 'PS3 Recomp';
 const TYPE = 'ps3recomp';
 const SET_ID = /^NPWR\d{5}_\d{2}$/;
 const TITLE_ID = /^[A-Z]{4}\d{5}$/;
-const PROGRESS_NAME = /^NPWR\d{5}\.json$/i;
+const PROGRESS_NAME = /^NPWR\d{5}(?:_\d{2})?\.json$/i;
 const GAME_FILE = /\.(?:elf|bin|self)$/i;
 const WINDOWS_ABSOLUTE = /^[a-zA-Z]:[\\/]/;
 const LAUNCH_FILE = path.join('installer', 'launch.txt');
@@ -46,6 +52,8 @@ const MAX_SETS = 16;
 const MAX_ROWS = 4096;
 const MAX_TROPHY_ID = 9999;
 const MAX_UNIX_S = 4102444800;
+const RTC_TICK_UNIX_EPOCH = 62135596800000000;
+const RTC_TICKS_PER_SECOND = 1000000;
 const MAX_INSTALL_DEPTH = 3;
 const MAX_INSTALL_DIRECTORIES = 400;
 const MAX_CACHED_LISTS = 64;
@@ -157,7 +165,7 @@ function installedSets(root) {
   return own.concat(children.flatMap((child) => (isRealDirectory(path.join(child, 'data', 'dev_hdd0')) ? installedSetsIn(path.join(child, 'data', 'dev_hdd0'), child) : [])));
 }
 
-const hasEvidence = (root) => hasPortEvidence(root) || installedSets(root).length > 0;
+const hasEvidence = (root) => hasPortEvidence(root) || launcher.isPort(root) || installedSets(root).length > 0;
 
 // The binary a repository build leaves in build/ or build/Release/, when there is exactly one.
 function builtBinary(root) {
@@ -282,6 +290,7 @@ function installedGames(root) {
 
 // The games of the port at `root` (one per trophy set), [] when `root` is not one.
 function detect(root) {
+  if (launcher.isPort(root)) return launcher.games(root, { readDirectory, localPath, debug });
   const installed = installedGames(root);
   if (!hasPortEvidence(root)) return installed;
   const ported = declaredGames(root);
@@ -345,8 +354,10 @@ function scan(dir) {
   }));
 }
 
-function readContainer(file) {
-  const files = formats.readTrp(formats.readBounded(String(file || ''), formats.MAX_TRP_BYTES), formats.PS3_TRP_HEADER_SIZE);
+// A TROPHY.TRP on disk, or the one at `entry` inside the disc image `file`.
+function readContainer(file, entry = '') {
+  const body = entry ? iso.readFile(String(file || ''), entry, formats.MAX_TRP_BYTES) : formats.readBounded(String(file || ''), formats.MAX_TRP_BYTES);
+  const files = formats.readTrp(body, formats.PS3_TRP_HEADER_SIZE);
   const container = files ? formats.readContainer(files, '', '') : null;
   return container && container.documents.size > 0 ? container : null;
 }
@@ -365,16 +376,16 @@ function readInstalledContainer(dir, names = INSTALLED_FILE) {
 
 // The trophy ids of a list, kept per file while it is unchanged: every unlock read needs them.
 const listIds = new Map();
-function trophyIds(file, read = readContainer) {
+function trophyIds(file, read = readContainer, entry = '') {
   let stamp = '';
   try {
     const stat = fs.statSync(file);
-    stamp = `${file}|${stat.size}|${stat.mtimeMs}`;
+    stamp = `${file}|${entry}|${stat.size}|${stat.mtimeMs}`;
   } catch {
     return null;
   }
   if (!listIds.has(stamp)) {
-    const container = read(file);
+    const container = read(file, entry);
     const document = container && (container.documents.get('') || container.documents.values().next().value);
     if (listIds.size >= MAX_CACHED_LISTS) listIds.delete(listIds.keys().next().value);
     listIds.set(stamp, document ? new Set(document.trophies.map((trophy) => trophy.id)) : null);
@@ -404,7 +415,7 @@ function readUnlocks(data) {
   const none = { unlocked: new Map(), unstable: false };
   if (info.trophyDir) return readInstalledUnlocks(info);
   if (!info.progressFile || !PROGRESS_NAME.test(path.basename(String(info.progressFile)))) return none;
-  const ids = trophyIds(info.trophyFile);
+  const ids = trophyIds(info.trophyFile, readContainer, info.trophyEntry || '');
   if (!ids || !fs.existsSync(info.progressFile)) return none;
   const raw = formats.readBounded(info.progressFile, MAX_PROGRESS_BYTES);
   if (!raw) {
@@ -419,7 +430,14 @@ function readUnlocks(data) {
     return { unlocked: new Map(), unstable: true };
   }
   if (!parsed || !Array.isArray(parsed.trophies)) return none;
-  return { unlocked: unlockRows(parsed.trophies, ids), unstable: false };
+  return { unlocked: unlockRows(parsed.trophies.map(unixRow), ids), unstable: false };
+}
+
+// A "tick" row as a "timestamp" one. A tick past 2^53 parses a few microseconds off: whole seconds stay exact.
+function unixRow(row) {
+  if (!row || typeof row !== 'object' || row.timestamp !== undefined || typeof row.tick !== 'number') return row;
+  const timestamp = row.tick === 0 ? 0 : Math.floor((row.tick - RTC_TICK_UNIX_EPOCH) / RTC_TICKS_PER_SECOND);
+  return { id: row.id, timestamp };
 }
 
 // One "<id> <unix seconds> <name>" line per unlock under '#' comment lines, as RACiT's state_load() reads it.
@@ -459,7 +477,9 @@ function relockInstalledUnlocks(text, id) {
 }
 
 // The file as sceNpTrophy.c writes it: its trophy_load() reads one "id" per line, never real JSON.
-const unlocksText = (rows) => `{\n  "trophies": [${rows.map((row) => `\n    { "id": ${row.id}, "timestamp": ${row.timestamp} }`).join(',')}\n  ]\n}\n`;
+const unlocksText = (rows, key = 'timestamp') => `{\n  "trophies": [${rows.map((row) => `\n    { "id": ${row.id}, "${key}": ${row.value} }`).join(',')}\n  ]\n}\n`;
+// The digits of each row's tick as written: JSON.parse rounds a tick past 2^53.
+const TICK_ROW = /"id"\s*:\s*(\d+)\s*,\s*"tick"\s*:\s*(\d+)/g;
 
 // { text, changed } for an unlock file without trophy `id`; a file that does not parse throws.
 function relockUnlocks(text, id) {
@@ -467,7 +487,11 @@ function relockUnlocks(text, id) {
   if (!parsed || !Array.isArray(parsed.trophies)) throw new Error('not a ps3recomp unlock file: no "trophies" list');
   const kept = parsed.trophies.filter((row) => !(row && row.id === id));
   if (kept.length === parsed.trophies.length) return { text, changed: false };
-  return { text: unlocksText(kept.map((row) => ({ id: row.id, timestamp: Number(row.timestamp) || 0 }))), changed: true };
+  if (kept.some((row) => row && row.tick !== undefined)) {
+    const ticks = new Map([...String(text).matchAll(TICK_ROW)].map((match) => [Number(match[1]), match[2]]));
+    return { text: unlocksText(kept.map((row) => ({ id: row.id, value: ticks.get(row.id) || '0' })), 'tick'), changed: true };
+  }
+  return { text: unlocksText(kept.map((row) => ({ id: row.id, value: Number(row.timestamp) || 0 }))), changed: true };
 }
 
 function getAchievements(data) {
@@ -486,7 +510,7 @@ function gameArt(gameRoot, container, iconDir) {
 
 async function getGameData(data, lang = 'english') {
   const info = data && typeof data === 'object' ? data : {};
-  const container = info.trophyDir ? readInstalledContainer(info.trophyDir) : readContainer(info.trophyFile);
+  const container = info.trophyDir ? readInstalledContainer(info.trophyDir) : readContainer(info.trophyFile, info.trophyEntry || '');
   if (!container) throw new Error(`PS3 Recomp: no readable trophy list for ${info.appid} in '${info.trophyDir || info.trophyFile}'`);
   return schema.gameDataOf(info, container, lang, iconDirFor, (iconDir) => gameArt(String(info.gameRoot || ''), container, iconDir));
 }

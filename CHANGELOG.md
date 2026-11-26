@@ -16,6 +16,10 @@ renamed in 3.9.0 and the history is kept under one file.
   with achievements, with unlock dates, gamerscore and pictures. Copy the profile over again after
   playing and its new unlocks are announced. AW Next only reads the profile and never writes to it.
   Games from Xenia and from a console profile also show the game's own tile as their icon.
+- **PS3 ports installed by RecompLauncher, starting with Vajra (Asura's Wrath).** Add the port's
+  folder under Settings > Folders, or let Smart find spot it from its `recomplauncher.json`. The
+  trophy list comes from the copy of the game you gave the port, a `PS3_GAME` folder or a decrypted
+  `.iso` read where it is, and the trophies it unlocks are announced as you play, with their dates.
 
 ### Improved
 
