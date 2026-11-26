@@ -79,6 +79,61 @@ test('DCport: dcport-launcher.json names the game, the runtime writes user/troph
   assert.deepEqual(unlocks(record), [['4', 1795000000]]);
 });
 
+// #226: a Driveclub dump with a second trophy set (an add-on list) was dropped; the game's own list is set 0.
+test('a single-game port whose dump holds several trophy sets uses set 0', () => {
+  const root = dir('dcport-two', 'DCport-0.5.4-windows');
+  const game = fixture.makeGameDump(dir('dcport-two', 'dumps', 'CUSA00003'), {
+    titleId: 'CUSA00003',
+    title: 'DRIVECLUB',
+    sets: [{ slot: 0, npcommid: 'NPWR05522_00', title: 'DRIVECLUB' }, { slot: 1, npcommid: 'NPWR09999_00', title: 'DRIVECLUB BIKES' }],
+  });
+  fixture.write(path.join(root, 'DriveClub.exe'), 'MZ');
+  fixture.write(path.join(root, 'bin', 'DriveClub.exe'), 'MZ');
+  fixture.write(path.join(root, 'dcport-launcher.json'), JSON.stringify({ game_dir: game, profile: 'default' }, null, 2));
+  fixture.write(path.join(root, 'user', 'trophies.log'), '4 1795000000\n');
+
+  const [record, ...others] = ps4Recomp.scan(root);
+  assert.equal(others.length, 0);
+  assert.equal(record.appid, 'ps4recomp-NPWR05522_00');
+  assert.equal(record.data.slot, 0);
+  assert.deepEqual(unlocks(record), [['4', 1795000000]]);
+});
+
+// settings.py load_settings of DCport: before dcport-launcher.json the game folder sat alone in game_dir.txt.
+test('a launcher that keeps the game folder alone in game_dir.txt is read too', () => {
+  const root = dir('dcport-legacy', 'DCport-0.5.3-windows');
+  dump('dcport-legacy', 'CUSA00003', 'NPWR05522_00', 'DRIVECLUB');
+  fixture.write(path.join(root, 'bin', 'DriveClub.exe'), 'MZ');
+  fixture.write(path.join(root, 'game_dir.txt'), `${path.join('..', 'dumps', 'CUSA00003')}\r\n`);
+  fixture.write(path.join(root, 'user', 'trophies.log'), '2 1795000000\n');
+
+  assert.equal(ps4Recomp.isPortFolder(root), true, 'never listed again as an unconfigured game');
+  const [record, ...others] = ps4Recomp.scan(root);
+  assert.equal(others.length, 0);
+  assert.equal(record.appid, 'ps4recomp-NPWR05522_00');
+  assert.deepEqual(unlocks(record), [['2', 1795000000]]);
+});
+
+// #226: two versions of a port side by side (DCport 0.5.3 kept next to 0.5.4) are one game, read from the copy played last.
+test('two copies of the same port give one game, the copy played last', () => {
+  const game = dump('dcport-copies', 'CUSA00003', 'NPWR05522_00', 'DRIVECLUB');
+  const copy = (version, line, time) => {
+    const root = dir('dcport-copies', `DCport-${version}-windows`);
+    fixture.write(path.join(root, 'bin', 'DriveClub.exe'), 'MZ');
+    fixture.write(path.join(root, 'dcport-launcher.json'), JSON.stringify({ game_dir: game }));
+    const log = fixture.write(path.join(root, 'user', 'trophies.log'), line);
+    fs.utimesSync(log, time, time);
+    return root;
+  };
+  copy('0.5.3', '1 1790000000\n', new Date('2026-10-01T10:00:00Z'));
+  const played = copy('0.5.4', '4 1795000000\n', new Date('2026-11-24T21:00:00Z'));
+
+  const records = ps4Recomp.scan(dir('dcport-copies'));
+  assert.equal(records.length, 1);
+  assert.equal(records[0].data.installRoot, played);
+  assert.deepEqual(unlocks(records[0]), [['4', 1795000000]]);
+});
+
 // sotc.py and launcher/sotc_launcher_win.py (open_session_log, CONFIG_FILE) of AjncSystem/ShadowOfTheColossus-PC.
 test('Shadow of the Colossus: user/launcher_settings.json names the game, rotated last_run logs are read and kept', () => {
   const root = dir('sotc', 'SotC-PC');

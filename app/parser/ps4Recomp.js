@@ -507,11 +507,15 @@ function gameTargets(install, dirs, identity, sets) {
       return { appid, ...base, game: entry.game, title: entry.title, slot: entry.slot, npcommid, exe, logs: [LAST_RUN_LOG] };
     });
   }
-  if (sets.size !== 1) {
-    debug.log(`[ps4recomp] '${root}': ${sets.size} trophy sets, a single-game port needs exactly one`);
+  // A game unlocks into its default set (service label 0); more sets are add-on lists (#226).
+  let slot = null;
+  if (sets.has(0)) slot = 0;
+  else if (sets.size === 1) [slot] = sets.keys();
+  if (slot === null) {
+    debug.log(`[ps4recomp] '${root}': ${sets.size} trophy sets and none is set 0, the game's own list is unknown`);
     return [];
   }
-  const [slot] = sets.keys();
+  if (sets.size > 1) debug.log(`[ps4recomp] '${root}': ${sets.size} trophy sets, using set 0`);
   const npcommid = identity.bindings.get(slot) || '';
   const id = npcommid || identity.titleId;
   if (!id) return [];
@@ -645,7 +649,28 @@ function discover(dir) {
       debug.warn(`[ps4recomp] '${install.root}' could not be read: ${err && err.message ? err.message : err}`);
     }
   }
-  return games;
+  return playedCopies(games);
+}
+
+// When its unlock records last changed: the logs a target reads, in its user, log and port folders.
+function lastPlayed(target) {
+  const dirs = [target.userDir, target.logDir, target.installRoot, ...listed(target.progressDirs)].filter(Boolean);
+  return Math.max(0, ...dirs.flatMap((dir) => LOG_FILES.map((name) => progress.modified(path.join(dir, name)))));
+}
+
+// Two copies of one port (an older version kept beside the new one, #226) are one game: the copy played last.
+function playedCopies(games) {
+  const kept = new Map();
+  for (const game of games) {
+    const other = kept.get(game.appid);
+    if (other && lastPlayed(other) >= lastPlayed(game)) {
+      debug.log(`[ps4recomp] ${game.appid}: '${game.installRoot}' is another copy of '${other.installRoot}', played earlier`);
+      continue;
+    }
+    if (other) debug.log(`[ps4recomp] ${game.appid}: '${other.installRoot}' is another copy of '${game.installRoot}', played earlier`);
+    kept.set(game.appid, game);
+  }
+  return games.filter((game) => kept.get(game.appid) === game);
 }
 
 function scan(dir) {

@@ -1,4 +1,5 @@
 pub mod display;
+pub mod gpu;
 pub mod tone;
 pub mod window;
 

@@ -27,7 +27,9 @@ page, so it looks the same as in SAN. Its author allowed AW Next to reuse SAN's 
 - SAN sizes each popup window to its card plus 25px of glow room on each side, while AW Next sizes
   one window for all the states of a theme. So the body takes the card's size, and the viewport units
   (`vw`, `vh`, `vmax`, `vmin`) of the cards and of the root font size become `--sanvw` and `--sanvh`,
-  one hundredth of the window SAN would have opened. A state's own `scale` zooms its card, and the
+  one hundredth of the window SAN would have opened. SAN's body cuts what overflows at its window's
+  edge; ours keeps that cut 25px out from the card, so a glow is not trimmed to the card's box. A
+  state's own `scale` zooms its card, and the
   window fits the largest card at its scale. Checked side by side against SAN 1.9.47's own page, every
   card at 100% and 150%: the same within text antialiasing.
 

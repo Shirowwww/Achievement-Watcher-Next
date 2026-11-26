@@ -250,7 +250,11 @@ test('a card measures SAN window units against its own card plus the glow room a
   assert.match(adapter, /body \{\s*width: var\(--notifywidth\);\s*height: var\(--notifyheight\);/);
   assert.match(adapter, /--sanvw: calc\(\(var\(--notifywidth\) \+ 50px\) \/ 100\);/);
   assert.match(adapter, /--sanvh: calc\(\(var\(--notifyheight\) \+ 50px\) \/ 100\);/);
-  assert.match(adapter, /font-size: clamp\(0\.05rem, 0\.05rem \+ 3 \* max\(var\(--sanvw\), var\(--sanvh\)\), 12\.5rem\);/);
+  // The root size is SAN's formula in its real (zoomed) window, then unzoomed for the zoomed body.
+  assert.match(
+    adapter,
+    /font-size: calc\(clamp\(0\.05rem, 0\.05rem \+ 3 \* max\(var\(--sanvw\), var\(--sanvh\)\) \* var\(--sanzoom\), 12\.5rem\) \/ var\(--sanzoom\)\);/
+  );
 });
 
 test('the sync tool turns SAN viewport units into glow-aware card units, signs included', () => {

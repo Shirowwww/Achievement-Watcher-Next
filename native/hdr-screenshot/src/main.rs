@@ -1,18 +1,22 @@
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::{Arc, Mutex};
 
 use aw_next_hdr_screenshot::AnyError;
 use aw_next_hdr_screenshot::display::*;
+use aw_next_hdr_screenshot::gpu;
 use aw_next_hdr_screenshot::tone::*;
 use aw_next_hdr_screenshot::window;
 use std::ffi::OsString;
 use half::f16;
 use png::{BitDepth, ColorType, DeflateCompression, Encoder, SrgbRenderingIntent};
 use windows::Win32::Devices::Display::DISPLAYCONFIG_PATH_INFO;
+use windows::Win32::Graphics::Dxgi::DXGI_ERROR_UNSUPPORTED;
 use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, HMONITOR, MONITORINFOEXW};
 use windows_capture::capture::{Context, GraphicsCaptureApiHandler};
+use windows_capture::d3d11::create_d3d_device;
 use windows_capture::dxgi_duplication_api::{DxgiDuplicationApi, DxgiDuplicationFormat, Error as DuplicationError};
 use windows_capture::frame::Frame;
 use windows_capture::graphics_capture_api::{GraphicsCaptureApi, InternalCaptureControl};
@@ -395,14 +399,74 @@ fn write_png(output: &Path, canvas: &Canvas) -> Result<(), AnyError> {
 
 // Windows Graphics Capture draws a yellow border around the screen on Windows 10, where it cannot be
 // turned off; Desktop Duplication draws nothing, so it takes the shot wherever the border would show.
+// Windows refuses it (DXGI_ERROR_UNSUPPORTED) from a process on another GPU than the screen's, as on a
+// hybrid-GPU laptop: the helper then asks Windows for the screen's GPU and runs once more there. Failing
+// that, a shot with a brief border beats no shot, as the clip recorder does. --duplication never falls back.
 fn capture(output: &Path, primary: Monitor, mode: CaptureMode, white_scale: f32, duplication: bool) -> Result<(), AnyError> {
-    let canvas = Canvas::new(primary.width()?, primary.height()?)?;
+    let new_canvas = || -> Result<Canvas, AnyError> { Canvas::new(primary.width()?, primary.height()?) };
     let canvas = if !duplication && GraphicsCaptureApi::is_border_settings_supported().unwrap_or(false) {
-        capture_graphics(canvas, primary, mode, white_scale)?
+        capture_graphics(new_canvas()?, primary, mode, white_scale)?
     } else {
-        capture_duplication(canvas, primary, mode, white_scale)?
+        match capture_duplication(new_canvas()?, primary, mode, white_scale) {
+            Ok(canvas) => canvas,
+            Err(refused) => {
+                if refused_for_gpu(&refused) && follow_screen_gpu(primary) {
+                    eprintln!("desktop duplication refused: the screen hangs off another GPU, the helper asked Windows for that one and runs again");
+                    match run_again() {
+                        Ok(()) => return Ok(()),
+                        Err(error) => eprintln!("the run on the screen's GPU failed ({error})"),
+                    }
+                }
+                if duplication {
+                    return Err(refused);
+                }
+                eprintln!("desktop duplication refused ({refused}), using Windows Graphics Capture");
+                capture_graphics(new_canvas()?, primary, mode, white_scale)?
+            }
+        }
     };
     write_png(output, &canvas)
+}
+
+// Set on the second run so a helper still refused there can never start a third.
+const RERUN_GUARD: &str = "AW_NEXT_SCREENSHOT_GPU_RERUN";
+
+fn refused_for_gpu(error: &AnyError) -> bool {
+    std::env::var_os(RERUN_GUARD).is_none()
+        && matches!(error.downcast_ref::<DuplicationError>(), Some(DuplicationError::WindowsError(error)) if error.code() == DXGI_ERROR_UNSUPPORTED)
+}
+
+// The duplication attempt ran on a device the crate made with create_d3d_device on the default
+// adapter; a new one made the same way lands on the same GPU.
+fn follow_screen_gpu(primary: Monitor) -> bool {
+    let log = |line: &str| eprintln!("{line}");
+    let device = match create_d3d_device() {
+        Ok((device, _)) => device,
+        Err(error) => {
+            log(&format!("gpu: the helper's own GPU could not be read ({error}), staying on it"));
+            return false;
+        }
+    };
+    match device_name(primary) {
+        Ok(display) => gpu::follow_display(&device, &display, "helper", log),
+        Err(error) => {
+            log(&format!("gpu: the screen's name could not be read ({error})"));
+            false
+        }
+    }
+}
+
+// Windows applies the stored GPU choice to the next process only: the same arguments, run again.
+fn run_again() -> Result<(), AnyError> {
+    let status = Command::new(std::env::current_exe()?)
+        .args(std::env::args_os().skip(1))
+        .env(RERUN_GUARD, "1")
+        .status()?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(format!("exit code {}", status.code().unwrap_or(-1)).into())
+    }
 }
 
 // The first frames can come before the desktop has presented anything, hence a few tries.
@@ -541,6 +605,16 @@ mod tests {
         let (pid, rest) = split_pid(os_args(&["shot.png"])).unwrap();
         assert_eq!(pid, 0);
         assert_eq!(rest, os_args(&["shot.png"]));
+    }
+
+    #[test]
+    fn only_an_unsupported_duplication_looks_for_the_screens_gpu() {
+        let unsupported: AnyError = DuplicationError::WindowsError(DXGI_ERROR_UNSUPPORTED.into()).into();
+        assert!(refused_for_gpu(&unsupported));
+        let busy: AnyError = DuplicationError::WindowsError(windows::Win32::Graphics::Dxgi::DXGI_ERROR_NOT_CURRENTLY_AVAILABLE.into()).into();
+        assert!(!refused_for_gpu(&busy), "a display too many recorders duplicate is not a GPU question");
+        assert!(!refused_for_gpu(&DuplicationError::OutputNotFound.into()));
+        assert!(!refused_for_gpu(&"Desktop Duplication returned no frame".into()));
     }
 
     #[test]

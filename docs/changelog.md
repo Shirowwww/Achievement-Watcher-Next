@@ -25,12 +25,28 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Achievement screenshots are taken again on PCs where Windows refuses screen duplication.** On some
+  laptops with two graphics chips, Windows refused the method AW Next uses for screenshots when it ran
+  on the chip that does not drive the screen, so every souvenir failed and game folders stayed empty.
+  The screenshot now asks Windows for the screen's chip, as clip recording already did, and falls back
+  to the other Windows capture only when that is not possible.
+- **Imported SAN themes glow and size their text as in SAN.** The glow of a theme imported from Steam
+  Achievement Notifier was cut off at the edge of the notification, leaving a hard rectangle with
+  filled corners instead of a soft halo. At a size other than 100%, its text was also drawn slightly
+  larger than in SAN. Both now match SAN.
+- **The in-game overlay fits its window at every zoom.** At 110% or 125% it grew wider than its window,
+  so its right edge and settings were cut off; at 80% or 90% it left an empty strip.
+- **A nightly installed by hand is no longer swapped back for the stable release.** With Update channel
+  still on Stable, automatic updates reinstalled the older stable version a few seconds after a nightly
+  was installed. Going back from a nightly is now offered, never done on its own.
 - **The overlay shortcut works with keys of any keyboard layout.** A shortcut on a key that a US
   keyboard does not have, such as º on a Spanish keyboard or ù on a French one, was never registered,
   so the overlay did not open. On Windows it now uses the key that types that character.
 - **The overlay opens over the game again.** A borderless game that puts itself always on top could
   keep the overlay behind it from the second open on, so it only showed up as a separate window. It is
-  now raised above the game each time it opens.
+  now raised above the game each time it opens. When it had not been used for a few minutes it was
+  rebuilt in a way that briefly took the keyboard from the game; it now opens like a reused overlay,
+  and the logs say which window sits above it.
 - **EA games cracked by anadius show the right unlock time, and notify again (#229).** anadius writes
   the time in UTC and AW Next read it as local time, so east of UTC unlocks looked hours old and were
   skipped as too old to announce. Times already recorded correct themselves.
@@ -39,7 +55,10 @@ renamed in 3.9.0 and the history is kept under one file.
   profile. Every profile is watched now, and the library shows the profile played last.
 - **Driveclub played with DCport now shows its trophies (#226).** DCport keeps the game folder in
   `dcport-launcher.json`, which PS4 Recomp did not read, so the port was listed as an unknown game
-  instead. A launcher's settings named after it are now read too.
+  instead. A launcher's settings named after it are now read too. A Driveclub copy whose game files
+  also hold a second trophy list, for an add-on, was still left out: the game's own list is used now.
+  An older DCport folder kept beside the new one, or one that names the game in game_dir.txt, is the
+  same game, read from the copy played last.
 - **The platform filter lists Steam once (#228).** Games with no achievements, such as unknown
   folders or a Ubisoft game with none found, were each listed under another "Steam". They now sit
   under their own platform, and unknown folders under PC.

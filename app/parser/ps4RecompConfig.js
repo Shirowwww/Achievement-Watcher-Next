@@ -70,10 +70,16 @@ function parseIni(text) {
   return values;
 }
 
+// A launcher may keep one setting alone in a text file named after it: DCport before its JSON had game_dir.txt.
+const KEY_FILES = GAME_KEYS.map((key) => `${key}.txt`);
+const keyFileOf = (file) => KEY_FILES.find((name) => name === path.basename(file).toLowerCase());
+
 // A launcher's JSON or INI settings as one flat object, {} when unreadable.
 function readConfig(file) {
   const text = isFile(file) ? readText(file) : '';
   if (!text) return {};
+  const keyFile = keyFileOf(file);
+  if (keyFile) return { [keyFile.slice(0, -'.txt'.length)]: text.split(/\r?\n/).map((line) => line.trim()).find(Boolean) || '' };
   if (!/\.json$/i.test(file)) return parseIni(text);
   try {
     const parsed = JSON.parse(text);
@@ -105,6 +111,7 @@ const NAMED_LAUNCHER_CONFIG = /^[a-z0-9][\w.-]{0,40}[-_]launcher\.(?:json|ini)$/
 const localConfigFiles = (root) => [
   ...LOCAL_CONFIGS.map((name) => path.join(root, name)).filter(isFile),
   ...listing(root).filter((entry) => entry.isFile() && NAMED_LAUNCHER_CONFIG.test(entry.name)).map((entry) => path.join(root, entry.name)),
+  ...KEY_FILES.map((name) => path.join(root, name)).filter(isFile),
 ];
 
 // A linked boot image: out/boot-linked.bin, or game/image/[<build>/]*.bin.

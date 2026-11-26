@@ -281,6 +281,17 @@ test('automatic install is off by default and never applies to a portable copy',
   assert.equal(gate.autoInstallEnabled({ autoUpdate: true }, { portable: true }), false);
 });
 
+// A nightly installed by hand while Settings still said Stable was replaced by the stable release
+// 30 seconds later, without a word (reporter's logs, 3.12.9-nightly.20 -> 3.12.8).
+test('the way back from a nightly to stable is never installed on its own', () => {
+  const general = { autoUpdate: true, updateChannel: 'stable' };
+  const back = { offered: '3.12.8', currentVersion: '3.12.9-nightly.20' };
+  assert.equal(gate.autoInstallEnabled(general, back), false, 'asked, not installed');
+  assert.equal(gate.autoInstallEnabled(general, { offered: '3.12.9', currentVersion: '3.12.9-nightly.20' }), true, 'a newer stable still installs');
+  assert.equal(gate.autoInstallEnabled(general, { offered: '3.12.9', currentVersion: '3.12.8' }), true);
+  assert.equal(gate.autoInstallEnabled({ autoUpdate: true, updateChannel: 'nightly' }, { offered: '3.12.9-nightly.21', currentVersion: '3.12.9-nightly.20' }), true);
+});
+
 test('an automatic install leaves a note that the next start reads once', () => {
   const general = { ...fresh(), ...gate.autoInstallPatch('3.13.0', { hidden: true }) };
   assert.deepEqual(gate.autoInstallOutcome(general, '3.13.0'), { installed: '3.13.0', startHidden: true });

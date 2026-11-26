@@ -136,6 +136,105 @@ test('every base card draws each state from a real preset page and closes itself
   assert.ok(cards.includes('default'), 'the default card is missing');
 });
 
+// Strongest alpha per side of a box: on its own edge, and in a band `depth` pixels wide just outside
+// it. Read back from a screenshot taken without the page background.
+async function alphaAround(browser, page, box, depth) {
+  const shot = await page.screenshot({ omitBackground: true, encoding: 'base64' });
+  const reader = await browser.newPage();
+  try {
+    return await reader.evaluate(
+      (data, b, d) =>
+        new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const strongest = (x, y, w, h) => {
+              const pixels = ctx.getImageData(Math.max(0, Math.floor(x)), Math.max(0, Math.floor(y)), Math.max(1, Math.floor(w)), Math.max(1, Math.floor(h))).data;
+              let max = 0;
+              for (let i = 3; i < pixels.length; i += 4) max = Math.max(max, pixels[i]);
+              return max;
+            };
+            const right = b.x + b.width;
+            const bottom = b.y + b.height;
+            resolve({
+              outside: {
+                left: strongest(b.x - d - 1, b.y, d, b.height),
+                right: strongest(right + 1, b.y, d, b.height),
+                top: strongest(b.x, b.y - d - 1, b.width, d),
+                bottom: strongest(b.x, bottom + 1, b.width, d),
+              },
+              inside: {
+                left: strongest(b.x + 2, b.y, 1, b.height),
+                right: strongest(right - 3, b.y, 1, b.height),
+                top: strongest(b.x, b.y + 2, b.width, 1),
+                bottom: strongest(b.x, bottom - 3, b.width, 1),
+              },
+            });
+          };
+          img.onerror = reject;
+          img.src = 'data:image/png;base64,' + data;
+        }),
+      shot,
+      box,
+      depth
+    );
+  } finally {
+    await reader.close();
+  }
+}
+
+test('a glowing card glows past its own edges on every side, inside the window SAN would open', { timeout: 240000 }, async (t) => {
+  const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
+  if (!browser) return t.skip(skipReason(failures));
+  const cards = engine.LAYOUT_IDS.filter((id) => fs.existsSync(path.join(appDir, 'util', 'sanEngine', 'layouts', `${id}.html`)));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-glow-'));
+  t.after(async () => {
+    await closeBrowser(browser, userDataDir);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  let edges = 0;
+  await mapLimit(cards, PAGES_AT_ONCE, async (card) => {
+    const theme = themeFor(card);
+    theme.types.main = { ...theme.types.main, glow: true, glowcolor: '#ffffff', glowsize: 100, scale: 150, displaytime: 30, iconanim: false };
+    const dir = path.join(root, card);
+    fs.mkdirSync(dir);
+    sanEngine.writePresetFiles(dir, theme, { name: card });
+    const meta = /<meta width="(\d+)" height="(\d+)"/.exec(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'));
+    const context = await browser.createBrowserContext();
+    const page = await context.newPage();
+    try {
+      // The popup window is the preset's <meta> box: draw the page at that size.
+      await page.setViewport({ width: Number(meta[1]), height: Number(meta[2]) });
+      await page.evaluateOnNewDocument(bridge);
+      await page.goto(pathToFileURL(path.join(dir, 'index.html')).href, { waitUntil: 'load' });
+      await page.evaluate((d) => window.__aw.show(d), payload({}));
+      await page.waitForFunction(() => window.__aw.ready > 0, { timeout: 10000 });
+      assert.equal(await page.evaluate(probeSource(6000)), 'settled', `${card}: the card never settled`);
+      const box = await page.evaluate(() => {
+        const r = document.body.getBoundingClientRect();
+        return { x: r.x, y: r.y, width: r.width, height: r.height };
+      });
+      // A side the card paints up to must glow past it. Cards inset their body or leave it bare
+      // (windows glows around its text only, as in SAN), so only sides painted near the edge count.
+      const PAINTED = 8;
+      const { inside, outside } = await alphaAround(browser, page, box, 4);
+      for (const side of ['left', 'right', 'top', 'bottom']) {
+        if (inside[side] < PAINTED) continue;
+        edges += 1;
+        assert.ok(outside[side] > 0, `${card}: no glow past the card's ${side} edge (${JSON.stringify(outside)})`);
+      }
+    } finally {
+      await context.close().catch(() => {});
+    }
+  });
+  assert.ok(edges >= cards.length,`only ${edges} painted card edges were checked`);
+});
+
 test('the trophy follows the tier shown, a pinned tier, and a state drawn by a theme of its own', { timeout: 60000 }, async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
   if (!browser) return t.skip(skipReason(failures));
@@ -217,7 +316,50 @@ test('a state is drawn at the scale its theme gives it, text included', { timeou
   const double = await measure(200);
   assert.ok(Math.abs(normal.card - 300) < 1, `the default card is 300px wide at 100%, got ${normal.card}`);
   assert.ok(Math.abs(double.card - 600) < 1, `the default card is 600px wide at 200%, got ${double.card}`);
-  assert.ok(Math.abs(double.text / normal.text - 2) < 0.05, `the text doubles too: ${normal.text} -> ${double.text}`);
+  // SAN's root font is 0.8px + 3vw of its window, so the text grows a little less than the card:
+  // 0.8 + 0.03 * 700 over 0.8 + 0.03 * 350 for the 300px default card.
+  const sanRatio = (0.8 + 0.03 * 700) / (0.8 + 0.03 * 350);
+  assert.ok(Math.abs(double.text / normal.text - sanRatio) < 0.02, `the text grows as in SAN: ${normal.text} -> ${double.text}`);
+});
+
+test('a scaled card sizes its text from the window SAN opens for it, as SAN does', { timeout: 60000 }, async (t) => {
+  const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
+  if (!browser) return t.skip(skipReason(failures));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-rem-'));
+  t.after(async () => {
+    await closeBrowser(browser, userDataDir);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  for (const [card, scale] of [['xbox360', 150], ['default', 100], ['ps5', 230]]) {
+    const theme = themeFor(card);
+    theme.types.main.scale = scale;
+    theme.types.main.displaytime = 30;
+    const dir = path.join(root, `${card}-${scale}`);
+    fs.mkdirSync(dir);
+    sanEngine.writePresetFiles(dir, theme, { name: card });
+    const page = await browser.newPage();
+    try {
+      await page.evaluateOnNewDocument(bridge);
+      await page.goto(pathToFileURL(path.join(dir, 'index.html')).href, { waitUntil: 'load' });
+      await page.evaluate((d) => window.__aw.show(d), payload({}));
+      await page.waitForFunction(() => window.__aw.ready > 0, { timeout: 10000 });
+      const rem = await page.evaluate(() => {
+        const probe = document.createElement('div');
+        probe.style.cssText = 'position:absolute;width:10rem;height:1px';
+        document.body.appendChild(probe);
+        return probe.getBoundingClientRect().width / 10;
+      });
+      // SAN's root font, in the window it opens: the card plus 25px a side, all at the scale.
+      const { width, height } = engine.LAYOUTS[card];
+      const vw = ((width + 50) * scale) / 100 / 100;
+      const vh = ((height + 50) * scale) / 100 / 100;
+      const expected = Math.min(200, Math.max(0.8, 0.8 + 3 * Math.max(vw, vh)));
+      assert.ok(Math.abs(rem - expected) < 0.02, `${card} at ${scale}%: 1rem is ${rem}px, SAN draws ${expected}px`);
+    } finally {
+      await page.close().catch(() => {});
+    }
+  }
 });
 
 test('items added in the designer are drawn in the card at their own size, shown by tier, and left out when bare', { timeout: 60000 }, async (t) => {

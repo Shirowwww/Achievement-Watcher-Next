@@ -17,7 +17,7 @@ const { normalizeOptions, normalizeCanvas, canvasFiles, canvasFonts } = require(
 
 // Raised whenever a change here, in engine.js, host.js, base.css or a layout must reach presets
 // that are already installed.
-const ENGINE_VERSION = 9;
+const ENGINE_VERSION = 10;
 
 const THEME_BLOCK_ID = 'aw-san-theme';
 const ENGINE_META = 'aw-san-engine';

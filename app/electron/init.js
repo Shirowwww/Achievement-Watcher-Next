@@ -5453,6 +5453,35 @@ function showOverlayAfterLoad(info) {
   if (process.platform === 'win32') overlayWindow.moveTop();
   registerOverlayShortcuts();
   notifyMonitorOverlayState(true);
+  logOverlayShown();
+}
+
+// One line per open, then the same check a moment later: a game that takes the top back after the
+// overlay was raised shows up as a change between the two.
+const OVERLAY_RECHECK_MS = 2000;
+let overlayZOrderProbe = null;
+// The overlay window already shown once: a later show of the same window is a reuse.
+let overlayShownWindow = null;
+function overlayZOrderText(win) {
+  if (process.platform !== 'win32') return '';
+  if (!overlayZOrderProbe) overlayZOrderProbe = require('../util/overlayZOrder.js').createZOrderProbe({ koffiPath: path.join(watchdogDir(), 'node_modules', 'koffi') });
+  const text = overlayZOrderProbe(win.getNativeWindowHandle());
+  return text ? ` z: ${text}` : '';
+}
+function logOverlayShown() {
+  const win = overlayWindow;
+  const kind = overlayShownWindow === win ? 'reused' : 'new';
+  overlayShownWindow = win;
+  const describe = () => {
+    const b = win.getBounds();
+    return `visible=${win.isVisible()} focused=${win.isFocused()} bounds=${b.width}x${b.height}@${b.x},${b.y}${overlayZOrderText(win)}`;
+  };
+  debug.log(`[overlay] shown (${kind} window): ${describe()}`);
+  const recheck = setTimeout(() => {
+    if (win.isDestroyed() || win !== overlayWindow || !overlayVisible) return;
+    debug.log(`[overlay] ${OVERLAY_RECHECK_MS / 1000}s after opening: ${describe()}`);
+  }, OVERLAY_RECHECK_MS);
+  if (typeof recheck.unref === 'function') recheck.unref();
 }
 
 async function createOverlayWindow(info) {
@@ -5539,6 +5568,9 @@ async function createOverlayWindow(info) {
       focusable: managedOverlay,
       hasShadow: false,
       fullscreenable: false,
+      // Shown by showOverlayAfterLoad like a reused window. Shown here, a new window was activated
+      // over the game, took its foreground and keyboard, then handed the foreground on with blur().
+      show: false,
       webPreferences: {
         preload: path.join(__dirname, '../overlayPreload.js'),
         additionalArguments: [`--isDev=${app.isDev ? 'true' : 'false'}`, `--userDataPath=${userData}`],
@@ -5576,8 +5608,8 @@ async function createOverlayWindow(info) {
     overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     overlayWindow.setFullScreenable(false);
     overlayWindow.setFocusable(true);
-    // On X11, blurring a window lowers it to the bottom of the stack, under the game.
-    if (process.platform !== 'linux') overlayWindow.blur();
+    // No default menu: its Ctrl+W and Ctrl+R would close or reload an overlay that has the keyboard.
+    overlayWindow.removeMenu();
 
     // Restore the user's last overlay position/size (from drag, nudge or snap), if any.
     const savedInGame = readOverlayBounds().inGame;
@@ -5605,6 +5637,11 @@ async function createOverlayWindow(info) {
     overlayWindow.on('resize', persistInGameBounds);
 
     const createdWindow = overlayWindow;
+    // The app only ever hides or destroy()s the overlay, and destroy() emits no 'close': this is
+    // Windows or the user closing it (Alt+F4), which the logs could not tell apart before.
+    overlayWindow.on('close', () => {
+      if (!app.isQuiting) debug.log('[overlay] window closed from outside the app (Alt+F4 or another program)');
+    });
     overlayWindow.on('closed', () => {
       if (overlayWindow !== createdWindow) return; // replaced by a window of the other kind
       overlayWindow = null;
@@ -7856,7 +7893,7 @@ try {
           return;
         }
         // No question: a running game still holds the install back (shouldHoldInstall).
-        if (updateGate.autoInstallEnabled(configJS && configJS.general)) {
+        if (updateGate.autoInstallEnabled(configJS && configJS.general, { offered: info.version, currentVersion: app.getVersion() })) {
           debug.log(`[updater] downloading ${info.version} on its own (automatic updates)`);
           updateOffer = offer;
           updateDownloading = true;

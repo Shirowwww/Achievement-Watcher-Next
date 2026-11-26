@@ -594,18 +594,25 @@ body[ss] .wrapper#achcontent > #desc {
 /* ---- AW Next ----------------------------------------------------------------------------------- */
 
 /*
-  SAN sizes each popup window to its card plus 25px of glow room on each side. AW Next sizes one
-  window for every state of a theme, so the card is drawn in a body of its own size, and SAN's
-  viewport units (the text scale among them) measure the window SAN would have opened for it.
+  SAN's window is its card plus 25px a side; ours is the card's own size, so SAN's viewport units
+  measure the window SAN would have opened. The body is zoomed by --sanzoom, which would also zoom
+  SAN's fixed 0.05rem: the root size is worked out in SAN's real window, then unzoomed.
 */
 :root {
+    --sanzoom: 1;
     --sanvw: calc((var(--notifywidth) + 50px) / 100);
     --sanvh: calc((var(--notifyheight) + 50px) / 100);
-    font-size: clamp(0.05rem, 0.05rem + 3 * max(var(--sanvw), var(--sanvh)), 12.5rem);
+    font-size: calc(clamp(0.05rem, 0.05rem + 3 * max(var(--sanvw), var(--sanvh)) * var(--sanzoom), 12.5rem) / var(--sanzoom));
 }
 
+/*
+  SAN's body is its whole window, so its overflow cut falls 25px out from the card and the glow
+  shows. Ours is the card itself: the cut keeps those 25px (zoomed with the card, like SAN's room).
+*/
 body {
     width: var(--notifywidth);
     height: var(--notifyheight);
     container-type: size;
+    overflow: clip;
+    overflow-clip-margin: 25px;
 }

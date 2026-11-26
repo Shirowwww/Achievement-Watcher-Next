@@ -2,7 +2,6 @@
 // The line protocol with the Watchdog is described in native/hdr-screenshot/README.md.
 mod audio;
 mod codec;
-mod gpu;
 mod mp4;
 mod mux;
 mod priority;
@@ -22,6 +21,7 @@ use windows::Win32::System::ProcessStatus::{K32GetProcessMemoryInfo, PROCESS_MEM
 use windows::Win32::System::Threading::{GetCurrentProcess, GetProcessTimes};
 use windows::Win32::UI::HiDpi::{DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, SetProcessDpiAwarenessContext};
 
+use aw_next_hdr_screenshot::gpu;
 use ring::{Ring, SECOND, Schedule};
 
 // Encoder and audio buffering: a clip is cut this long after its end so its last frames are out.

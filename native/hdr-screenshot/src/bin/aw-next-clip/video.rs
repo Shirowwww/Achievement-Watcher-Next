@@ -910,7 +910,7 @@ fn screen_source(config: &Config, device: &ID3D11Device, output: &IDXGIOutput, m
             let mode = unsafe { duplication.GetDesc() }.ModeDesc;
             Ok((Source::Duplication(duplication), (mode.Width, mode.Height)))
         }
-        Err(refused) if refused.code() == DXGI_ERROR_UNSUPPORTED && !config.graphics_capture && crate::gpu::follow_display(device, &display) => {
+        Err(refused) if refused.code() == DXGI_ERROR_UNSUPPORTED && !config.graphics_capture && crate::gpu::follow_display(device, &display, "recorder", log) => {
             log("desktop duplication refused: the screen hangs off another GPU, the recorder asked Windows for that one and starts again");
             Err(Error::new(refused.code(), GPU_MOVED))
         }

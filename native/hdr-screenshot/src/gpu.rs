@@ -1,7 +1,8 @@
 // Desktop duplication only works from a device on the GPU that drives the screen. On a laptop whose
-// panel hangs off the integrated GPU, a recorder that Windows starts on the discrete one is refused
+// panel hangs off the integrated GPU, a process that Windows starts on the discrete one is refused
 // (DXGI_ERROR_UNSUPPORTED) and falls back to Windows Graphics Capture, whose yellow frame Windows 10
 // cannot hide. Windows keeps a GPU choice per executable; this module stores the screen's GPU there.
+// Shared by the clip recorder and the screenshot helper.
 
 use std::ffi::c_void;
 use std::path::Path;
@@ -14,8 +15,6 @@ use windows::Win32::Graphics::Gdi::*;
 use windows::Win32::System::LibraryLoader::{GetProcAddress, LOAD_LIBRARY_SEARCH_SYSTEM32, LoadLibraryExW};
 use windows::Win32::System::Registry::*;
 use windows::core::*;
-
-use crate::log;
 
 // Where Settings > Display > Graphics keeps its per-app choices, one "GpuPreference=N;" per path.
 const PREFERENCES_KEY: PCWSTR = w!("Software\\Microsoft\\DirectX\\UserGpuPreferences");
@@ -159,14 +158,15 @@ fn ids_text((vendor, device): Ids) -> String {
 // After duplication was refused: when the display hangs off another GPU than `device`'s, asks Windows
 // to start this executable on that GPU from now on. True when the choice was stored. Windows applies
 // it to the next process only (checked on a desktop with an AMD and an NVIDIA GPU, 21/11/2026).
-pub fn follow_display(device: &ID3D11Device, display: &[u16]) -> bool {
+// `who` names the process in the log lines ("recorder", "helper").
+pub fn follow_display(device: &ID3D11Device, display: &[u16], who: &str, log: impl Fn(&str)) -> bool {
     let current = (|| -> Result<DXGI_ADAPTER_DESC1> {
         let adapter: IDXGIAdapter1 = unsafe { device.cast::<IDXGIDevice>()?.GetAdapter()? }.cast()?;
         unsafe { adapter.GetDesc1() }
     })();
     // Each way out is logged: a laptop that keeps the yellow frame otherwise says nothing (22/11/2026).
     let Ok(current) = current else {
-        log("gpu: the recorder's own GPU could not be read, staying on it");
+        log(&format!("gpu: the {who}'s own GPU could not be read, staying on it"));
         return false;
     };
     let own = (current.VendorId, current.DeviceId);
@@ -175,7 +175,7 @@ pub fn follow_display(device: &ID3D11Device, display: &[u16]) -> bool {
         return false;
     };
     if gpu == own {
-        log(&format!("gpu: the screen hangs off the recorder's own GPU ({}), nothing to change", ids_text(gpu)));
+        log(&format!("gpu: the screen hangs off the {who}'s own GPU ({}), nothing to change", ids_text(gpu)));
         return false;
     }
     let gpus = hardware_gpus();
@@ -185,13 +185,13 @@ pub fn follow_display(device: &ID3D11Device, display: &[u16]) -> bool {
         return false;
     };
     let Ok(exe) = std::env::current_exe() else {
-        log("gpu: the recorder's own path could not be read");
+        log(&format!("gpu: the {who}'s own path could not be read"));
         return false;
     };
     match store(&exe, preference) {
         Ok(None) => true,
         Ok(Some(entry)) => {
-            log(&format!("gpu: Windows already holds a GPU choice for the recorder ({entry}), left as it is"));
+            log(&format!("gpu: Windows already holds a GPU choice for the {who} ({entry}), left as it is"));
             false
         }
         Err(error) => {

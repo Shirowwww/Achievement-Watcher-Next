@@ -73,8 +73,9 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        width: 100vw;
-        max-height: 100vh;
+        /* zoom scales viewport units too: divide them so the panel keeps the window's size. */
+        width: calc(100vw / var(--zoom));
+        max-height: calc(100vh / var(--zoom));
         background: var(--bg);
         border: 1px solid var(--border);
         border-radius: var(--radius);
@@ -779,7 +780,7 @@
         right: 10px;
         z-index: 10;
         width: 252px;
-        max-height: calc(100vh - 60px);
+        max-height: calc(100vh / var(--zoom) - 60px);
         overflow-y: auto;
         padding: 12px;
         border: 1px solid var(--border);

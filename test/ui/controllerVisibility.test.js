@@ -24,6 +24,27 @@ test('only controller.js touches the Gamepad API in the main window (#217)', () 
   assert.match(controller, /window\.AWGamepads = /, 'controller.js hands the gated reading to the other scripts');
 });
 
+// The test above sees only the <script> tags; a module those scripts require, a component or a
+// page shown inside the window would wake the pad reading just the same (#217).
+test('no app source other than controller.js and the overlay window touches the Gamepad API (#217)', () => {
+  const appDir = path.join(__dirname, '..', '..', 'app');
+  const skipped = new Set(['node_modules', 'dist']);
+  const allowed = new Set([path.join('ui', 'controller.js'), path.join('view', 'overlay.js')]);
+  const offenders = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (!skipped.has(entry.name)) walk(full);
+      } else if (/\.(c|m)?js$|\.html?$/i.test(entry.name) && !allowed.has(path.relative(appDir, full))) {
+        if (/getGamepads|gamepadconnected|gamepaddisconnected/.test(fs.readFileSync(full, 'utf8'))) offenders.push(path.relative(appDir, full));
+      }
+    }
+  };
+  walk(appDir);
+  assert.deepEqual(offenders, [], 'these read the pads outside the gate in controller.js');
+});
+
 test('renderer-side controller polling follows the main tray-window visibility signal', () => {
   const init = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'electron', 'init.js'), 'utf8');
   const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'ui', 'controller.js'), 'utf8');

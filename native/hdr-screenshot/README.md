@@ -11,8 +11,16 @@ ran it, which antivirus behaviour engines report as a screen-capture tool.
 
 Windows 10 cannot turn off the yellow border Windows Graphics Capture draws around a captured screen.
 Where Windows has no switch for it, the helper uses DXGI Desktop Duplication, which draws nothing, and
-skips frames that only moved the pointer, since their texture is still black. Both paths feed the same
-tone mapping.
+skips frames that only moved the pointer, since their texture is still black. Windows refuses
+duplication (`DXGI_ERROR_UNSUPPORTED`) to a process on another GPU than the one that drives the screen,
+as on a hybrid-GPU laptop whose panel hangs off the integrated GPU. The helper then does what the clip
+recorder does (`src/gpu.rs`, shared by both): when its entry in
+`HKCU\Software\Microsoft\DirectX\UserGpuPreferences` names no GPU yet, it stores the screen's GPU there
+and runs itself once more with the same arguments, which Windows starts on that GPU, borderless. An
+environment variable keeps that second run from starting a third. When no choice was stored, the second
+run failed, or it was refused again, the shot falls back to Graphics Capture and its brief border,
+unless `--duplication` asked for duplication only. Each way out is a line on stderr (`gpu: ...` for the
+reasons it stays put). Both paths feed the same tone mapping.
 
 HDR is read from the display path of the captured monitor with
 `DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2`, not from DXGI: `IDXGIOutput6::GetDesc1` keeps reporting the
@@ -126,7 +134,7 @@ Everything runs on parts of Windows, with no third-party media library:
   discrete one. When the entry for `aw-next-clip.exe` in
   `HKCU\Software\Microsoft\DirectX\UserGpuPreferences` (Settings > Display > Graphics) names no GPU
   (missing, "Let Windows decide", or other settings only), the recorder stores the screen's GPU
-  there, keeping the rest of the entry (`gpu.rs`), and exits with code 5; Windows applies it to the
+  there, keeping the rest of the entry (`src/gpu.rs`), and exits with code 5; Windows applies it to the
   next process only, and the Watchdog starts that one at once. Each reason it stays put is logged
   with a `gpu:` line.
   For development, `--capture graphics` takes that path on any desktop (whole monitor),

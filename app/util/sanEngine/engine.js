@@ -422,7 +422,10 @@
     // The state's own scale zooms the card, as SAN's window does; the host's page zoom (AW Next's
     // size setting) comes on top. The properties below are then computed at the design size.
     const zoom = scaleOf(c);
-    if (zoom !== 1) body.style.zoom = String(zoom);
+    if (zoom !== 1) {
+      body.style.zoom = String(zoom);
+      html.style.setProperty('--sanzoom', String(zoom));
+    }
     c.scale = 100;
     const info = opts.info || {};
     const type = TYPES.includes(info.type) ? info.type : 'main';

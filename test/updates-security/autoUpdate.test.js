@@ -138,7 +138,10 @@ test('automatic updates download without asking, install silently and leave a no
   const appRoot = path.join(__dirname, '..', '..', 'app');
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
   // The option skips the question but not the game hold: the accepted-by-user flag stays false.
-  assert.match(init, /if \(updateGate\.autoInstallEnabled\(configJS && configJS\.general\)\) \{[\s\S]{0,300}updateAcceptedByUser = false;\s*autoInstallInFlight = true;/);
+  assert.match(
+    init,
+    /if \(updateGate\.autoInstallEnabled\(configJS && configJS\.general, \{ offered: info\.version, currentVersion: app\.getVersion\(\) \}\)\) \{[\s\S]{0,300}updateAcceptedByUser = false;\s*autoInstallInFlight = true;/
+  );
   // After the portable branch, so a portable copy never downloads an installer.
   const handler = init.slice(init.indexOf("autoUpdater.on('update-available'"));
   assert.ok(handler.indexOf('if (isPortableBuild)') < handler.indexOf('updateGate.autoInstallEnabled('));

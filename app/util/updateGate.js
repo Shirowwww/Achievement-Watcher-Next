@@ -149,8 +149,11 @@ function clearPostponePatch() {
   "Install updates automatically" (general.autoUpdate) skips the question: the download starts on
   its own and installs once no game is running. A portable copy cannot install anything.
 */
-function autoInstallEnabled(general, { portable = false } = {}) {
-  return !portable && Boolean(general) && general.autoUpdate === true;
+function autoInstallEnabled(general, { portable = false, offered = '', currentVersion = '' } = {}) {
+  if (portable || !general || general.autoUpdate !== true) return false;
+  // Going back from a nightly to an older stable is a downgrade: it is offered, never installed unasked.
+  const channel = normalizeChannel(general.updateChannel, currentVersion);
+  return !(isReturnToStable(offered, currentVersion, channel) && isNotAnUpgrade(offered, currentVersion));
 }
 
 // Written just before an automatic install, so the next start can say it happened and stay in the
