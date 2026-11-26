@@ -21,7 +21,8 @@ test('a save is read once per change, never skipped because another file changed
   assert.doesNotMatch(watchdog, /self\.tick\b/);
   // One read at a time per save, the changes made during a read folded into one more read.
   assert.match(watchdog, /const saveReads = createChangeCoalescer\(\);/);
-  assert.match(watchdog, /saveReads\.run\(String\(name\)\.toLowerCase\(\), \(\) => onChange\(evt, name, false, seenAt\)\)/);
+  // Keyed by the save read, so a stat file and its save are one read (#232).
+  assert.match(watchdog, /saveReads\.run\(String\(saveFileFor\(name, options\) \|\| name\)\.toLowerCase\(\), \(\) => onChange\(evt, name, false, seenAt\)\)/);
   // A read that runs after the burst is still judged fresh against when the change was reported.
   assert.match(watchdog, /const onChange = async function \(evt, name, catchUp = false, seenAt = Date\.now\(\)\)/);
   assert.match(watchdog, /const currentTime = seenAt;/);

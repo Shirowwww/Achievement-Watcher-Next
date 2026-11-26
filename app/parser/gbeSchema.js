@@ -11,6 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const gbeEffectiveConfig = require(path.join(__dirname, 'gbeEffectiveConfig.js'));
 
 const GRAY_KEYS = ['icon_gray', 'icongray'];
 // Each AW schema icon field and the emulator keys that name its file.
@@ -196,11 +197,12 @@ function planSchema({ existing = null, schemaList = [], reference = {}, links = 
 
 /*
   stats.json after the rewrite: every stat a progress definition reads must be declared (GBE
-  refuses SetStat on any other one), with the reference's type and default where it has one.
+  refuses SetStat on any other one unless allow_unknown_stats is on), with the reference's type
+  and default where it has one.
   A stat the user already declared keeps its `global` value; its type and default follow the
   reference, which is what "outdated" means here.
 */
-function planStats({ existing = [], reference = [], entries = [] } = {}) {
+function planStats({ existing = [], reference = [], entries = [], unknownStatsAllowed = false } = {}) {
   const current = Array.isArray(existing) ? existing.filter((s) => s && typeof s === 'object') : [];
   const known = byName(reference, (s) => s);
   const summary = { added: [], updated: [] };
@@ -221,7 +223,9 @@ function planStats({ existing = [], reference = [], entries = [] } = {}) {
   for (const ref of reference || []) {
     if (ref && ref.name && !declared.has(upper(ref.name))) add({ name: String(ref.name), type: String(ref.type || 'int'), default: String(ref.default ?? '0'), global: String(ref.global ?? '0') });
   }
-  for (const entry of entries) {
+  // A stat whose type nothing names: declared int, GBE would refuse it set as a float (#232), so under
+  // allow_unknown_stats it stays undeclared and takes the type the game sets.
+  for (const entry of unknownStatsAllowed ? [] : entries) {
     const stat = progressStat(entry && entry.progress);
     if (stat && !declared.has(upper(stat))) add({ name: stat, type: 'int', default: '0', global: '0' });
   }
@@ -234,10 +238,18 @@ function planStats({ existing = [], reference = [], entries = [] } = {}) {
   schema achievements Steam says have a counter; one untied in the file is reported as `untied`.
 */
 function drift({ entries = [], stats = [], schemaList = [], reference = {} } = {}) {
-  const result = { missing: [], changed: [], undeclared: [], untied: [] };
+  const result = { missing: [], changed: [], undeclared: [], untied: [], mistyped: [] };
   if (!Array.isArray(entries)) return result;
   const authoritative = byName(reference.progress, (item) => item.progress);
-  const declared = new Set((Array.isArray(stats) ? stats : []).filter((s) => s && s.name).map((s) => upper(s.name)));
+  const declaredStats = (Array.isArray(stats) ? stats : []).filter((s) => s && s.name);
+  const declared = new Set(declaredStats.map((s) => upper(s.name)));
+  // GBE refuses SetStat of the other type (an int set as a float), so that counter never moves (#232).
+  const referenceType = byName(reference.stats, (s) => s.type);
+  const isInt = (type) => String(type || 'int').toLowerCase() === 'int';
+  for (const stat of declaredStats) {
+    const type = referenceType.get(upper(stat.name));
+    if (type && isInt(type) !== isInt(stat.type)) result.mistyped.push(String(stat.name));
+  }
   const counters = new Set((schemaList || []).filter((a) => a && a.name && a.counter).map((a) => upper(a.name)));
   for (const entry of entries) {
     if (!entry || !entry.name) continue;
@@ -375,6 +387,14 @@ async function fetchIcons(jobs, downloadIcon, { onCreated, step }) {
   the files the rewrite creates are listed in created.json there, so the folder alone tells what
   the rewrite did; repairJournal keeps the undo itself.
 */
+function allowsUnknownStats(steamSettings, emulator) {
+  try {
+    return gbeEffectiveConfig.allowsUnknownStats(gbeEffectiveConfig.resolve({ steamSettings, emulator }));
+  } catch {
+    return false;
+  }
+}
+
 async function rewrite({
   steamSettings,
   schema,
@@ -388,8 +408,11 @@ async function rewrite({
   recordCreated = true,
   downloadIcon = null,
   onProgress = null,
+  // Whether GBE keeps undeclared stats; left out, read from the setup's effective config.
+  unknownStatsAllowed = null,
 } = {}) {
   if (!steamSettings) throw new Error('rewrite: steamSettings path is required');
+  const keepsUnknownStats = typeof unknownStatsAllowed === 'boolean' ? unknownStatsAllowed : allowsUnknownStats(steamSettings, emulator);
   const report = (phase, done = 0, total = 0) => {
     if (typeof onProgress !== 'function') return;
     try {
@@ -403,7 +426,7 @@ async function rewrite({
   const statsFile = path.join(steamSettings, 'stats.json');
   const existing = readJson(achFile);
   const planned = planSchema({ existing, schemaList, reference, links, emulator, language, defaultFolder });
-  const stats = planStats({ existing: readJson(statsFile) || [], reference: reference.stats || [], entries: planned.entries });
+  const stats = planStats({ existing: readJson(statsFile) || [], reference: reference.stats || [], entries: planned.entries, unknownStatsAllowed: keepsUnknownStats });
   const summary = {
     steamSettings,
     achievementsJson: planned.entries,

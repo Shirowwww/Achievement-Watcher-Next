@@ -12,7 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 const winHosts = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
-const { parseIni } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
+const { parseIni, INI_TRUE } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
 
 const CONFIG_FILES = ['configs.app.ini', 'configs.main.ini', 'configs.overlay.ini', 'configs.user.ini'];
 const DEFAULT_SAVES_FOLDER = 'GSE Saves';
@@ -141,4 +141,9 @@ function answered(effective, section, key) {
   return entry && String(entry.value).trim() ? entry : null;
 }
 
-module.exports = { resolve, answered, dlcMode, CONFIG_FILES, DEFAULT_SAVES_FOLDER };
+// Whether GBE keeps a stat stats.json does not declare ([main::stats] allow_unknown_stats).
+function allowsUnknownStats(effective) {
+  return INI_TRUE.test((answered(effective, 'main::stats', 'allow_unknown_stats') || {}).value || '');
+}
+
+module.exports = { resolve, answered, dlcMode, allowsUnknownStats, CONFIG_FILES, DEFAULT_SAVES_FOLDER };

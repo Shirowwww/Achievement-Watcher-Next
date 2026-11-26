@@ -625,6 +625,27 @@ function inferredStatLinks({ steamSettings, schemaList, saveFolders }) {
   });
 }
 
+/*
+  Achievements achievements.json ties to a stat whose saved value is at its goal while the save still
+  has them locked (#168, #232). GBE fires an unlock only when SetStat changes the stat, so a stat that
+  got there before the link, or stays capped there, never does; AW Next counts them itself.
+*/
+function statGoalsReached({ steamSettings, entries, saveFile }) {
+  const gbeStatFiles = require(path.join(__dirname, 'gbeStatFiles.js'));
+  const links = (Array.isArray(entries) ? entries : []).filter((a) => a && a.name && a.progress && a.progress.value && a.progress.value.operand1 && Number(a.progress.max_val) > 0);
+  if (links.length === 0) return [];
+  const folders = withShortcutTwins([path.dirname(saveFile)]);
+  const values = gbeStatFiles.readStatValues(folders, links.map((a) => a.progress.value.operand1), gbeStatFiles.declaredStatTypes(steamSettings));
+  const earned = new Set();
+  for (const folder of folders) {
+    for (const [name, entry] of Object.entries(readSaveEntries(path.join(folder, 'achievements.json')) || {})) if (isEarnedEntry(entry)) earned.add(name.toUpperCase());
+  }
+  return links
+    .filter((a) => !earned.has(String(a.name).toUpperCase()))
+    .filter((a) => values[String(a.progress.value.operand1).toLowerCase()] >= Number(a.progress.max_val))
+    .map((a) => String(a.name));
+}
+
 function hasDeclaredStats(steamSettings) {
   try {
     const parsed = JSON.parse(fs.readFileSync(path.join(steamSettings, 'stats.json'), 'utf8'));
@@ -1044,6 +1065,29 @@ function steamShortcutLaunches() {
   return launches;
 }
 
+// The emulator dll went in over a crack, and that crack's saves kept changing afterwards: the game
+// never loads the swapped dll. `setupAt` is the newest emulator dll's write time.
+function reportSwitchStillServed(gameDir, dlls, add) {
+  let setupAt = 0;
+  for (const dll of dlls) {
+    if (!crackLoaderDetect.isEmulatorDll(dll)) continue;
+    try {
+      setupAt = Math.max(setupAt, fs.statSync(dll).mtimeMs);
+    } catch {
+      /* gone since the walk */
+    }
+  }
+  const dirs = [gameDir, ...dlls.map((dll) => path.dirname(dll))];
+  const still = crackLoaderDetect.switchedLoaderStillSaving(dirs, setupAt);
+  if (!still) return;
+  add(
+    'error',
+    'SWITCHED_LOADER_STILL_SAVING',
+    `${still.name} still wrote ${still.file} after the emulator replaced it, so the game does not load the swapped steam_api dll: another file of the release still runs ${still.name}.`,
+    { loader: still.name, folder: still.folder, file: still.file, at: still.at }
+  );
+}
+
 // `reference` is { progress, stats, origin } from schemaReference (the authoritative definitions);
 // `canGenerate` says the schema rewrite will run the generator (Advanced steam_settings).
 function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameDir), shortcutExes = steamShortcutLaunches, reference = {}, canGenerate = false }) {
@@ -1138,6 +1182,7 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     );
     return report;
   }
+  reportSwitchStillServed(gameDir, emu.dll, add);
 
   /*
     A complete steam_settings the emulator never reads looks exactly like a working setup: the
@@ -1475,16 +1520,27 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     /* absent or unreadable: nothing is declared */
   }
   const drift = gbeSchema.drift({ entries: parsed, stats: declaredStats, schemaList, reference: reference || {} });
-  const unknownStatsAllowed = INI_TRUE.test((gbeEffectiveConfig.answered(effective, 'main::stats', 'allow_unknown_stats') || {}).value || '');
+  const unknownStatsAllowed = gbeEffectiveConfig.allowsUnknownStats(effective);
   const untied = canGenerate ? drift.untied.filter((name) => !linkedBySave.has(String(name).toUpperCase())) : [];
   const undeclared = unknownStatsAllowed ? [] : drift.undeclared;
   const outdated = [...drift.missing, ...drift.changed, ...untied];
-  if (outdated.length > 0 || undeclared.length > 0) {
+  const { mistyped } = drift;
+  if (outdated.length > 0 || undeclared.length > 0 || mistyped.length > 0) {
     add(
       'warning',
       'PROGRESS_OUTDATED',
-      `${outdated.length} progress definition(s) are missing or outdated in achievements.json${undeclared.length ? ` and ${undeclared.length} stat(s) are not declared in stats.json` : ''}${reference && reference.origin ? ` (compared with ${reference.origin})` : ''}.`,
-      { count: outdated.length + undeclared.length, missing: drift.missing, changed: drift.changed, untied, undeclared, origin: (reference && reference.origin) || null }
+      `${outdated.length} progress definition(s) are missing or outdated in achievements.json${undeclared.length ? ` and ${undeclared.length} stat(s) are not declared in stats.json` : ''}${mistyped.length ? `; ${mistyped.length} stat(s) in stats.json have a type the game does not set (${mistyped.join(', ')}), so GBE refuses them` : ''}${reference && reference.origin ? ` (compared with ${reference.origin})` : ''}.`,
+      { count: outdated.length + undeclared.length + mistyped.length, missing: drift.missing, changed: drift.changed, untied, undeclared, mistyped, origin: (reference && reference.origin) || null }
+    );
+  }
+
+  const reached = report.save && report.save.file ? statGoalsReached({ steamSettings, entries: parsed, saveFile: report.save.file }) : [];
+  if (reached.length > 0) {
+    add(
+      'info',
+      'STAT_GOAL_REACHED',
+      `${reached.length} counter achievement(s) have reached their stat goal but the emulator never unlocked them (${reached.join(', ')}): GBE only unlocks one when the stat changes, and this one was already there. AW Next counts them as unlocked; the game's own overlay still shows them locked.`,
+      { names: reached }
     );
   }
 
@@ -1919,6 +1975,8 @@ async function repair({
     language: language || 'english',
     reference: { progress: community.progress || [], stats: Array.isArray(community.stats) ? community.stats : [], origin: 'games-infos-datas' },
     links: inferred,
+    // writeMainConfig below sets allow_unknown_stats=1.
+    unknownStatsAllowed: writeMain ? true : null,
     downloadIcon: downloadIcon || null,
     defaultFolder: imagePrefix,
     recordCreated: !createdFolder,

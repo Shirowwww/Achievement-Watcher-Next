@@ -23,6 +23,14 @@ renamed in 3.9.0 and the history is kept under one file.
   on the chip that does not drive the screen, so every souvenir failed and game folders stayed empty.
   The screenshot now asks Windows for the screen's chip, as clip recording already did, and falls back
   to the other Windows capture only when that is not possible.
+- **Counter achievements under GBE Fork unlock and notify when the emulator never does (#232).** AW Next
+  now reads the stat files GBE writes as a counter moves, takes the stat links a release's
+  achievements.json lacks from its own tables, and no longer declares a stat of unknown type as an
+  integer, which made GBE refuse it. Game Health flags a stat declared with the wrong type and notes
+  the achievements AW Next counts from a stat already at its goal.
+- **Game Health says when a switch to GBE did not take.** If the crack it replaced keeps writing its
+  saves afterwards, the game is not loading the new file, and the report names the crack and its
+  folder instead of saying nothing was recorded yet.
 - **Imported SAN themes glow and size their text as in SAN.** The glow of a theme imported from Steam
   Achievement Notifier was cut off at the edge of the notification, leaving a hard rectangle with
   filled corners instead of a soft halo. At a size other than 100%, its text was also drawn slightly

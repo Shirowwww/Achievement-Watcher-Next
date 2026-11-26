@@ -632,6 +632,13 @@ function gameHealthExplanationText(report) {
         "This game runs as Spacewar (Steam ID 480), the trick some online fixes use to reach real Steam. Steam then rejects the game's achievements, since they are not in Spacewar's list, so nothing records them anywhere and AW Next has nothing to read. To get achievements, use a version that keeps them, such as an OnlineFix release, or an emulator.",
         "Ce jeu tourne déguisé en Spacewar (identifiant Steam 480), l'astuce de certains correctifs en ligne pour passer par le vrai Steam. Steam refuse alors les succès du jeu, absents de la liste de Spacewar : rien ne les enregistre nulle part et AW Next n'a rien à lire. Pour avoir les succès, utilise une version qui les garde, comme une release OnlineFix, ou un émulateur."
       );
+    case 'switch-not-loaded':
+      return t(
+        'gh-why-switch-not-loaded',
+        "The Goldberg emulator is in this game's folder, but the game still saved through {stillServedBy} after the switch (in {stillSavingIn}). So the game does not load the emulator file, another file of this release still runs {stillServedBy}, and no achievement can be recorded this way. Undo the switch to put the release back as it was.",
+        "L'émulateur Goldberg est dans le dossier de ce jeu, mais le jeu a encore sauvegardé via {stillServedBy} après la bascule (dans {stillSavingIn}). Le jeu ne charge donc pas le fichier de l'émulateur, un autre fichier de cette version fait encore tourner {stillServedBy}, et aucun succès ne peut être enregistré ainsi. Annule la bascule pour remettre la version comme elle était.",
+        p
+      );
     case 'crack-runtime-replaced':
       return t(
         'gh-why-crack-runtime-replaced',
@@ -747,7 +754,7 @@ function gameHealthSimpleCheckValue(entry) {
       if (p.noSource) return gameHealthNoSourceLabel();
       if (p.serverAwarded) return t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement');
       if (p.spacewar) return t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès');
-      if (p.noRecord || p.oldSave || p.stalled || p.replacedBy || p.offline || p.coldClient || (p.servedBy && p.topics)) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
+      if (p.stillServedBy || p.noRecord || p.oldSave || p.stalled || p.replacedBy || p.offline || p.coldClient || (p.servedBy && p.topics)) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
       if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       // Offline achievements were just switched on and the game has not run since: say so, or the
       // row goes green with a "turn it off" button beside it and no word about why.

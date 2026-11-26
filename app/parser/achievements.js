@@ -169,6 +169,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
 const { normalizeSaveEntry } = require(path.join(appPath, 'emuSave.js'));
 // What a save says about each achievement, read exactly as the Watchdog reads it.
 const { saveState, entryState, addSaveStats } = require(path.join(appPath, 'saveState.js'));
+const { hasStatFiles, needsProgressMapping } = require(path.join(appPath, 'gbeStatFiles.js'));
 const { MILLISECOND_THRESHOLD } = require('../util/unlockTime.js');
 // A millisecond stamp past this is the year 2286 too: what is left is not a time in any unit we read.
 const UNREADABLE_TIME = MILLISECOND_THRESHOLD * 1000;
@@ -4795,28 +4796,29 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       }
 
       const hasSteamSettings = Boolean(appid.data && appid.data.steamSettings);
+      const saveFolders =
+        typeof appid.data.path === 'string' && appid.data.path ? [appid.data.path, ...(Array.isArray(appid.data.aliasSavePaths) ? appid.data.aliasSavePaths : [])] : [];
       let progressSchema = [];
-      if (root && typeof root === 'object' && (hasSteamSettings || Array.isArray(root.__rawStatKeys))) {
+      if (needsProgressMapping(root, { steamSettings: hasSteamSettings ? appid.data.steamSettings : null, saveFolders })) {
         try {
-          // A stats file with no steam_settings beside it (CODEX, RUNE) still maps through the
-          // Steam client's schema when it has one.
+          // Stats with nothing local to map them: a CODEX/RUNE stats file, or GBE stat files under a
+          // steam_settings that ties no counter or under none AW located (#232).
+          const hasStats = (Array.isArray(root.__rawStatKeys) && root.__rawStatKeys.length > 0) || hasStatFiles(saveFolders);
+          // Those still map through the Steam client's schema when it has one.
           let schema = resolveProgressSchema({
             appid: appid.appid,
             localSchema: hasSteamSettings ? goldberg.readLocalSchema(appid.data.steamSettings) : [],
-            steamStatsDir: Array.isArray(root.__rawStatKeys) ? await steamStatsDir() : null,
+            steamStatsDir: hasStats ? await steamStatsDir() : null,
             cacheDir: _userDataPath,
           });
-          // Stats with nothing local to map them: the community copy of Steam's schema.
-          if (schema.length === 0 && Array.isArray(root.__rawStatKeys) && root.__rawStatKeys.length > 0) {
+          // Else the community copy of Steam's schema.
+          if (schema.length === 0 && hasStats) {
             schema = await fetchCommunityProgressSchema(appid.appid, { cacheDir: _userDataPath });
             if (schema.length > 0) debug.log(`[${appid.appid}] progress schema fetched from games-infos-datas (${schema.length})`);
           }
           // GBE's stat files hold a counter's current value, in every save folder of the game (#168);
           // the Watchdog reads those of the folder it watches, typed by steam_settings when known.
-          if (typeof appid.data.path === 'string' && appid.data.path) {
-            const aliases = Array.isArray(appid.data.aliasSavePaths) ? appid.data.aliasSavePaths : [];
-            addSaveStats(root, { folders: [appid.data.path, ...aliases], steamSettings: appid.data.steamSettings || null, schema });
-          }
+          if (saveFolders.length > 0) addSaveStats(root, { folders: saveFolders, steamSettings: appid.data.steamSettings || null, schema });
           progressSchema = schema;
           if (schema.length > 0) debug.log(`[${appid.appid}] stats mapped through a progress schema of ${schema.length} achievement${schema.length === 1 ? '' : 's'}`);
         } catch (err) {

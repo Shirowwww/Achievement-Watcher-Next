@@ -3155,6 +3155,7 @@
     "gh-why-nemirtingas-setup": "這款遊戲使用 Nemirtingas Epic 模擬器，必須依下方「Epic 模擬器」一列的說明設定後才會記錄成就。",
     "gh-why-coldclient-setup": "ColdClient 支援這款遊戲，但{problem}，因此它記錄的成就無法傳到這款遊戲。請修正載入器旁的 ColdClientLoader.ini：AW Next 只會讀取它。",
     "gh-why-crack-runtime-replaced": "這款遊戲的資料夾已針對 {servedBy} 設定，但其 steam_api.dll 已被另一個程式 ({replacedBy}) 取代，通常是 MOD 或線上修補程式。該檔案不會記錄成就，因此只要它還在，就不會儲存任何成就。請放回原版 steam_api.dll 以取得成就，並將另一個檔案另外保存，以便切換回去。",
+    "gh-why-switch-not-loaded": "此遊戲資料夾中已有 Goldberg 模擬器，但切換後遊戲仍透過 {stillServedBy} 存檔（位於 {stillSavingIn}）。也就是說，遊戲沒有載入模擬器檔案，此版本的另一個檔案仍在執行 {stillServedBy}，這樣無法記錄任何成就。請復原切換，將該版本還原。",
     "gh-why-crack-records-nothing": "這款遊戲已搭配 {servedBy} 執行超過一小時，卻沒有記錄到任何一項成就。有些破解檔根本不會回報成就。AW Next 可以在其上安裝支援的模擬器 - 目前的檔案會被保留。",
     "gh-why-server-awarded": "這款遊戲的成就由發行商的伺服器授予，而非 Steam。使用 {servedBy} 時遊戲離線執行，無論在這台電腦上或帳號上，都不會記錄任何成就。這不是 AW Next 或設定的問題。如需線上方案，請到 cs.rin.ru 或 online-fix.me 查找。",
     "gh-why-spacewar": "這款遊戲以 Spacewar（Steam ID 480）的身分執行，這是某些線上修正檔用來連上真正 Steam 的手法。Steam 隨後會拒絕該遊戲的成就，因為它們不在 Spacewar 的清單中，所以任何地方都不會記錄它們，AW Next 也就無從讀取。若要取得成就，請使用能保留成就的版本，例如 OnlineFix 發行版，或使用模擬器。",

@@ -29,7 +29,8 @@ const GSE_FILES = ['achievements.json', 'stats.json', 'achievements.ini'];
 // stats.ini changes alone when only a counter moves; statsSibling reads achievements.ini for it.
 const CODEX_WATCH = { filter: APPID_FOLDER, file: CODEX_FILES, statsSibling: true };
 const RLD_WATCH = { filter: APPID_FOLDER, file: RLD_FILES };
-const GSE_WATCH = { filter: APPID_FOLDER, file: GSE_FILES };
+// A counter moving writes only stats/<name> (#232); statFolder reads the save beside that folder.
+const GSE_WATCH = { filter: APPID_FOLDER, file: GSE_FILES, statFolder: 'achievements.json' };
 const EMPRESS_WATCH = { filter: EMPRESS_REMOTE, file: ['achievements.json'] };
 const SKIDROW_WATCH = { filter: APPID_FOLDER, file: ['achieve.dat'] };
 
@@ -98,4 +99,17 @@ function watchOptions(watch) {
   return { recursive: true, ...watch, file: [...watch.file] };
 }
 
-module.exports = { SAVE_ROOTS, SAVE_FILE_NAMES, RAZOR1911_FILE, GSE_WATCH, rowDir, watchOptions };
+/*
+  The save file a change under a root is read through, or null when the root does not read it: a
+  CODEX or RUNE stats.ini and a GBE stat file stand for the achievement list beside them, parsed
+  with their stats folded in.
+*/
+function saveFileFor(file, options = {}) {
+  const parsed = path.parse(String(file));
+  if (options.statsSibling && parsed.base.toLowerCase() === 'stats.ini') return path.join(parsed.dir, 'achievements.ini');
+  if (options.statFolder && path.basename(parsed.dir).toLowerCase() === 'stats') return path.join(path.dirname(parsed.dir), options.statFolder);
+  if (Array.isArray(options.file) && !options.file.some((name) => name.toLowerCase() === parsed.base.toLowerCase())) return null;
+  return String(file);
+}
+
+module.exports = { SAVE_ROOTS, SAVE_FILE_NAMES, RAZOR1911_FILE, GSE_WATCH, rowDir, watchOptions, saveFileFor };

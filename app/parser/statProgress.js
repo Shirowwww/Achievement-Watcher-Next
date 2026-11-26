@@ -299,7 +299,32 @@ function sharedStatNaming(pairs) {
   - 'saved' AW Next's cache, filled from either the client or a fetch the user asked for
 */
 function findProgressSchema({ appid, localSchema, steamStatsDir, cacheDir } = {}) {
-  if (hasProgress(localSchema)) return { schema: localSchema, origin: 'game' };
+  const other = otherProgressSchema({ appid, steamStatsDir, cacheDir });
+  if (!hasProgress(localSchema)) return other;
+  // `steam` keeps what the client gave, which resolveProgressSchema caches for the Watchdog.
+  return { schema: withMissingLinks(localSchema, other.schema), origin: 'game', ...(other.origin === 'steam' ? { steam: other.schema } : {}) };
+}
+
+/*
+  A game file tying only some counters (#194: 18 of 23) leaves the others to AW Next: GBE never
+  unlocks an untied one, so its stat file is all there is. The links the file lacks are added from
+  the other table; the file's own always win.
+*/
+function withMissingLinks(localSchema, other) {
+  const linked = new Set(progressEntries(localSchema).map((a) => String(a.name).toUpperCase()));
+  const missing = progressEntries(other).filter((a) => !linked.has(String(a.name).toUpperCase()));
+  if (missing.length === 0) return localSchema;
+  const byName = new Map(missing.map((a) => [String(a.name).toUpperCase(), a]));
+  const completed = localSchema.map((a) => {
+    const link = a && a.name ? byName.get(String(a.name).toUpperCase()) : null;
+    if (!link) return a;
+    byName.delete(String(a.name).toUpperCase());
+    return { ...a, progress: link.progress };
+  });
+  return [...completed, ...byName.values()];
+}
+
+function otherProgressSchema({ appid, steamStatsDir, cacheDir } = {}) {
   try {
     const schema = appcacheProgressSchema(steamStatsDir, appid);
     if (schema.length > 0) return { schema, origin: 'steam' };
@@ -328,9 +353,10 @@ function findProgressSchema({ appid, localSchema, steamStatsDir, cacheDir } = {}
 // folder): the Watchdog reads it from there, and it outlives the client dropping the file.
 function resolveProgressSchema(options = {}) {
   const found = findProgressSchema(options);
-  if (found.origin === 'steam') {
+  const fromSteam = found.origin === 'steam' ? found.schema : found.steam;
+  if (fromSteam) {
     try {
-      writeProgressCache(options.cacheDir, options.appid, found.schema);
+      writeProgressCache(options.cacheDir, options.appid, fromSteam);
     } catch {
       /* the cache is a convenience */
     }

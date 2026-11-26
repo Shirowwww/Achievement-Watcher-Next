@@ -62,7 +62,8 @@ const KNOWN_CRACK_LOADERS = [
     leftover reported every ColdClient save as somebody else's.
   */
   { name: 'ColdClient', markers: ['coldclientloader.ini', 'coldapi.ini'], replaceable: false },
-  { name: 'TENOKE', markers: ['tenoke.ini'], replaceable: true },
+  // `saveDirs`: where the loader writes beside its ini, so a switch it still serves can be told.
+  { name: 'TENOKE', markers: ['tenoke.ini'], replaceable: true, saveDirs: ['SteamData'] },
   { name: 'ALI213', markers: ['ali213.ini'], replaceable: true },
   { name: 'SmartSteamEmu', markers: ['smartsteamemu.ini'], replaceable: false },
   { name: 'UniverseLAN', markers: ['universelan.ini'], replaceable: false },
@@ -234,6 +235,60 @@ function switchedLoaderDirs(dirs) {
     if (sidelinedMarkersIn(dir).length > 0 || replacedOriginalIn(dir)) found.push(dir);
   }
   return found;
+}
+
+const SAVE_WALK_DEPTH = 3;
+const SAVE_WALK_MAX_ENTRIES = 500;
+
+// The newest file under a crack's own save folder, bounded: that folder is the crack's, never the game's.
+function newestFileUnder(root) {
+  let newest = null;
+  let seen = 0;
+  const walk = (dir, depth) => {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if ((seen += 1) > SAVE_WALK_MAX_ENTRIES) return;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (depth < SAVE_WALK_DEPTH) walk(full, depth + 1);
+        continue;
+      }
+      try {
+        const mtimeMs = fs.statSync(full).mtimeMs;
+        if (!newest || mtimeMs > newest.mtimeMs) newest = { file: full, mtimeMs };
+      } catch {
+        /* gone since the listing */
+      }
+    }
+  };
+  walk(root, 0);
+  return newest;
+}
+
+/*
+  A switched folder whose crack still wrote its own saves after the emulator went in: the game does
+  not load the dll that was swapped, some other file of the release still carries the crack (Dead
+  Rising Deluxe Remaster, TENOKE). `sinceMs` is when the emulator dll was written.
+*/
+function switchedLoaderStillSaving(dirs, sinceMs) {
+  if (!(sinceMs > 0)) return null;
+  for (const dir of switchedLoaderDirs(dirs)) {
+    for (const marker of sidelinedMarkersIn(dir)) {
+      const original = marker.slice(0, -'.bak'.length).toLowerCase();
+      const loader = KNOWN_CRACK_LOADERS.find((entry) => entry.markers.includes(original));
+      for (const sub of (loader && loader.saveDirs) || []) {
+        const folder = path.join(dir, sub);
+        const newest = newestFileUnder(folder);
+        if (newest && newest.mtimeMs > sinceMs) return { name: loader.name, folder, file: newest.file, at: newest.mtimeMs };
+      }
+    }
+  }
+  return null;
 }
 
 /*
@@ -410,4 +465,4 @@ function runsAsSpacewar(dirs) {
   return false;
 }
 
-module.exports = { steamApiKeptBy, runsAsSpacewar, detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, engineDllDirs, EMULATOR_DLL_MARKER, STEAM_API_DLLS };
+module.exports = { steamApiKeptBy, runsAsSpacewar, detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, switchedLoaderStillSaving, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, engineDllDirs, EMULATOR_DLL_MARKER, STEAM_API_DLLS };

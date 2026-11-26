@@ -139,6 +139,7 @@ const progressMute = require(sharedAppModulePath('parser/progressMute.js'));
 progressMute.setUserDataPath(userDataDir());
 const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'));
 const { findProgressSchema } = require(sharedAppModulePath('parser/statProgress.js'));
+const { saveFileFor } = require(sharedAppModulePath('parser/emuSaveRoots.js'));
 const psnTrophyLink = require(sharedAppModulePath('parser/psnTrophyLinkRead.js'));
 const platinumScope = require(sharedAppModulePath('util/platinumScope.js'));
 // The GOG/Epic -> Steam appid maps (steam_cache/gog.db, epic.db), read and written by their parsers.
@@ -1117,22 +1118,22 @@ var app = {
         const fileLastModified = fs.statSync(name).mtimeMs || 0;
         if (catchUp ? fileLastModified < catchUpSince : currentTime - fileLastModified > 1000) return;
 
-        let filePath = path.parse(name);
-        // NTFS is case-insensitive, so the on-disk casing path.parse() reports is not the casing a
-        // root declared; most roots list only one spelling, which dropped events for the other.
-        if (options.file && !options.file.some((file) => file.toLowerCase() == filePath.base.toLowerCase())) return;
-
         /*
-          A CODEX or RUNE counter moving rewrites stats.ini and nothing else. The achievement list
-          beside it is what gets parsed, with the stats folded in below: parsing stats.ini itself
-          would save a list of stats as this game's baseline and replay every unlock afterwards.
+          A counter moving rewrites only CODEX/RUNE's stats.ini or one of GBE's stats/<name> files.
+          The achievement list beside it is what gets parsed, with the stats folded in below: parsing
+          the stats themselves would save them as this game's baseline and replay every unlock.
+          Names compare whatever their case: NTFS reports the on-disk casing, not the root's.
         */
-        if (options.statsSibling && filePath.base.toLowerCase() === 'stats.ini') {
-          const sibling = path.join(filePath.dir, 'achievements.ini');
-          if (!fs.existsSync(sibling)) return;
-          name = sibling;
-          filePath = path.parse(sibling);
+        const saveFile = saveFileFor(name, options);
+        if (!saveFile) return;
+        // GBE writes no achievements.json until something is unlocked or tied: its stats are the save.
+        let statsOnly = false;
+        if (saveFile !== name) {
+          statsOnly = !fs.existsSync(saveFile);
+          if (statsOnly && !options.statFolder) return;
+          name = saveFile;
         }
+        const filePath = path.parse(name);
 
         debug.log('achievement file change detected');
 
@@ -1257,7 +1258,7 @@ var app = {
           // The game's other save folders (its own appid and its shortcut ids) are one save: parsed together,
           // each read as the library reads it, stats folded in (saveState.js).
           const twinFiles = options.steamClient || options.appid ? [] : twinSaveFiles(name);
-          const readOptions = { source: game.source, schema: findLocalProgressSchema(appID, game), steamSettings: game.steamSettings || null };
+          const readOptions = { source: game.source, schema: findLocalProgressSchema(appID, game), steamSettings: game.steamSettings || null, statsOnly };
           const parseSave = options.steamClient ? async () => steamClientStats.readSteamClientUnlocks(name) : () => parseWithTwins(name, twinFiles, readOptions);
           let achievements = await parseWithRetry(parseSave, {
             onError: (err, attempt) => {
@@ -1587,7 +1588,8 @@ var app = {
     self.watcher[i] = watch(dir, { recursive: options.recursive, filter: options.filter }, (evt, name) => {
       if (evt !== 'update') return;
       const seenAt = Date.now();
-      saveReads.run(String(name).toLowerCase(), () => onChange(evt, name, false, seenAt));
+      // Keyed by the save read, so several stat files written at once make one read of it.
+      saveReads.run(String(saveFileFor(name, options) || name).toLowerCase(), () => onChange(evt, name, false, seenAt));
     });
     self.watcher[i].on('error', (err) => debug.error(`[watch:${dir}] ${err}`));
 

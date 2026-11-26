@@ -238,10 +238,11 @@ module.exports.getFolders = async (userDir_file, options = {}, redirectedSaves =
   UnlockTime }] newest first, read by the library's own function (saveState.js): the same stats, the
   same unlocked rule and the date in epoch seconds. `source` is the game's (GOG and Epic emulator
   saves list only unlocks), `schema` its stats -> achievements table, `steamSettings` its GBE
-  settings when known, which type the stat files of the save's folder.
+  settings when known, which type the stat files of the save's folder. `statsOnly`: the change was a
+  GBE stat file in a folder with no save yet, which then reads as an empty one (#232).
 */
-module.exports.parse = async (filePath, { source, schema = [], steamSettings = null } = {}) => {
-  const local = await readSaveFile(filePath);
+module.exports.parse = async (filePath, { source, schema = [], steamSettings = null, statsOnly = false } = {}) => {
+  const local = statsOnly && !(await fs.exists(filePath)) ? {} : await readSaveFile(filePath);
   addSaveStats(local, { saveFile: filePath, folders: [path.dirname(filePath)], steamSettings, schema });
   const achievements = saveState(local, { source, schema }).map(({ name, crc, state }) => ({
     name,

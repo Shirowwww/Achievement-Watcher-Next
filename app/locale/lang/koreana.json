@@ -3155,6 +3155,7 @@
     "gh-why-nemirtingas-setup": "이 게임은 Nemirtingas Epic 에뮬레이터를 사용하며, 아래 Epic 에뮬레이터 항목의 안내대로 설정해야만 도전 과제가 기록됩니다.",
     "gh-why-coldclient-setup": "ColdClient가 이 게임을 지원하지만 {problem}, 기록되는 도전 과제가 이 게임에 전달될 수 없습니다. 로더 옆의 ColdClientLoader.ini를 수정하세요. AW Next는 읽기만 합니다.",
     "gh-why-crack-runtime-replaced": "이 게임의 폴더는 {servedBy}용으로 설정되어 있지만, steam_api.dll이 다른 프로그램({replacedBy})으로 교체되었습니다. 대개 모드나 온라인 패치입니다. 이 파일은 도전 과제를 기록하지 않으므로 그대로 두면 하나도 저장되지 않습니다. 원본 steam_api.dll을 다시 넣으면 도전 과제가 기록되며, 다시 전환할 수 있도록 다른 파일은 따로 보관하세요.",
+    "gh-why-switch-not-loaded": "이 게임 폴더에 Goldberg 에뮬레이터가 있지만, 전환 후에도 게임이 {stillServedBy}를 통해 저장했습니다({stillSavingIn}). 즉 게임이 에뮬레이터 파일을 불러오지 않고, 이 릴리스의 다른 파일이 여전히 {stillServedBy}를 실행하고 있어 이 방식으로는 어떤 도전 과제도 기록되지 않습니다. 전환을 취소해 릴리스를 원래대로 되돌리세요.",
     "gh-why-crack-records-nothing": "이 게임은 {servedBy}(으)로 1시간 넘게 실행되었지만 기록된 도전 과제는 하나도 없습니다. 일부 크랙은 도전 과제를 전혀 보고하지 않습니다. AW Next가 그 위에 지원되는 에뮬레이터를 설치할 수 있으며, 현재 파일은 그대로 유지됩니다.",
     "gh-why-server-awarded": "이 게임의 도전 과제는 Steam이 아니라 배급사 서버에서 부여합니다. {servedBy}(으)로는 오프라인으로 실행되므로, 이 PC에서도 계정에서도 도전 과제가 기록되지 않습니다. AW Next나 설정의 문제가 아닙니다. 온라인 방법은 cs.rin.ru나 online-fix.me에서 찾아보세요.",
     "gh-why-spacewar": "이 게임은 일부 온라인 픽스가 진짜 Steam에 접속하기 위해 쓰는 방법인 Spacewar(Steam ID 480)로 실행됩니다. 그러면 Steam은 Spacewar 목록에 없는 이 게임의 도전 과제를 거부하므로, 어디에도 기록되지 않아 AW Next가 읽을 것이 없습니다. 도전 과제를 얻으려면 도전 과제를 유지하는 버전(예: OnlineFix 릴리스)이나 에뮬레이터를 사용하세요.",

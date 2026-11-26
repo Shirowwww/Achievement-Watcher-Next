@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 
 const STAT_FILE_BYTES = 4;
+const AVGRATE_FILE_BYTES = 16;
 // An int32 above this is no counter a game keeps: it is a float's bits, read as an integer.
 const PLAUSIBLE_INT_LIMIT = 1e7;
 // Below this a float reading is the bits of a large int (12000000 reads as about 1.7e-38), no value.
@@ -37,6 +38,11 @@ function declaredStatTypes(steamSettings) {
   is implausible and the float reading is a plain number.
 */
 function decodeStat(buffer, type) {
+  // An avgrate stat is its average (float), then the count and session length it comes from.
+  if (Buffer.isBuffer(buffer) && buffer.length === AVGRATE_FILE_BYTES && type !== 'int') {
+    const average = buffer.readFloatLE(0);
+    return Number.isFinite(average) ? average : null;
+  }
   if (!Buffer.isBuffer(buffer) || buffer.length !== STAT_FILE_BYTES) return null;
   const asInt = buffer.readInt32LE(0);
   const asFloat = buffer.readFloatLE(0);
@@ -97,4 +103,26 @@ function addSavedStats(root, { folders, steamSettings, schema } = {}) {
   return added;
 }
 
-module.exports = { declaredStatTypes, decodeStat, readStatValues, addSavedStats };
+// Whether GBE stored any stat in one of these save folders: then a progress table is worth looking for.
+function hasStatFiles(folders) {
+  return (folders || []).some((folder) => {
+    if (typeof folder !== 'string' || !folder) return false;
+    try {
+      return fs.readdirSync(path.join(folder, 'stats'), { withFileTypes: true }).some((entry) => entry.isFile());
+    } catch {
+      return false;
+    }
+  });
+}
+
+/*
+  Whether a read save has stats a progress table must map before the Watchdog can turn one into an
+  unlock: GBE under a known steam_settings, CODEX/RUNE/OnlineFix stats folded into the save, or GBE
+  stat files alone, as in a GSE Saves folder whose game folder AW never located (#232).
+*/
+function needsProgressMapping(root, { steamSettings = null, saveFolders = [] } = {}) {
+  if (!root || typeof root !== 'object') return false;
+  return Boolean(steamSettings) || Array.isArray(root.__rawStatKeys) || hasStatFiles(saveFolders);
+}
+
+module.exports = { declaredStatTypes, decodeStat, readStatValues, addSavedStats, hasStatFiles, needsProgressMapping };

@@ -182,6 +182,7 @@ const ISSUE_TOPIC = {
   SETTINGS_NOT_BESIDE_DLL: 'location',
   UNREAL_ENGINE_DLL_UNCONFIGURED: 'location',
   RUNTIME_DLL_NOT_EMULATOR: 'runtime',
+  SWITCHED_LOADER_STILL_SAVING: 'runtime',
   LOADER_NO_ACH_REDIRECT: 'loader',
   NO_SESSION_TICKET: 'session',
   SESSION_TICKET_NO_EFFECT: 'session',
@@ -583,7 +584,10 @@ function emulatorCheck(rawSignals) {
     const withRuntime = needsRuntime && !actions.includes(ACTION.INSTALL_RUNTIME) ? [...actions, ACTION.INSTALL_RUNTIME] : actions;
     return mismatch ? [...withRuntime, ACTION.FIX_APPID] : withRuntime;
   };
+  // The switch to GBE did not take: the crack it replaced still wrote its saves afterwards.
+  const stillServed = (goldberg.issues || []).find((issue) => issue && issue.code === 'SWITCHED_LOADER_STILL_SAVING' && issue.data);
   const appidParams = {
+    ...(stillServed ? { stillServedBy: String(stillServed.data.loader || ''), stillSavingIn: String(stillServed.data.folder || '') } : {}),
     ...(mismatch ? { appidOnDisk: mismatch.onDisk, appidExpected: mismatch.expected } : {}),
     ...(foreignRuntime ? { foreignRuntime: true } : {}),
     ...(keptBy ? { keptBy } : {}),
@@ -604,7 +608,7 @@ function emulatorCheck(rawSignals) {
     return check('emulator', LEVEL.FAIL, {
       params: { emulator: goldberg.emulator || 'none', topics: issueTopics([...errors, ...offlineWarnings]), ...appidParams },
       // Nothing this setup holds will ever be read while a foreign runtime serves the folder.
-      blocking: foreignRuntime,
+      blocking: foreignRuntime || !!stillServed,
       actions: withAppidFix(actionsFor([...errors, ...offlineWarnings])),
     });
   }
@@ -865,6 +869,8 @@ function explain(state, checks, signals) {
   if (emulator && emulator.params && emulator.params.spacewar) return { reason: 'spacewar', params: emulator.params };
   if (emulator && emulator.params && emulator.params.noRecord) return { reason: 'crack-keeps-no-record', params: emulator.params };
   if (data && data.level === LEVEL.FAIL && data.blocking) return { reason: 'no-achievement-data', params: data.params };
+  // Before "the emulator is missing": it is there, the game just never loads it.
+  if (emulator && emulator.params && emulator.params.stillServedBy) return { reason: 'switch-not-loaded', params: emulator.params };
   // Only a blocking emulator failure means "there is no emulator here"; a report that merely
   // carries schema or config errors is explained by the check that owns those instead.
   if (emulator && emulator.level === LEVEL.FAIL && emulator.blocking) {
