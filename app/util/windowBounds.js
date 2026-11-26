@@ -21,4 +21,13 @@ function clampWindowBoundsToWorkArea(bounds, workArea) {
   };
 }
 
-module.exports = { clampWindowBoundsToWorkArea };
+// The same, shrinking first when the saved size no longer fits: a position saved on another display
+// or at another scale can lie wholly off every screen, where Windows still reports the window shown.
+function fitWindowBoundsToWorkArea(bounds, workArea) {
+  if (![bounds?.width, bounds?.height, workArea?.width, workArea?.height].every(finite)) return clampWindowBoundsToWorkArea(bounds, workArea);
+  const width = Math.min(bounds.width, workArea.width);
+  const height = Math.min(bounds.height, workArea.height);
+  return clampWindowBoundsToWorkArea({ ...bounds, width, height }, workArea);
+}
+
+module.exports = { clampWindowBoundsToWorkArea, fitWindowBoundsToWorkArea };

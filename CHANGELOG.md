@@ -77,6 +77,9 @@ renamed in 3.9.0 and the history is kept under one file.
   now raised above the game each time it opens. When it had not been used for a few minutes it was
   rebuilt in a way that briefly took the keyboard from the game; it now opens like a reused overlay,
   and the logs say which window sits above it.
+- **The overlay no longer opens off the screen.** It comes back where it was last moved, and a place
+  saved on another monitor or at another display scale could lie beyond every screen, so it opened
+  where nobody could see it. A saved place that no longer fits a screen is now brought back onto it.
 - **EA games cracked by anadius show the right unlock time, and notify again (#229).** anadius writes
   the time in UTC and AW Next read it as local time, so east of UTC unlocks looked hours old and were
   skipped as too old to announce. Times already recorded correct themselves.

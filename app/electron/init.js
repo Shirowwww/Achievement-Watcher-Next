@@ -100,7 +100,7 @@ const os = require('os');
   const updateChannel = require('../util/updateChannel.js');
   const { withScrapeLease } = require('../util/scrapeLease.js');
   const steamSchemaFetch = require(path.join(__dirname, '../util/steamSchemaFetch.js'));
-  const { clampWindowBoundsToWorkArea } = require('../util/windowBounds.js');
+  const { clampWindowBoundsToWorkArea, fitWindowBoundsToWorkArea } = require('../util/windowBounds.js');
   const { resolveMainWindowState, buildMainWindowState, mainWindowStateChanged } = require('../util/mainWindowState.js');
 
 /*
@@ -5186,6 +5186,14 @@ function writeOverlayBounds(patch) {
     debug.log('[overlay-bounds] ' + (e.message || e));
   }
 }
+// The last dragged position, brought back onto a display that exists now: one saved on another
+// monitor or at another scale reopened off every screen, shown and topmost for Windows yet invisible.
+function savedInGameOverlayBounds() {
+  const saved = readOverlayBounds().inGame;
+  if (!saved || !Number.isFinite(saved.x) || !Number.isFinite(saved.y)) return null;
+  const bounds = { x: saved.x, y: saved.y, width: saved.width || 450, height: saved.height || 800 };
+  return fitWindowBoundsToWorkArea(bounds, require('electron').screen.getDisplayMatching(bounds).workArea);
+}
 let overlayClickThrough = false;
 let overlayAppid = null;
 function persistInGameBounds() {
@@ -5538,15 +5546,8 @@ async function createOverlayWindow(info) {
       overlayVisible = true;
       overlayAppid = String(info.appid);
       overlayClickThrough = false;
-      const savedInGame = readOverlayBounds().inGame;
-      if (savedInGame && Number.isFinite(savedInGame.x) && Number.isFinite(savedInGame.y)) {
-        overlayWindow.setBounds({
-          x: savedInGame.x,
-          y: savedInGame.y,
-          width: savedInGame.width || 450,
-          height: savedInGame.height || 800,
-        });
-      }
+      const savedInGame = savedInGameOverlayBounds();
+      if (savedInGame) overlayWindow.setBounds(savedInGame);
       showOverlayAfterLoad(info);
       return;
     }
@@ -5612,15 +5613,8 @@ async function createOverlayWindow(info) {
     overlayWindow.removeMenu();
 
     // Restore the user's last overlay position/size (from drag, nudge or snap), if any.
-    const savedInGame = readOverlayBounds().inGame;
-    if (savedInGame && Number.isFinite(savedInGame.x) && Number.isFinite(savedInGame.y)) {
-      overlayWindow.setBounds({
-        x: savedInGame.x,
-        y: savedInGame.y,
-        width: savedInGame.width || 450,
-        height: savedInGame.height || 800,
-      });
-    }
+    const savedInGame = savedInGameOverlayBounds();
+    if (savedInGame) overlayWindow.setBounds(savedInGame);
     overlayClickThrough = false; // each open starts interactive (drag/scroll), not click-through
 
     // Load the bundled overlay (same policy as the main window): a userData copy can be stale and
