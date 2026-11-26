@@ -40,7 +40,9 @@ const SKIDROW_WATCH = { filter: APPID_FOLDER, file: ['achieve.dat'] };
   folder whose library side is a source of its own. expandForLibrary: the library takes each child.
 */
 const SAVE_ROOTS = [
-  { env: 'PUBLIC', dir: ['Documents', 'OnlineFix'], watch: { filter: APPID_FOLDER, file: ['achievements.ini'] } },
+  // OnlineFix keeps CODEX's pair in <appid>\Stats; a game that unlocks through counters (Forza
+  // Horizon 6, #231) only ever rewrites Stats.ini and leaves Achievements.ini empty.
+  { env: 'PUBLIC', dir: ['Documents', 'OnlineFix'], watch: CODEX_WATCH },
   { env: 'PUBLIC', dir: ['Documents', 'Steam', 'RUNE'], watch: CODEX_WATCH },
   { env: 'PUBLIC', dir: ['Documents', 'Steam', 'CODEX'], watch: CODEX_WATCH },
   // CPY releases run CODEX's emulator and keep its tree under their own name.

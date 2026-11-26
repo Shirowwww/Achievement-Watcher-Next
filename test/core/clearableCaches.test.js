@@ -201,8 +201,8 @@ test('clearing caches keeps the imported Xbox library, which nothing can fetch b
 });
 
 test('the folder the Xbox library is read from is the one that is preserved', () => {
-  // A move of that folder in xboxPc.js would silently reopen the hole above.
-  const xbox = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'xboxPc.js'), 'utf8');
+  // A move of that folder in xboxPcCore.js would silently reopen the hole above.
+  const xbox = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'xboxPcCore.js'), 'utf8');
   assert.match(xbox, /function listCachedTitles\(\)[\s\S]*?path\.join\(getUserDataPath\(\), 'steam_cache', 'xbox'\)/);
   assert.ok(PRESERVED_CACHE_CHILDREN.steam_cache.includes('xbox'));
 });

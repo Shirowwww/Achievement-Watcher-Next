@@ -365,12 +365,14 @@ function resolveProgressSchema(options = {}) {
 }
 
 // Numeric stats a CODEX/RUNE (`[UserStats]`) or OnlineFix (`[Stats]`) save keeps beside its
-// achievements, or 0 when the folder has none.
+// achievements, or 0 when the folder has none. OnlineFix keeps both files in a Stats subfolder.
 function countSaveStats(dir) {
-  for (const name of ['stats.ini', 'Stats.ini']) {
+  const root = String(dir || '');
+  const candidates = [root, path.join(root, 'Stats')].flatMap((folder) => [path.join(folder, 'stats.ini'), path.join(folder, 'Stats.ini')]);
+  for (const file of candidates) {
     let text;
     try {
-      text = fs.readFileSync(path.join(String(dir || ''), name), 'utf8');
+      text = fs.readFileSync(file, 'utf8');
     } catch {
       continue;
     }
@@ -383,7 +385,26 @@ function countSaveStats(dir) {
     }
     return count;
   }
-  return 0;
+  return countGbeStatFiles(path.join(root, 'stats'));
+}
+
+// GBE keeps one binary file per stat under <save>/stats: 4 bytes for int and float, 16 for avgrate.
+const GBE_STAT_SIZES = new Set([4, 16]);
+function countGbeStatFiles(dir) {
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return 0;
+  }
+  return entries.filter((entry) => {
+    if (!entry.isFile() || path.extname(entry.name)) return false;
+    try {
+      return GBE_STAT_SIZES.has(fs.statSync(path.join(dir, entry.name)).size);
+    } catch {
+      return false;
+    }
+  }).length;
 }
 
 // How many achievements Steam gives a counter, from a keyless GetGameAchievements answer. It names

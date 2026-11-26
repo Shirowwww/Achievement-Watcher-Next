@@ -161,7 +161,6 @@ test('process-trail activity projects sessions without replaying private timer o
 
   assert.deepEqual(activity.games.map((game) => game.appid), ['100', '200', '300']);
   assert.equal(activity.overlayGame.appid, '300', 'matches the last live launch as overlay target');
-  assert.equal(activity.xboxGame.appid, '200', 'starts the single Xbox polling slot for the active Xbox title');
   assert.equal('pids' in activity.games[0], false);
   assert.equal('timer' in activity.games[0], false);
   assert.notEqual(activity.games[0], sessions[0]);
@@ -170,11 +169,10 @@ test('process-trail activity projects sessions without replaying private timer o
   assert.equal(sessions[0].name, 'Older game', 'the monitor session remains private');
 });
 
-test('process-trail activity has no overlay or Xbox target when no session is active', () => {
+test('process-trail activity has no overlay target when no session is active', () => {
   const activity = describeActiveGames(null);
   assert.deepEqual(activity.games, []);
   assert.equal(activity.overlayGame, null);
-  assert.equal(activity.xboxGame, null);
 });
 
 test('a shared executable name is settled by the install folder of the process', () => {

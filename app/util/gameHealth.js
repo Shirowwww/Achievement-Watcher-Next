@@ -730,8 +730,9 @@ function progressCheck(signals) {
 
 /*
   Progress counters ("37/50") for a save that keeps its stats apart from its unlocks (CODEX, RUNE,
-  OnlineFix). Shown only when that save has stats: every other game either stores progress itself
-  or has none. A missing table is not a fault, so it is INFO with the fetch offered.
+  OnlineFix, GBE's stats folder). Shown only when that save has stats: every other game either
+  stores progress itself or has none. A missing table is not a fault, so it is INFO with the fetch
+  offered.
 */
 function countersCheck(signals) {
   if (hasNoAchievements(signals)) return null;

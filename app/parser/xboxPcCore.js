@@ -93,6 +93,29 @@ function readJson(file) {
   }
 }
 
+// The titles the account import saved. Here rather than in xboxPc.js: the Watchdog needs them to
+// find the Xbox title behind a game another source runs.
+function listCachedTitles() {
+  const root = path.join(getUserDataPath(), 'steam_cache', 'xbox');
+  let entries = [];
+  try {
+    entries = fs.readdirSync(root);
+  } catch {
+    return [];
+  }
+  return entries.filter((name) => fs.existsSync(path.join(root, name, 'schema.json')));
+}
+
+// The imported title's name, straight off the cached schema. Discovery needs it to recognise that
+// this game is the one another source already found, and it must stay cheap: this runs per cached
+// title on every scan, so it reads the schema rather than building the whole game record.
+function cachedTitleName(appid) {
+  const titleId = normalizeTitleId(appid);
+  if (!titleId) return '';
+  const schema = readJson(schemaCacheFile(titleId));
+  return String(schema?.name || '').trim();
+}
+
 function xboxAuthExpiry(expiresIn) {
   return Date.now() + Math.max(0, Number(expiresIn) || 0) * 1000;
 }
@@ -194,6 +217,15 @@ function buildXboxAuthorizationHeader(auth) {
   return `XBL3.0 x=${uhs};${token}`;
 }
 
+// Retry-After is either a number of seconds or an HTTP date; 0 when absent or unreadable.
+function retryAfterToMs(value, now = Date.now()) {
+  const text = String(value ?? '').trim();
+  if (!text) return 0;
+  if (/^\d+$/.test(text)) return Number(text) * 1000;
+  const at = Date.parse(text);
+  return Number.isFinite(at) ? Math.max(0, at - now) : 0;
+}
+
 async function xboxServiceGet(baseUrl, endpoint, options = {}) {
   const auth = options.auth || (await ensureXboxDirectSession(options));
   const url = `${baseUrl}/${String(endpoint || '').replace(/^\/+/, '')}`;
@@ -213,6 +245,8 @@ async function xboxServiceGet(baseUrl, endpoint, options = {}) {
   if (!res.ok) {
     const error = new Error(`xbox-network-http-${res.status}`);
     error.status = res.status;
+    const retryAfterMs = retryAfterToMs(res.headers?.get?.('retry-after'));
+    if (retryAfterMs) error.retryAfterMs = retryAfterMs;
     throw error;
   }
   return res.json();
@@ -424,6 +458,9 @@ module.exports = {
   stateCacheFile,
   readJson,
   writeJson,
+  listCachedTitles,
+  cachedTitleName,
+  retryAfterToMs,
   exchangeLiveTokenForXboxSession,
   saveAuth,
   loadAuth,

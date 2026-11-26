@@ -76,6 +76,32 @@ test('writing the poll state keeps an unlock the library import stored', () => {
   }
 });
 
+test('Retry-After is read as seconds or as a date, and nothing else', () => {
+  const now = Date.parse('2026-11-25T15:00:00Z');
+  assert.equal(xboxPc.retryAfterToMs('120', now), 120000);
+  assert.equal(xboxPc.retryAfterToMs('Wed, 25 Nov 2026 15:05:00 GMT', now), 300000);
+  assert.equal(xboxPc.retryAfterToMs('Wed, 25 Nov 2026 14:00:00 GMT', now), 0);
+  assert.equal(xboxPc.retryAfterToMs('', now), 0);
+  assert.equal(xboxPc.retryAfterToMs(null, now), 0);
+  assert.equal(xboxPc.retryAfterToMs('soon', now), 0);
+});
+
+test('the imported titles and their names are listed for the Watchdog', () => {
+  const dir = makeTempDir('aw-xtitles-');
+  const original = process.env['APPDATA'];
+  process.env['APPDATA'] = dir;
+  try {
+    xboxPc.writeJson(xboxPc.schemaCacheFile('2079757188'), { name: 'Forza Horizon 6 ', achievement: { list: [] } });
+    xboxPc.writeState('1717113201', {});
+    assert.deepEqual(xboxPc.listCachedTitles(), ['2079757188'], 'a title without its schema is not listed');
+    assert.equal(xboxPc.cachedTitleName('2079757188'), 'Forza Horizon 6');
+    assert.equal(xboxPc.cachedTitleName('nope'), '');
+  } finally {
+    if (original === undefined) delete process.env['APPDATA'];
+    else process.env['APPDATA'] = original;
+  }
+});
+
 test('state cache read/write round-trips', () => {
   const dir = makeTempDir('aw-xstate-');
   const original = process.env['APPDATA'];

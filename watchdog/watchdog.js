@@ -234,7 +234,11 @@ const {
   platinumLastOrder,
 } = require('./util/achievementIndex.js');
 const { createIndexedGameLookup } = require(sharedAppModulePath('util/indexedGameLookup.js'));
-const { runXboxPoll, matchesActiveXboxPoll } = require('./util/xboxPolling.js');
+const { runXboxPoll, matchesActiveXboxPoll, xboxTitleForGame, startPollLoop, stopPollLoop, finishPollLoop } = require('./util/xboxPolling.js');
+const { statsSiblingFile } = require('./util/statsSibling.js');
+const { announcedLocally, recordAccountUnlock } = require('./util/accountUnlockDedupe.js');
+const { sameTitleAppid } = require(sharedAppModulePath('util/fuzzyAppid.js'));
+const { remapUnlocksOntoSchema } = require(sharedAppModulePath('util/crossSchemaUnlocks.js'));
 
 // A brand-new save folder whose first write carries more unlocks than this is a copied-in save.
 const NEW_FOLDER_NOTIFY_MAX = 10;
@@ -330,79 +334,133 @@ let playtimeIndexReloadQueued = false;
 let xboxPollState = null;
 // The same notify as the live watchers below: souvenir, library report, linked trophy, 100% popup.
 const xboxNotify = createUnlockNotify(notify, { getOptions: () => app.options, report: reportUnlockToApp });
-const XBOX_POLL_INTERVAL_MS = 30000;
 
-function startXboxPolling(game) {
-  stopXboxPolling();
-  const auth = xboxPc.loadAuth();
-  const titleId = xboxPc.normalizeTitleId(game && game.appid);
-  if (!auth || !titleId) return;
-  debug.log(`[xbox-pc] live polling started for ${game.name}(${titleId})`);
-  const state = {
-    appid: titleId,
-    game,
-    auth,
-    snapshot: xboxPc.readState(titleId),
-    timer: null,
-    polling: false,
-  };
-  xboxPollState = state;
-  const poll = async () => {
-    let schema = null;
-    let schemaList = [];
-    await runXboxPoll({
-      state,
-      getCurrentState: () => xboxPollState,
-      ensureSession: xboxPc.ensureSession,
-      pollOnce: xboxPc.pollOnce,
-      writeState: xboxPc.writeState,
-      beforeNotifications: (newUnlocked) => {
-        debug.log(`[xbox-pc] ${newUnlocked.length} new unlock(s) for ${game.name}`);
-        schema = xboxPc.readSchema(titleId);
-        schemaList = schema && schema.achievement && Array.isArray(schema.achievement.list) ? schema.achievement.list : [];
-      },
-      notifyUnlock: async (id) => {
-        const ach = schemaList.find((a) => a && String(a.name) === id);
-        const rows = Object.entries(state.snapshot || {});
-        // The list's names and texts let the platinum rules read it; without a schema, the bare ids count.
-        const entries = schemaList.length ? schemaList : rows.map(([rowId]) => ({ name: rowId }));
-        await xboxNotify(
-          {
-            source: SOURCE_LABEL.XBOX_PC,
-            completion: completionOf(
-              entries,
-              rows.filter(([, row]) => row && row.earned).map(([rowId]) => rowId)
-            ),
-            appid: titleId,
-            gameDisplayName: game.name || titleId,
-            achievementName: id,
-            achievementDisplayName: (ach && ach.displayName) || id,
-            achievementDescription: (ach && ach.description) || '',
-            ...unlockRarity(ach ? ach.rarityPct : null, app.options),
-            icon: (ach && ach.icon) || '',
-            gameIcon: (schema && schema.img && schema.img.portrait) || '',
-            image: (schema && schema.img && schema.img.header) || '',
-            time: Math.floor(Date.now() / 1000),
-          },
-          // No toast sound and no rumble, as before: Game Bar may already announce an Xbox PC unlock.
-          notifyOptions(app.options, { toastId: app.toastID, attribution: 'AW Next', imageIntegration: '1', sound: false, rumble: false })
-        );
-      },
-      onError: (err) => {
-        debug.warn(`[xbox-pc] poll failed: ${err && err.message ? err.message : err}`);
-      },
-    });
-  };
-  state.timer = setInterval(poll, XBOX_POLL_INTERVAL_MS);
-  poll();
+function xboxTitleOf(game) {
+  return xboxTitleForGame(game, {
+    normalizeTitleId: xboxPc.normalizeTitleId,
+    listTitles: xboxPc.listCachedTitles,
+    titleName: xboxPc.cachedTitleName,
+    sameTitleAppid,
+  });
 }
 
-function stopXboxPolling(exitedGame) {
-  if (!matchesActiveXboxPoll(xboxPollState, exitedGame, xboxPc.normalizeTitleId)) return;
-  if (xboxPollState && xboxPollState.timer) {
-    clearInterval(xboxPollState.timer);
-    debug.log(`[xbox-pc] live polling stopped for ${xboxPollState.game && xboxPollState.game.name}`);
+const schemaListOf = (schema) => (schema && schema.achievement && Array.isArray(schema.achievement.list) ? schema.achievement.list : []);
+
+/*
+  The achievement list the library shows for a game another source runs (#231): its unlocks are
+  reported under that list's names, or the open tile would never tick. Read from the schema cache the
+  library scan wrote; an Xbox PC game is shown with its own list.
+*/
+async function shownSchemaListOf(game) {
+  if (String(game.source || '') === SOURCE_LABEL.XBOX_PC || !/^\d+$/.test(String(game.appid || ''))) return [];
+  try {
+    return schemaListOf(await steam.loadSteamData(String(game.appid), app.options.achievement.lang));
+  } catch (err) {
+    debug.warn(`[xbox-pc] no ${game.appid} schema to name the unlock after: ${err}`);
+    return [];
   }
+}
+
+// The name the shown game's list gives an Xbox achievement, matched by title; '' when none does.
+function shownNameOf({ schemaList, shownList }, id) {
+  if (!shownList.length) return '';
+  return Object.keys(remapUnlocksOntoSchema({ [id]: { Achieved: true } }, schemaList, shownList))[0] || '';
+}
+
+function xboxUnlockPayload(state, { schema, schemaList }, id, shownName) {
+  const { game, appid: titleId } = state;
+  const ach = schemaList.find((a) => a && String(a.name) === id);
+  const rows = Object.entries(state.snapshot || {});
+  // The list's names and texts let the platinum rules read it; without a schema, the bare ids count.
+  const entries = schemaList.length ? schemaList : rows.map(([rowId]) => ({ name: rowId }));
+  const isXboxGame = String(game.source || '') === SOURCE_LABEL.XBOX_PC;
+  return {
+    source: isXboxGame ? SOURCE_LABEL.XBOX_PC : game.source,
+    completion: completionOf(entries, rows.filter(([, row]) => row && row.earned).map(([rowId]) => rowId)),
+    appid: isXboxGame ? titleId : String(game.appid),
+    gameDisplayName: game.name || titleId,
+    achievementName: shownName || id,
+    achievementDisplayName: (ach && ach.displayName) || id,
+    achievementDescription: (ach && ach.description) || '',
+    ...unlockRarity(ach ? ach.rarityPct : null, app.options),
+    icon: (ach && ach.icon) || '',
+    gameIcon: (schema && schema.img && schema.img.portrait) || '',
+    image: (schema && schema.img && schema.img.header) || '',
+    time: Math.floor(Date.now() / 1000),
+  };
+}
+
+function pollXboxTitle(state) {
+  const { game, appid: titleId } = state;
+  // No toast sound and no rumble on an Xbox PC game: Game Bar may already announce its unlock.
+  const quiet = String(game.source || '') === SOURCE_LABEL.XBOX_PC;
+  const lists = { schema: null, schemaList: [], shownList: [] };
+  return runXboxPoll({
+    state,
+    getCurrentState: () => xboxPollState,
+    ensureSession: xboxPc.ensureSession,
+    pollOnce: xboxPc.pollOnce,
+    writeState: xboxPc.writeState,
+    beforeNotifications: (newUnlocked) => {
+      debug.log(`[xbox-pc] ${newUnlocked.length} new unlock(s) for ${game.name}`);
+      lists.schema = xboxPc.readSchema(titleId);
+      lists.schemaList = schemaListOf(lists.schema);
+    },
+    notifyUnlock: async (id) => {
+      if (!lists.shownList.length) lists.shownList = await shownSchemaListOf(game);
+      const shownName = shownNameOf(lists, id);
+      // The game's own save (OnlineFix's Stats.ini) may have announced it already.
+      if (shownName && (await announcedLocally(track, game.appid, shownName))) {
+        debug.log(`[xbox-pc] ${game.name}: ${shownName} already announced from the save`);
+        return;
+      }
+      const payload = xboxUnlockPayload(state, lists, id, shownName);
+      await xboxNotify(
+        payload,
+        notifyOptions(app.options, { toastId: app.toastID, attribution: 'AW Next', imageIntegration: '1', sound: !quiet, rumble: !quiet })
+      );
+      if (!shownName) return;
+      await recordAccountUnlock(track, game.appid, shownName, payload.time).catch((err) => {
+        debug.warn(`[xbox-pc] could not mark ${shownName} in the ${game.appid} baseline: ${err && err.message ? err.message : err}`);
+      });
+    },
+    onError: (err) => {
+      debug.warn(`[xbox-pc] poll failed${state.failures > 1 ? ` (${state.failures} in a row)` : ''}: ${err && err.message ? err.message : err}`);
+    },
+  });
+}
+
+/*
+  Polls the Xbox account while a game whose unlocks live there runs: an Xbox PC game, or a game any
+  other source runs that the account import holds (#231: online-fix's Forza Horizon 6 records nothing
+  locally). One game at a time, the latest started; a game with no Xbox title leaves it alone.
+*/
+function startXboxPolling(game) {
+  const auth = xboxPc.loadAuth();
+  const titleId = auth ? xboxTitleOf(game) : null;
+  if (!titleId) return false;
+  stopXboxPolling();
+  debug.log(`[xbox-pc] live polling started for ${game.name}(${titleId})${String(game.appid) !== titleId ? ` run as ${game.source} ${game.appid}` : ''}`);
+  const state = { appid: titleId, game, auth, snapshot: xboxPc.readState(titleId), timer: null, polling: false, failures: 0 };
+  xboxPollState = state;
+  startPollLoop(state, () => pollXboxTitle(state));
+  return true;
+}
+
+// `exitedGame` is the game that closed: it is polled once more for what it earned last. Without one
+// (another game takes the slot, the Watchdog stops), polling ends at once.
+function stopXboxPolling(exitedGame, { lastPoll = false } = {}) {
+  const state = xboxPollState;
+  if (!state || !matchesActiveXboxPoll(state, exitedGame, xboxPc.normalizeTitleId)) return;
+  if (lastPoll && exitedGame) {
+    debug.log(`[xbox-pc] ${state.game && state.game.name} closed, one last poll`);
+    finishPollLoop(state, () => pollXboxTitle(state), () => {
+      if (xboxPollState === state) xboxPollState = null;
+    });
+    return;
+  }
+  stopPollLoop(state);
+  debug.log(`[xbox-pc] live polling stopped for ${state.game && state.game.name}`);
   xboxPollState = null;
 }
 let runningGames = [];
@@ -1127,8 +1185,13 @@ var app = {
           the stats themselves would save them as this game's baseline and replay every unlock.
           Names compare whatever their case: NTFS reports the on-disk casing, not the root's.
         */
-        const saveFile = saveFileFor(name, options);
+        let saveFile = saveFileFor(name, options);
         if (!saveFile) return;
+        // OnlineFix spells the list Achievements.ini, and Linux tells the two spellings apart (#231).
+        if (options.statsSibling && path.basename(name).toLowerCase() === 'stats.ini') {
+          saveFile = statsSiblingFile(name);
+          if (!saveFile) return;
+        }
         // GBE writes no achievements.json until something is unlocked or tied: its stats are the save.
         let statsOnly = false;
         if (saveFile !== name) {
@@ -1700,10 +1763,10 @@ var app = {
           if (isExit) {
             let gameIndex = runningGames.findIndex((g) => g.appid === game.appid);
             if (gameIndex !== -1) runningGames.splice(gameIndex, 1);
-            stopXboxPolling(game);
+            stopXboxPolling(game, { lastPoll: true });
           } else {
             runningGames.push(game);
-            if (String(game.source || '') === SOURCE_LABEL.XBOX_PC) startXboxPolling(game);
+            startXboxPolling(game);
             requestArtworkPrefetch(game);
             loadRarityMap(game, String(game.appid));
           }
@@ -1751,7 +1814,8 @@ var app = {
         if (active.games.length > 0) {
           runningGames = active.games;
           runningAppid = active.overlayGame.appid;
-          if (active.xboxGame) startXboxPolling(active.xboxGame);
+          // The latest game whose unlocks the Xbox account holds, whatever source runs it.
+          active.games.toReversed().some((running) => startXboxPolling(running));
           debug.log(`[Process trail] synchronized ${active.games.length} already-running game(s)`);
         }
         forwardGameActivity();

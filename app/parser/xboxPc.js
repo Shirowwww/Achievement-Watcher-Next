@@ -34,6 +34,8 @@ const {
   normalizeXboxAchievement,
   buildXboxStateSnapshot,
   mergeXboxStateSnapshots,
+  listCachedTitles,
+  cachedTitleName,
 } = require('./xboxPcCore.js');
 const { SOURCE_LABEL } = require('../util/sourceIdentity.js');
 
@@ -522,27 +524,6 @@ async function importLibrary(options = {}) {
     }
   });
   return result;
-}
-
-function listCachedTitles() {
-  const root = path.join(getUserDataPath(), 'steam_cache', 'xbox');
-  let entries = [];
-  try {
-    entries = fs.readdirSync(root);
-  } catch {
-    return [];
-  }
-  return entries.filter((name) => fs.existsSync(path.join(root, name, 'schema.json')));
-}
-
-// The imported title's name, straight off the cached schema. Discovery needs it to recognise that
-// this game is the one another source already found, and it must stay cheap: this runs per cached
-// title on every scan, so it reads the schema rather than building the whole game record.
-function cachedTitleName(appid) {
-  const titleId = normalizeTitleId(appid);
-  if (!titleId) return '';
-  const schema = readJson(schemaCacheFile(titleId));
-  return String(schema?.name || '').trim();
 }
 
 /*

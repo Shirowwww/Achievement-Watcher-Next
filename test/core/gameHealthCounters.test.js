@@ -65,6 +65,35 @@ test('countSaveStats reads CODEX [UserStats] and ignores a save without stats', 
   }
 });
 
+test('countSaveStats reads an OnlineFix save, which keeps Stats.ini in its Stats folder (#231)', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-counters-of-'));
+  try {
+    fs.mkdirSync(path.join(dir, 'Stats'));
+    fs.writeFileSync(path.join(dir, 'Stats', 'Achievements.ini'), '');
+    fs.writeFileSync(path.join(dir, 'Stats', 'Stats.ini'), '[Stats]\nstat_56=100\nstat_10=100\nstat_26=90\n');
+    assert.equal(statProgress.countSaveStats(dir), 3);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// #232: a RUNE release run through GBE (Resonance) keeps one binary file per stat under stats/, and
+// without counting them the row and its fetch never showed, so its counters had no table to unlock by.
+test('countSaveStats reads a GBE save, one 4 or 16 byte file per stat under stats', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-counters-gbe-'));
+  try {
+    fs.mkdirSync(path.join(dir, 'stats'));
+    fs.writeFileSync(path.join(dir, 'stats', 'stat_collectibles'), Buffer.alloc(4));
+    fs.writeFileSync(path.join(dir, 'stats', 'stat_kills'), Buffer.alloc(4));
+    fs.writeFileSync(path.join(dir, 'stats', 'stat_avg_rate'), Buffer.alloc(16));
+    fs.writeFileSync(path.join(dir, 'stats', 'notes.txt'), 'not a stat');
+    fs.writeFileSync(path.join(dir, 'achievements.json'), '{}');
+    assert.equal(statProgress.countSaveStats(dir), 3);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('a generate_emu_config output left in the tool folder is a saved table', () => {
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-counters-ud-'));
   try {

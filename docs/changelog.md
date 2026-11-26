@@ -41,8 +41,16 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Counter achievements under GBE Fork unlock and notify when the emulator never does (#232).** AW Next
   now reads the stat files GBE writes as a counter moves, takes the stat links a release's
   achievements.json lacks from its own tables, and no longer declares a stat of unknown type as an
-  integer, which made GBE refuse it. Game Health flags a stat declared with the wrong type and notes
-  the achievements AW Next counts from a stat already at its goal.
+  integer, which made GBE refuse it. Game Health flags a stat declared with the wrong type, notes the
+  achievements AW Next counts from a stat already at its goal, and now offers to fetch the progress
+  counters of a GBE save too, for a release that ships no stat links.
+- **Unlocks kept on your Xbox account, or in OnlineFix's stats, arrive on their own (#231).** With your
+  Xbox account linked, a game it holds is checked every 30 seconds while it runs, and once more after
+  it closes, whatever source runs it, so Forza Horizon 6 with online-fix no longer needs a manual
+  fetch. AW Next slows down when Xbox is busy or asks it to wait. OnlineFix games that track
+  achievements as counters in `Stats\Stats.ini` are watched too, and Game Health offers to fetch their
+  progress counters; once fetched, those unlocks pop instantly, offline. An unlock seen both ways is
+  announced once.
 - **Game Health says when a switch to GBE did not take.** If the crack it replaced keeps writing its
   saves afterwards, the game is not loading the new file, and the report names the crack and its
   folder instead of saying nothing was recorded yet.
