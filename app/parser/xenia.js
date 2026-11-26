@@ -18,6 +18,8 @@ const ACHIEVEMENT_NAMESPACE = 1;
 const STRING_NAMESPACE = 5;
 const IMAGE_NAMESPACE = 2;
 const TITLE_STRING_ID = 0x8000;
+// The title's own tile shares the string's id, in the image namespace.
+const TITLE_IMAGE_ID = 0x8000;
 const ACHIEVEMENT_EARNED_FLAG = 0x20000;
 const ACHIEVEMENT_STRUCT_SIZE = 0x1c;
 // Namespace-1 entries whose id is 0x100000000 / 0x200000000 are the sync lists Xenia writes next to
@@ -391,10 +393,12 @@ function exists(p) {
 // from Xbox Live's image host.
 const { xboxLiveIconUrl, fillMissingIcons } = require('../util/xboxLiveIcons.js');
 
-module.exports.getGameData = async (gpdPath, { fetchImpl } = {}) => {
-  const raw = await fsp.readFile(gpdPath);
-  const parsed = parseGpdBuffer(raw, gpdPath);
-  const titleId = titleIdFromPath(gpdPath);
+module.exports.getGameData = async (gpdPath, { fetchImpl } = {}) =>
+  gameDataFromGpd(await fsp.readFile(gpdPath), titleIdFromPath(gpdPath), { fetchImpl, filePath: gpdPath });
+
+// A title GPD read into a library game. A console profile hands its GPDs over as buffers.
+async function gameDataFromGpd(raw, titleId, { fetchImpl, filePath = `${titleId}.gpd` } = {}) {
+  const parsed = parseGpdBuffer(raw, filePath);
   const valid = validAchievements(parsed);
 
   // Extract embedded achievement icons to the cache so the UI can render them via file:///.
@@ -407,23 +411,26 @@ module.exports.getGameData = async (gpdPath, { fetchImpl } = {}) => {
     /* fall back to no icons */
   }
 
+  // One of the GPD's own pictures as a file:/// url, '' when it has none or the cache is not writable.
+  const cachedImage = async (imageId) => {
+    const buf = parsed.imagesById.get(String(imageId));
+    if (!iconsWritten || !buf || buf.length === 0) return '';
+    const iconPath = path.join(iconDir, `${imageId}.png`);
+    try {
+      if (!fs.existsSync(iconPath)) await fsp.writeFile(iconPath, buf);
+      return 'file:///' + iconPath.replace(/\\/g, '/');
+    } catch {
+      return '';
+    }
+  };
+
   const list = [];
   const withoutIcon = [];
   for (const a of valid) {
     const locked = txt(a.lockedDescription);
     const unlocked = txt(a.unlockedDescription) || locked;
     const hidden = (a.flags & 0x8) === 0 ? 1 : 0;
-    let icon = '';
-    const buf = parsed.imagesById.get(String(a.imageId));
-    if (iconsWritten && buf && buf.length > 0) {
-      const iconPath = path.join(iconDir, `${a.imageId}.png`);
-      try {
-        if (!fs.existsSync(iconPath)) await fsp.writeFile(iconPath, buf);
-        icon = 'file:///' + iconPath.replace(/\\/g, '/');
-      } catch {
-        /* leave icon empty */
-      }
-    }
+    const icon = await cachedImage(a.imageId);
     const entry = {
       name: String(a.achievementId),
       displayName: txt(a.name) || String(a.achievementId),
@@ -437,25 +444,28 @@ module.exports.getGameData = async (gpdPath, { fetchImpl } = {}) => {
     if (!icon && iconsWritten) withoutIcon.push({ entry, imageId: a.imageId });
   }
   if (withoutIcon.length) await fillMissingIcons(titleId, iconDir, withoutIcon, fetchImpl);
+  // The game's own 64x64 tile, the picture the dashboard shows beside its name.
+  const titleTile = await cachedImage(TITLE_IMAGE_ID);
 
   return {
     name: parsed.title || titleId,
     appid: titleId,
     system: 'xbox',
-    // An achievement picture only stands in for the header until SteamGridDB's art replaces it.
-    img: { header: list.find((x) => x.icon)?.icon, headerStandIn: true },
+    // The tile or an achievement picture only stands in for the header until SteamGridDB's art replaces it.
+    img: { header: titleTile || list.find((x) => x.icon)?.icon, headerStandIn: true, ...(titleTile ? { icon: titleTile } : {}) },
     achievement: {
       total: list.length,
       list,
     },
   };
-};
+}
 
-module.exports.getAchievements = async (gpdPath) => {
-  const { list } = readGpd(await fsp.readFile(gpdPath), gpdPath);
-  return list.map(({ id, achieved, time }) => ({ id, achieved, earned_time: time }));
-};
+const unlocksOf = (list) => list.map(({ id, achieved, time }) => ({ id, achieved, earned_time: time }));
 
+module.exports.getAchievements = async (gpdPath) => unlocksOf(readGpd(await fsp.readFile(gpdPath), gpdPath).list);
+
+module.exports.gameDataFromGpd = gameDataFromGpd;
+module.exports.unlocksOf = unlocksOf;
 module.exports.readGpd = readGpd;
 
 /*

@@ -108,6 +108,7 @@ function discover(configFile = kit.userDirFile()) {
 const baseline = createBaselineCache({ prefix: 'xenia', tag: 'xenia', debug });
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
+const seedBaseline = (key, list) => cacheSave(key, list.filter((a) => a.achieved).map((a) => a.id));
 
 // Xenia can rewrite the same GPD several times per unlock.
 const isDuplicateUnlock = kit.createDuplicateGuard();
@@ -115,51 +116,53 @@ const isDuplicateUnlock = kit.createDuplicateGuard();
 async function handleChange(target, ctx) {
   try {
     await waitForFileStable(target.gpdPath);
-
     const data = read(target.gpdPath);
-    if (!data || data.list.length === 0) return;
-    const gameName = data.title || target.titleId;
-
-    const achievedNow = data.list.filter((a) => a.achieved);
-    const cache = cacheLoad(target.key);
-    const isFirstObservation = !cache || !Array.isArray(cache.unlocked);
-
-    // First observation: record the baseline silently so a pre-existing profile full of earned
-    // achievements doesn't toast on startup. Only real unlocks afterwards notify.
-    if (!isFirstObservation) {
-      const prev = new Set(cache.unlocked.map(String));
-      let delay = 0;
-      for (const a of achievedNow) {
-        if (prev.has(String(a.id))) continue;
-        if (isDuplicateUnlock(target.key, a.id)) continue;
-        debug.log(`[xenia] Unlocked: ${gameName} - ${a.displayName}`);
-        const iconPath = ensureIcon(target.titleId, a.imageId, data.imagesById);
-        await ctx.notify(
-          {
-            source: 'Xenia Emulator',
-            appid: target.titleId,
-            gameDisplayName: gameName,
-            achievementName: String(a.id),
-            achievementDisplayName: a.displayName,
-            achievementDescription: a.description,
-            icon: iconPath || undefined,
-            time: a.time || moment().unix(),
-            delay,
-            completion: completionOf(
-              data.list.map((entry) => ({ name: String(entry.id), displayName: entry.displayName, description: entry.description })),
-              achievedNow.map((entry) => String(entry.id))
-            ),
-          },
-          kit.unlockToastOptions(ctx, { attribution: kit.gamerscoreAttribution(ctx, a.gamerscore) })
-        );
-        delay += 1;
-      }
-    }
-
-    cacheSave(target.key, achievedNow.map((a) => a.id));
+    if (data && data.list.length > 0) await announceUnlocks({ key: target.key, titleId: target.titleId, data, ctx });
   } catch (err) {
     debug.warn(`[xenia] handleChange failed for ${target.key}: ${err}`);
   }
+}
+
+/*
+  Notifies what one title GPD earned since its baseline, then moves the baseline. A title seen for
+  the first time is recorded silently, so a profile full of old unlocks does not toast on startup,
+  unless `announceNew` says the title itself is new since watching began (a re-copied console profile).
+*/
+async function announceUnlocks({ key, titleId, data, ctx, source = 'Xenia Emulator', announceNew = false }) {
+  const gameName = data.title || titleId;
+  const achievedNow = data.list.filter((a) => a.achieved);
+  const cache = cacheLoad(key);
+  const isFirstObservation = !cache || !Array.isArray(cache.unlocked);
+  if (!isFirstObservation || announceNew) {
+    const prev = new Set(isFirstObservation ? [] : cache.unlocked.map(String));
+    let delay = 0;
+    for (const a of achievedNow) {
+      if (prev.has(String(a.id))) continue;
+      if (isDuplicateUnlock(key, a.id)) continue;
+      debug.log(`[xenia] Unlocked: ${gameName} - ${a.displayName}`);
+      const iconPath = ensureIcon(titleId, a.imageId, data.imagesById);
+      await ctx.notify(
+        {
+          source,
+          appid: titleId,
+          gameDisplayName: gameName,
+          achievementName: String(a.id),
+          achievementDisplayName: a.displayName,
+          achievementDescription: a.description,
+          icon: iconPath || undefined,
+          time: a.time || moment().unix(),
+          delay,
+          completion: completionOf(
+            data.list.map((entry) => ({ name: String(entry.id), displayName: entry.displayName, description: entry.description })),
+            achievedNow.map((entry) => String(entry.id))
+          ),
+        },
+        kit.unlockToastOptions(ctx, { attribution: kit.gamerscoreAttribution(ctx, a.gamerscore) })
+      );
+      delay += 1;
+    }
+  }
+  cacheSave(key, achievedNow.map((a) => a.id));
 }
 
 // Tear down any existing watchers and (re)start from the current options. Safe to call on every
@@ -183,7 +186,7 @@ module.exports.start = async (ctx) => {
     if (!cacheLoad(target.key)) {
       try {
         const data = read(target.gpdPath);
-        if (data) cacheSave(target.key, data.list.filter((a) => a.achieved).map((a) => a.id));
+        if (data) seedBaseline(target.key, data.list);
       } catch (err) {
         debug.warn(`[xenia] baseline seed failed for ${target.key}: ${err}`);
       }
@@ -203,6 +206,11 @@ module.exports.stop = () => {
   changes.clear();
   watchers.closeAll();
 };
+
+// A console profile's titles are the same GPDs, announced and baselined the same way.
+module.exports.announceUnlocks = announceUnlocks;
+module.exports.hasBaseline = (key) => !!cacheLoad(key);
+module.exports.seedBaseline = seedBaseline;
 
 // Exposed for unit testing the pure reader.
 module.exports._internal = { read, discover };

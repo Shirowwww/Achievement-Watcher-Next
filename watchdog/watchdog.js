@@ -100,6 +100,7 @@ const shadps4Watch = require('./console/shadps4Watch.js');
 const rpcs3Watch = require('./console/rpcs3Watch.js');
 const kytyps5Watch = require('./console/kytyps5Watch.js');
 const xeniaWatch = require('./console/xeniaWatch.js');
+const x360ProfileWatch = require('./console/x360ProfileWatch.js');
 const xllnWatch = require('./console/xllnWatch.js');
 const markerpatchWatch = require('./console/markerpatchWatch.js');
 const madnesspatchWatch = require('./console/madnesspatchWatch.js');
@@ -245,6 +246,7 @@ const NEW_FOLDER_NOTIFY_MAX = 10;
     kytyps5  PS5 emulator trophies, its _Trophies unlock files
     ea       EA Desktop's rotating verbose log
     xenia    Xbox 360 emulator GPD files under the user's saved folders
+    x360profile  Xbox 360 profiles copied off a modded console, read again when copied over
     xlln     Games for Windows LIVE profile state, through XLiveLessNess
     markerpatch   Dead Space 2's settings.txt bitflag, through MarkerPatch
     madnesspatch  Alice: Madness Returns' per-profile Achievements.txt bitflag, through MadnessPatch
@@ -264,6 +266,7 @@ const CONSOLE_WATCHERS = [
   { name: 'kytyps5', watcher: kytyps5Watch },
   { name: 'ea', watcher: eaWatch },
   { name: 'xenia', watcher: xeniaWatch },
+  { name: 'x360profile', watcher: x360ProfileWatch },
   { name: 'xlln', watcher: xllnWatch },
   { name: 'markerpatch', watcher: markerpatchWatch },
   { name: 'madnesspatch', watcher: madnesspatchWatch },

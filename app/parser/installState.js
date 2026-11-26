@@ -11,8 +11,9 @@
 // absent: its scan lists owned games as well as installed ones, so install proof comes from the
 // per-game Steam registry flag (passed as trustedInstalled by the caller).
 // RetroAchievements is here because a ROM is out of reach: under "installed only" its games would
-// otherwise vanish as a whole source. A PlayStation Network list is a console game, for the same reason.
-const TRUSTED_TYPES = new Set(['rpcs3', 'xenia', 'socialclub', 'retroachievements', 'psnlibrary']);
+// otherwise vanish as a whole source. A PlayStation Network list or an Xbox 360 profile is a console
+// game, for the same reason.
+const TRUSTED_TYPES = new Set(['rpcs3', 'xenia', 'x360profile', 'socialclub', 'retroachievements', 'psnlibrary']);
 
 function isInstalled({ dataType, hasResolvedExe, hasExeListExe, trustedInstalled } = {}) {
   const type = String(dataType || '').toLowerCase();

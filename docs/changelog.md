@@ -16,6 +16,14 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Xbox 360 profiles copied off a console (#205).** A profile taken from a modded Xbox 360 (RGH or
+  JTAG) with Aurora's FTP is read once its folder is added under Settings > Folders: every game on it
+  with achievements, with unlock dates, gamerscore and pictures. Copy the profile over again after
+  playing and its new unlocks are announced. AW Next only reads the profile and never writes to it.
+  Games from Xenia and from a console profile also show the game's own tile as their icon.
+
 ### Improved
 
 - **Consoles & ports has its own page in Settings (#226).** The console emulators, the PC ports of

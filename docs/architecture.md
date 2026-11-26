@@ -229,6 +229,7 @@ a newer official or local one.
 | `app/parser/xlln.js` | XLiveLessNess installs: discovery, per-profile unlocks, and the schema read from the game's executable (`xllnSpa.js` parses its SPAFILE resource) |
 | `app/parser/x360Recomp.js` | Recompiled Xbox 360 games: ReXGlue `.toml`, `.tsv`, `SaveData\Achievements.json` and Unleashed `ACH-DATA` unlock lists; schema from the game's `default.xex`, dbox.tools as fallback |
 | `app/parser/x360Ports.js`, `x360Launcher.js`, `reblueBonus.js` | Known ports by executable (listed before the first unlock; `renut.cfg`), a literal `--user_data_root` read from a `.bat`/`.cmd`/`.ps1` launcher, re:Blue's own achievements |
+| `app/parser/x360Profile.js`, `stfs.js` | Xbox 360 profiles copied off a console: the STFS container (read only), then each title GPD read by `xenia.js`; watched by `watchdog/console/x360ProfileWatch.js` |
 | `app/parser/xex.js` | Xbox 360 executables: title id, AES and LZX unpacking (`app/util/lzx.js`) and the SPA resource, extracted in a time-limited worker (`xexWorker.js`) |
 | `app/parser/ff7.js` | FINAL FANTASY VII (2013): the 8-byte `achievement.dat` bitfield, paired with Steam api-names |
 | `app/parser/retroAchievements.js` | RetroAchievements Web API: account, library import and the `steam_cache/retroachievements` cache, shared with `watchdog/console/retroAchievementsWatch.js` (recent unlocks every 8 s while a known emulator runs, every 5 min otherwise) |

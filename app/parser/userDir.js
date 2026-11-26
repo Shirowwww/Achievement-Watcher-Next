@@ -617,6 +617,13 @@ module.exports.diagnose = async (dirpath) => {
   } catch {
     /* same */
   }
+  try {
+    // A profile copied off a modded Xbox 360: the folder holding the file, or the console's tree above it.
+    const profiles = require('./x360Profile.js').findProfiles(dirpath);
+    if (profiles.length > 0) return { accepted: true, code: 'emulator-data', evidence: { ...evidence, emulator: 'x360profile', roots: profiles } };
+  } catch {
+    /* same */
+  }
 
   // Some GOG/UniverseLAN and repack layouts keep the config below the selected game root
   // (for example <Game>/Engine/Binaries/.../UniverseLAN.ini). Accept that root, then scan()

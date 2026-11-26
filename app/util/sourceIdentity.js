@@ -43,6 +43,8 @@ const SOURCE_ROWS = {
   'playstation network': { ...PLAYSTATION, rarity: 'cache-only', launchable: false },
   'xenia emulator': { ...XBOX_CONSOLE, console: 'xbox-360', platform: 'xenia', emulatorData: true },
   [SOURCE_LABEL.X360_RECOMP]: { ...XBOX_CONSOLE, console: 'xbox-360', platform: 'xenia', emulatorData: true },
+  // A profile copied off a modded console: no PC executable, and nothing a reset may write back.
+  'xbox 360 profile': { ...XBOX_CONSOLE, console: 'xbox-360', platform: 'xenia', emulatorData: true, launchable: false },
   xlivelessness: { ...XBOX_CONSOLE, emulatorData: true },
   [SOURCE_LABEL.XBOX_PC.toLowerCase()]: { family: 'xbox', icon: 'xbox.svg', purchased: 'xbox', rarity: 'cache-only' },
   // Short spellings the Watchdog and older index entries carry; they only name the platform.

@@ -26,6 +26,7 @@ const rpcs3 = require(path.join(appPath, 'rpcs3.js'));
 const shadps4 = require(path.join(appPath, 'shadps4.js'));
 const kytyps5 = require(path.join(appPath, 'kytyps5.js'));
 const xenia = require(path.join(appPath, 'xenia.js'));
+const x360Profile = require(path.join(appPath, 'x360Profile.js'));
 const greenluma = require(path.join(appPath, 'greenluma.js'));
 const userDir = require(path.join(appPath, 'userDir.js'));
 const socialclub = require(path.join(appPath, 'socialclub.js'));
@@ -2536,6 +2537,8 @@ async function claimFolder(dir, source, kytyOptions) {
   if (scanned.length === 0 && source.shadps4) scanned = await shadps4.scan(dir);
   if (scanned.length === 0 && source.kytyps5) scanned = kytyps5.scan(dir, kytyOptions);
   if (scanned.length === 0 && source.xenia) scanned = await xenia.scan(dir);
+  // A profile copied off a modded Xbox 360 follows the Xenia switch, like the recompiled ports.
+  if (scanned.length === 0 && source.xenia) scanned = x360Profile.scan(dir);
   // Games for Windows LIVE installs running XLiveLessNess. Like the console emulators these are
   // game folders, so they are resolved before the appid-named save scan below.
   if (scanned.length === 0 && source.xlln) scanned = xlln.scan(dir);
@@ -3747,6 +3750,7 @@ const SOURCE_READERS = {
     unlocks: (appid) => xenia.getAchievements(appid.data.path),
     fullArtFallback: true,
   },
+  [x360Profile.TYPE]: { ...sameModule(x360Profile), fullArtFallback: true },
   x360recomp: { ...sameModule(x360Recomp), fullArtFallback: true },
   ps4recomp: { ...sameModule(ps4Recomp), fullArtFallback: true },
   ps3recomp: { ...sameModule(ps3Recomp), fullArtFallback: true },

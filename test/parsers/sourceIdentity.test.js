@@ -110,7 +110,7 @@ test('each record type is read through one entry of the dispatch map', () => {
     if (reader.schema) assert.equal(typeof reader.schema, 'function', `${type} schema`);
   }
   const fullArt = Object.keys(SOURCE_READERS).filter((type) => SOURCE_READERS[type].fullArtFallback);
-  assert.deepEqual(fullArt.sort(), ['kytyps5', 'manual', 'ps3recomp', 'ps4recomp', 'psnLibrary', 'rpcs3', 'shadps4', 'x360recomp', 'xenia', 'xlln']);
+  assert.deepEqual(fullArt.sort(), ['kytyps5', 'manual', 'ps3recomp', 'ps4recomp', 'psnLibrary', 'rpcs3', 'shadps4', 'x360profile', 'x360recomp', 'xenia', 'xlln']);
 });
 
 test('the Xbox console logo goes to the Xbox emulators, not to the Xbox PC library', () => {

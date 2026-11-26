@@ -14,7 +14,8 @@ const PORT_SOURCES = Object.freeze({
   ps4recomp: ['ps4 recomp'],
   ps3recomp: ['ps3 recomp'],
   x360recomp: ['xbox 360 recomp'],
-  xenia: ['xenia emulator'],
+  // A profile copied off a console follows the Xenia switch.
+  xenia: ['xenia emulator', 'xbox 360 profile'],
   markerpatch: ['markerpatch', 'madnesspatch', 'pc port'],
 });
 
