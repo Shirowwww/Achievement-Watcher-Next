@@ -174,6 +174,13 @@ renamed in 3.9.0 and the history is kept under one file.
   replaced, so AW Next recognises the SDK from them and writes that SDK's interface list. D4: Dark
   Dreams Don't Die, whose RELOADED crack records no achievement, is one of them (SDK 1.33). A crack
   whose calls match no single SDK is still refused.
+- **A switch to the supported emulator touches only the crack's own Steam file, and its Undo puts
+  the folder back as it was.** The switch used to add emulator files in folders the release never had
+  them in, of the launcher's type rather than the game's, and Undo left those files behind with the
+  interface list the switch had made. An interface list that names no version, left by an earlier
+  failed try, no longer passes for a good one, so the right list is made again (or the switch is
+  refused). D4: Dark Dreams Don't Die kept crashing for these reasons. Undo also clears what earlier
+  switches left there.
 
 ## 3.12.8 - 2026-11-22
 

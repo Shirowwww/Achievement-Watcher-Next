@@ -14,6 +14,7 @@
 const gameHealth = require(path.join(appPath, 'util/gameHealth.js'));
 const healthToolCaches = require(path.join(appPath, 'util/toolCaches.js'));
 const gameHealthRepair = require(path.join(appPath, 'util/gameHealthRepair.js'));
+const runtimeSwitchUndo = require(path.join(appPath, 'util/runtimeSwitchUndo.js'));
 const { createHealthIgnoreStore } = require(path.join(appPath, 'util/healthIgnoreStore.js'));
 // Libraries whose unlocks come from the platform itself. Their watchdog watcher polls the account,
 // so none of the process-tracking or Steam-emulator reasoning applies to them.
@@ -1557,17 +1558,30 @@ async function putEmulatorOfflineModeBack(appid, game) {
 }
 
 // Where a runtime switch can have set a crack's files aside: the game root and every steam_api dll folder.
-function switchedRuntimeDirs(game) {
+function runtimeDirsOf(game) {
   if (!game || !game.gameDir || !fs.existsSync(game.gameDir)) return [];
-  const dllDirs = goldberg.detectEmulator(game.gameDir).dll.map((dll) => path.dirname(dll));
-  return crackLoaderDetect.switchedLoaderDirs([game.gameDir, ...dllDirs]);
+  return [game.gameDir, ...goldberg.detectEmulator(game.gameDir).dll.map((dll) => path.dirname(dll))];
+}
+
+function switchedRuntimeDirs(game) {
+  return crackLoaderDetect.switchedLoaderDirs(runtimeDirsOf(game));
+}
+
+// Is this dll the GBE build AW Next installs? Tells its own leftovers from a release's runtime.
+function isAwGbeBuild(file) {
+  return gbeInstaller.matchesCachedDll(file, healthToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'), gbeInstaller.archOfSteamApiFile(file));
+}
+
+// A switch to undo, or the dlls an earlier one left behind in a crack's folders.
+function hasSwitchToUndo(game) {
+  return switchedRuntimeDirs(game).length > 0 || runtimeSwitchUndo.leftoverDlls({ dirs: runtimeDirsOf(game), isAwBuild: isAwGbeBuild }).length > 0;
 }
 
 function paintUndoSwitch(root, game) {
   const link = root.find('.gh-undo-switch');
   link.text(gameHealthActionLabel(gameHealth.ACTION.UNDO_SWITCH_RUNTIME));
   const hasUplayBackup = !!game && !!game.gameDir && fs.existsSync(game.gameDir) && uplayR2.listConfigBackups(game.gameDir).length > 0;
-  if (switchedRuntimeDirs(game).length > 0 || hasUplayBackup) link.removeAttr('hidden');
+  if (hasSwitchToUndo(game) || hasUplayBackup) link.removeAttr('hidden');
   else link.attr('hidden', 'hidden');
 }
 
@@ -2102,9 +2116,9 @@ async function runGameHealthAction(appid, action, button) {
   if (action === gameHealth.ACTION.UNDO_REPAIR) return undoLastRepair(appid, game);
 
   if (action === gameHealth.ACTION.UNDO_SWITCH_RUNTIME) {
-    const dirs = switchedRuntimeDirs(game);
     // A Ubisoft repair swaps the Uplay loader instead, and keeps its own snapshot.
-    if (dirs.length === 0) return restoreUplayR2Backup(game.gameDir, appid);
+    if (!hasSwitchToUndo(game)) return restoreUplayR2Backup(game.gameDir, appid);
+    const dirs = runtimeDirsOf(game).filter((dir, index, list) => list.findIndex((other) => path.resolve(other).toLowerCase() === path.resolve(dir).toLowerCase()) === index);
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
       title: gameHealthActionLabel(action),
@@ -2120,12 +2134,13 @@ async function runGameHealthAction(appid, action, button) {
       noLink: true,
     });
     if (confirmed !== 1) return false;
-    const restored = await journaledRepair(appid, action, repairJournal.gbeRoots({ runtimeDirs: dirs }), () => crackLoaderDetect.restoreSwitchedLoader(dirs));
-    debug.log(`[health] undid the runtime switch: ${restored.join(', ')}`);
+    const roots = repairJournal.gbeRoots({ runtimeDirs: dirs, settingsDirs: dirs.map((dir) => path.join(dir, 'steam_settings')) });
+    const undone = await journaledRepair(appid, action, roots, () => runtimeSwitchUndo.undoRuntimeSwitch({ dirs, isAwBuild: isAwGbeBuild }));
+    debug.log(`[health] undid the runtime switch: put back ${undone.restored.join(', ') || 'nothing'}; removed ${undone.removed.join(', ') || 'nothing'}`);
     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'info',
       title: gameHealthActionLabel(action),
-      message: t('gh-undo-switch-done', '{count} file(s) put back.', '{count} fichier(s) remis en place.', { count: restored.length }),
+      message: t('gh-undo-switch-done', '{count} file(s) put back.', '{count} fichier(s) remis en place.', { count: undone.restored.length + undone.removed.length }),
       noLink: true,
     });
     return true;
@@ -2149,7 +2164,11 @@ async function runGameHealthAction(appid, action, button) {
     } catch {
       /* an unreadable header just means the 64-bit default is used */
     }
-    const plan = gameHealthRepair.planRuntimeInstall({ gbeInstaller, gameDir: game.gameDir, exePath: exe || null, steamSettings, arch, native: !!nativeArch });
+    const installPlan = gameHealthRepair.planRuntimeInstall({ gbeInstaller, gameDir: game.gameDir, exePath: exe || null, steamSettings, arch, native: !!nativeArch });
+    // A switch replaces only the Steam dlls the release ships, whatever the exe's architecture.
+    const plan = switching
+      ? gameHealthRepair.planRuntimeSwitch({ gbeInstaller, plan: installPlan, dllPaths: goldberg.detectEmulator(game.gameDir).dll, isAwBuild: isAwGbeBuild })
+      : installPlan;
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
       title: t('gh-confirm-runtime-title', 'Install the emulator file?', 'Installer le fichier d’émulateur ?'),

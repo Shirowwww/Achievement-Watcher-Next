@@ -19,6 +19,7 @@ const { safeArchiveEntry } = require('../util/archiveEntry.js');
 const unrealLayout = require('../util/unrealLayout.js');
 const crackLoaderDetect = require('../util/crackLoaderDetect.js');
 const steamSdkInterfaces = require('./steamSdkInterfaces.js');
+const { INTERFACE_VERSION_LINE, usableInterfacesFile } = require('../util/steamInterfacesFile.js');
 const { replaceFileSync, clearReadOnly } = require('../util/replaceFile.js');
 
 const RELEASE_API = 'https://api.github.com/repos/Detanup01/gbe_fork/releases/latest';
@@ -528,8 +529,6 @@ function isValveOriginal(file) {
   return sections.length > 0 && sections.every((name) => COMPILER_SECTIONS.has(name)) && !crackLoaderDetect.holdsLoaderFiles(path.dirname(file));
 }
 
-// One versioned interface name (SteamUser019) on a line of the generator's output.
-const INTERFACE_VERSION_LINE = /[A-Za-z_]+\d{3}\s*$/m;
 const SCENE_INTERFACE_LINE = /^\s*Steam\w*\s*=\s*([A-Za-z_]+\d{3})\s*$/;
 
 /*
@@ -630,7 +629,7 @@ function ensureTitleSetup({ appid, dirs = [], log = noopLog } = {}) {
   for (const dir of new Set(dirs.filter(Boolean))) {
     if (!holdsFile(dir, setup.exe)) continue;
     const steamSettings = path.join(dir, 'steam_settings');
-    if (!fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) {
+    if (!usableInterfacesFile(steamSettings)) {
       changed.push(writeTitleInterfaces({ appid, dllPath: path.join(dir, ARCH.x86.file), steamSettings, log }).file);
     }
     const file = path.join(dir, 'commandline.txt');
@@ -668,7 +667,18 @@ async function generateInterfaces({ dllPath, steamSettings, dlls, candidates = [
     throw err;
   }
   if (result.generated) return result;
-  return fallback() || result;
+  return fallback() || dropUnusableInterfaces(steamSettings, result, log);
+}
+
+// A list with no version in it is worse than none: without one GBE answers from its own versions.
+function dropUnusableInterfaces(steamSettings, result, log) {
+  const file = path.join(steamSettings, 'steam_interfaces.txt');
+  if (fs.existsSync(file) && !usableInterfacesFile(steamSettings)) {
+    clearReadOnly(file);
+    fs.rmSync(file, { force: true });
+    log.log(`[gbe] removed ${file}: it names no interface version`);
+  }
+  return result;
 }
 
 // The tool works in a private temp directory so it never drops files beside the game unexpectedly.
@@ -825,7 +835,7 @@ function describeRuntimeDlls({ dllDirs = [], cacheDir = null } = {}) {
         backupOriginal: hasBackup ? isValveOriginal(backup) && (!preserved || sameFileBytes(backup, preserved)) : false,
         preservedOriginal: preserved ? path.basename(preserved) : '',
         settings: fs.existsSync(path.join(dir, 'steam_settings')),
-        interfaces: fs.existsSync(path.join(dir, 'steam_settings', 'steam_interfaces.txt')),
+        interfaces: usableInterfacesFile(path.join(dir, 'steam_settings')),
       });
     }
   }
@@ -1057,7 +1067,8 @@ function sideLoadedRuntime(dirs) {
 // Install the cached GBE DLLs into one or more dirs, backing up replaced originals as <name>.bak once.
 // writeIfMissing drops an arch into DLL-less dirs; ensureArch seeds an arch even when only the other one is present.
 // nativeArch does the same for a native Linux game's libsteam_api.so, which is replaced wherever it is found.
-function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, nativeArch = null, log = noopLog } = {}) {
+// `only` (paths) limits the swap to those files: a switch replaces what the release ships, nothing more.
+function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, nativeArch = null, only = null, log = noopLog } = {}) {
   if (!dlls || (!dlls.x64 && !dlls.x86)) throw new Error('installDlls: no cached GBE Fork DLLs available');
   const dirs = (Array.isArray(dllDirs) ? dllDirs : [dllDirs]).filter(Boolean);
   if (dirs.length === 0) throw new Error('installDlls: no target directories');
@@ -1096,9 +1107,11 @@ function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, 
     if (!hasNative && seedable(ensureArch) && !targets.includes(ensureArch)) targets.push(ensureArch);
 
     // An arch that wasn't in the release has no buffer and is skipped.
-    const files = targets.filter((key) => buffers[key]).map((key) => ({ name: ARCH[key].file, buf: buffers[key] }));
+    const allFiles = targets.filter((key) => buffers[key]).map((key) => ({ name: ARCH[key].file, buf: buffers[key] }));
     const native = nativeTarget(dir, dlls, present.length === 0 ? nativeArch : null);
-    if (native) files.push(native);
+    if (native) allFiles.push(native);
+    const kept = only ? new Set(only.map((file) => path.resolve(file).toLowerCase())) : null;
+    const files = kept ? allFiles.filter(({ name }) => kept.has(path.resolve(dir, name).toLowerCase()) && fs.existsSync(path.join(dir, name))) : allFiles;
 
     for (const { name, buf } of files) {
       const dest = path.join(dir, name);

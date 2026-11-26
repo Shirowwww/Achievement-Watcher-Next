@@ -22,6 +22,7 @@ const gbeEffectiveConfig = require(path.join(__dirname, 'gbeEffectiveConfig.js')
 const gbeSchema = require(path.join(__dirname, 'gbeSchema.js'));
 const { isSteamId64 } = require(path.join(__dirname, '..', 'util', 'steamId64.js'));
 const { canonicalSteamAppid } = require(path.join(__dirname, '..', 'util', 'steamAppid.js'));
+const { usableInterfacesFile } = require(path.join(__dirname, '..', 'util', 'steamInterfacesFile.js'));
 
 const APPID_CONFIG_FILES = new Set([
   'steam_appid.txt',
@@ -1418,7 +1419,9 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     supply, and painting every working repack orange over it would say nothing useful.
   */
   // ColdClient's steamclient answers each interface by the name the game asks for: no list needed.
-  if (!loaderSettings && !fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) {
+  if (!loaderSettings && !usableInterfacesFile(steamSettings)) {
+    // A list naming no version counts as none (util/steamInterfacesFile.js), and is called so.
+    const absent = fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt')) ? 'names no interface version in' : 'is missing from';
     const original = originalSteamApiDll([...dllDirs, ...report.engineDllDirs, settingsParent]);
     const proxied = report.proxiedRuntimes[0];
     if (proxied) {
@@ -1426,21 +1429,21 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
       add(
         'info',
         'NO_STEAM_INTERFACES_PROXIED',
-        `steam_interfaces.txt is missing from ${steamSettings}. This release loads its own emulator (${path.basename(proxied.runtime)}${proxied.loadedBy ? ` through ${path.basename(proxied.loadedBy)}` : ''}), which answers with its built-in interface versions.`,
+        `steam_interfaces.txt ${absent} ${steamSettings}. This release loads its own emulator (${path.basename(proxied.runtime)}${proxied.loadedBy ? ` through ${path.basename(proxied.loadedBy)}` : ''}), which answers with its built-in interface versions.`,
         { steamSettings, runtime: proxied.runtime }
       );
     } else if (original) {
       add(
         'info',
         'NO_STEAM_INTERFACES',
-        `steam_interfaces.txt is missing from ${steamSettings}. It can be generated from ${original} by installing the emulator runtime again.`,
+        `steam_interfaces.txt ${absent} ${steamSettings}. It can be generated from ${original} by installing the emulator runtime again.`,
         { steamSettings, source: original }
       );
     } else {
       add(
         'info',
         'NO_STEAM_INTERFACES_UNRECOVERABLE',
-        `steam_interfaces.txt is missing from ${steamSettings} and no original Steam API dll is left on disk to generate it from - this release shipped its own emulator in its place - so the emulator answers with its built-in interface versions.`,
+        `steam_interfaces.txt ${absent} ${steamSettings} and no original Steam API dll is left on disk to generate it from - this release shipped its own emulator in its place - so the emulator answers with its built-in interface versions.`,
         { steamSettings }
       );
     }

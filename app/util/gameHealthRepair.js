@@ -14,6 +14,8 @@ const unrealLayout = require('./unrealLayout.js');
 const crackLoaderDetect = require('./crackLoaderDetect.js');
 const gbeSchemaFiles = require('../parser/gbeSchema.js');
 const steamApiCallers = require('../parser/steamApiCallers.js');
+const { usableInterfacesFile } = require('./steamInterfacesFile.js');
+const runtimeSwitchUndo = require('./runtimeSwitchUndo.js');
 
 function sameDir(a, b) {
   if (!a || !b) return false;
@@ -111,6 +113,36 @@ function planRuntimeInstall({ gbeInstaller, gameDir, exePath = null, steamSettin
   const dllFile = gbeInstaller.ARCH[arch] ? gbeInstaller.ARCH[arch].file : gbeInstaller.ARCH.x64.file;
   const file = native ? gbeInstaller.NATIVE_LIB : dllFile;
   return { dirs, arch, native, file, backup: `${file}.bak` };
+}
+
+function releaseRuntimeFiles(dir, gbeInstaller, native, isAwBuild) {
+  const names = native ? [gbeInstaller.NATIVE_LIB] : Object.values(gbeInstaller.ARCH).map((entry) => entry.file);
+  return names.filter((name) => fs.existsSync(path.join(dir, name)) && !runtimeSwitchUndo.isAwLeftover(path.join(dir, name), isAwBuild));
+}
+
+/*
+  A switch replaces the Steam dlls the release ships, and only those: same folder, same architecture.
+  Planned from the exe, it seeded GBE wherever the exe pointed. D4: Dark Dreams Don't Die starts from
+  a 32-bit launcher at its root, and the switch put an x86 steam_api.dll beside the game's x64 one in
+  Binaries/Win64 and two more dlls at a root that had none. A release with no Steam dll at all keeps
+  the install plan. `dllPaths` are the dlls the scan found, so their folders are looked at too.
+*/
+function planRuntimeSwitch({ gbeInstaller, plan, dllPaths = [], isAwBuild = null } = {}) {
+  if (!plan || !Array.isArray(plan.dirs)) return plan;
+  const dirs = [...plan.dirs];
+  for (const file of dllPaths || []) {
+    const dir = file ? path.dirname(file) : '';
+    if (dir && !dirs.some((known) => sameDir(known, dir))) dirs.push(dir);
+  }
+  const held = dirs.map((dir) => ({ dir, files: releaseRuntimeFiles(dir, gbeInstaller, plan.native, isAwBuild) })).filter((entry) => entry.files.length > 0);
+  if (held.length === 0) return plan;
+  // The dll steam_settings goes beside leads: the plan's own file where the release has one.
+  const first = held.find((entry) => entry.files.includes(plan.file)) || held[0];
+  const ordered = [first, ...held.filter((entry) => entry !== first)];
+  const file = first.files.includes(plan.file) ? plan.file : first.files[0];
+  const arch = plan.native ? plan.arch : file === gbeInstaller.ARCH.x86.file ? 'x86' : 'x64';
+  const replace = ordered.flatMap((entry) => entry.files.map((name) => path.join(entry.dir, name)));
+  return { ...plan, dirs: ordered.map((entry) => entry.dir), file, arch, backup: `${file}.bak`, replace };
 }
 
 const LEGACY_DLC_CONFIG_FILES = ['steam_emu.ini', 'steam_api.ini', 'cpy.ini'];
@@ -243,12 +275,15 @@ async function installEmulatorRuntime({
   // `staged`: the build the caller downloaded before changing anything, so a blocked download
   // cannot land between two writes.
   const dlls = staged || (await gbeInstaller.ensureEmulatorDlls({ cacheDir, log }));
+  // A switch plan (planRuntimeSwitch) names the release's own files and seeds nothing.
+  const replaceOnly = Array.isArray(plan.replace);
   const summary = gbeInstaller.installDlls({
     dllDirs: plan.dirs,
     dlls,
-    writeIfMissing: plan.native ? null : plan.arch,
-    ensureArch: plan.native ? null : plan.arch,
-    nativeArch: plan.native ? plan.arch : null,
+    writeIfMissing: plan.native || replaceOnly ? null : plan.arch,
+    ensureArch: plan.native || replaceOnly ? null : plan.arch,
+    nativeArch: plan.native && !replaceOnly ? plan.arch : null,
+    only: replaceOnly ? plan.replace : null,
     log,
   });
 
@@ -311,6 +346,8 @@ async function switchToSupportedRuntime({
   if (!/^[0-9]+$/.test(String(appid || ''))) throw new Error('switchToSupportedRuntime: GBE needs a Steam appid, none is known for this game');
   if (!plan || !Array.isArray(plan.dirs) || plan.dirs.length === 0) throw new Error('switchToSupportedRuntime: no target directory resolved');
   const target = switchSettingsDir(plan, steamSettings);
+  // What the folders held before, so the Undo can put them back as they were (runtimeSwitchUndo).
+  const before = runtimeSwitchUndo.begin(plan.dirs, target);
   const sidelined = sideline() || [];
   const summary = await installEmulatorRuntime({
     gbeInstaller,
@@ -326,6 +363,7 @@ async function switchToSupportedRuntime({
   if (!fs.existsSync(path.join(target, 'steam_appid.txt'))) goldberg.writeSteamAppId({ steamSettings: target, appid });
   // No icon download here: that is network, and a missing icon is offered by the rewrite later.
   const written = await gbeSchemaFiles.rewrite({ steamSettings: target, schema, emulator: 'gbe', reference });
+  runtimeSwitchUndo.finish(before);
   return { ...summary, steamSettings: target, sidelined, schema: written.schema };
 }
 
@@ -336,7 +374,7 @@ async function switchToSupportedRuntime({
   then closed three seconds after every launch. Tried before anything changes, in a throwaway folder.
 */
 async function switchInterfacesReady({ gbeInstaller, plan, cacheDir, steamSettings = null, gameDir = '', appid = '', log } = {}) {
-  if (steamSettings && fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) return { ready: true, reason: '' };
+  if (usableInterfacesFile(steamSettings)) return { ready: true, reason: '' };
   if (plan.native) return { ready: true, reason: '' };
   if (steamApiCallers.namesItsInterfaces(gameDir)) return { ready: true, reason: '' };
   const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir, log });
@@ -359,6 +397,7 @@ module.exports = {
   planSchemaRewrite,
   rewriteAchievementSchema,
   planRuntimeInstall,
+  planRuntimeSwitch,
   repairAchievementData,
   installEmulatorRuntime,
   switchToSupportedRuntime,

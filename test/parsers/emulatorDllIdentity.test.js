@@ -274,3 +274,18 @@ test('a .rne that is itself an emulator is never taken for the original', () => 
   assert.deepEqual(gbe.interfaceSourceFor(path.join(dir, 'steam_api64.dll')), { file: '', reason: 'emulator-dll' });
   assert.deepEqual(gbe.preservedOriginalsFor('steam_api64.bin'), [], 'only a .dll has a preserved twin');
 });
+
+// A failed try on D4: Dark Dreams Don't Die left the generator's bare macro name in the file.
+test('a steam_interfaces.txt naming no interface version reads as missing', () => {
+  const gameDir = tmpdir('aw-iface-macro-');
+  const settings = writeSettings(path.join(gameDir, 'steam_settings'));
+  write(path.join(gameDir, 'steam_api64.dll'), AW_BUILD);
+  write(path.join(gameDir, 'steam_api64.dll.bak'), VALVE_ORIGINAL);
+  fs.writeFileSync(path.join(settings, 'steam_interfaces.txt'), 'STEAMCONTROLLER_INTERFACE_VERSION\n');
+
+  const report = goldberg.diagnose({ gameDir, appid: '3751260', schema: SCHEMA, savesRoots: [] });
+  const issue = report.issues.find((entry) => entry.code === 'NO_STEAM_INTERFACES');
+  assert.ok(issue, 'the repair can still make the real one');
+  assert.match(issue.message, /names no interface version/);
+  assert.equal(gbe.describeRuntimeDlls({ dllDirs: [gameDir] })[0].interfaces, false);
+});
