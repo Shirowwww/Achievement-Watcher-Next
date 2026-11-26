@@ -1,0 +1,223 @@
+{
+  "source": "https://github.com/rlabrecque/SteamworksSDK",
+  "sdks": [
+    {
+      "sdk": [
+        "1.32"
+      ],
+      "flatApi": "a070e2e54fd30633229d2a385d5f27976451c81b85d32b9c3fc5d470a355a8f5",
+      "interfaces": [
+        "STEAMAPPLIST_INTERFACE_VERSION001",
+        "STEAMAPPS_INTERFACE_VERSION007",
+        "STEAMCONTROLLER_INTERFACE_VERSION",
+        "STEAMHTMLSURFACE_INTERFACE_VERSION_002",
+        "STEAMHTTP_INTERFACE_VERSION002",
+        "STEAMINVENTORY_INTERFACE_V001",
+        "STEAMMUSICREMOTE_INTERFACE_VERSION001",
+        "STEAMMUSIC_INTERFACE_VERSION001",
+        "STEAMREMOTESTORAGE_INTERFACE_VERSION012",
+        "STEAMSCREENSHOTS_INTERFACE_VERSION002",
+        "STEAMUGC_INTERFACE_VERSION003",
+        "STEAMUNIFIEDMESSAGES_INTERFACE_VERSION001",
+        "STEAMUSERSTATS_INTERFACE_VERSION011",
+        "STEAMVIDEO_INTERFACE_V001",
+        "SteamClient017",
+        "SteamFriends015",
+        "SteamGameServer012",
+        "SteamGameServerStats001",
+        "SteamMatchMaking009",
+        "SteamMatchMakingServers002",
+        "SteamNetworking005",
+        "SteamUser018",
+        "SteamUtils007"
+      ]
+    },
+    {
+      "sdk": [
+        "1.33",
+        "1.33a"
+      ],
+      "flatApi": "f4d3267330b43b7bc82c4f9aac6d236eef7385354597ddbade23f28a3617b90c",
+      "interfaces": [
+        "STEAMAPPLIST_INTERFACE_VERSION001",
+        "STEAMAPPS_INTERFACE_VERSION007",
+        "STEAMCONTROLLER_INTERFACE_VERSION",
+        "STEAMHTMLSURFACE_INTERFACE_VERSION_002",
+        "STEAMHTTP_INTERFACE_VERSION002",
+        "STEAMINVENTORY_INTERFACE_V001",
+        "STEAMMUSICREMOTE_INTERFACE_VERSION001",
+        "STEAMMUSIC_INTERFACE_VERSION001",
+        "STEAMREMOTESTORAGE_INTERFACE_VERSION012",
+        "STEAMSCREENSHOTS_INTERFACE_VERSION002",
+        "STEAMUGC_INTERFACE_VERSION005",
+        "STEAMUNIFIEDMESSAGES_INTERFACE_VERSION001",
+        "STEAMUSERSTATS_INTERFACE_VERSION011",
+        "STEAMVIDEO_INTERFACE_V001",
+        "SteamClient017",
+        "SteamFriends015",
+        "SteamGameServer012",
+        "SteamGameServerStats001",
+        "SteamMatchMaking009",
+        "SteamMatchMakingServers002",
+        "SteamNetworking005",
+        "SteamUser018",
+        "SteamUtils007"
+      ]
+    },
+    {
+      "sdk": [
+        "1.33b"
+      ],
+      "flatApi": "7c65da18a01d4ad173f56f44278c380dc31c8d1fcddf76aca759046130dc3f56",
+      "interfaces": [
+        "STEAMAPPLIST_INTERFACE_VERSION001",
+        "STEAMAPPS_INTERFACE_VERSION007",
+        "STEAMCONTROLLER_INTERFACE_VERSION",
+        "STEAMHTMLSURFACE_INTERFACE_VERSION_003",
+        "STEAMHTTP_INTERFACE_VERSION002",
+        "STEAMINVENTORY_INTERFACE_V001",
+        "STEAMMUSICREMOTE_INTERFACE_VERSION001",
+        "STEAMMUSIC_INTERFACE_VERSION001",
+        "STEAMREMOTESTORAGE_INTERFACE_VERSION012",
+        "STEAMSCREENSHOTS_INTERFACE_VERSION002",
+        "STEAMUGC_INTERFACE_VERSION005",
+        "STEAMUNIFIEDMESSAGES_INTERFACE_VERSION001",
+        "STEAMUSERSTATS_INTERFACE_VERSION011",
+        "STEAMVIDEO_INTERFACE_V001",
+        "SteamClient017",
+        "SteamFriends015",
+        "SteamGameServer012",
+        "SteamGameServerStats001",
+        "SteamMatchMaking009",
+        "SteamMatchMakingServers002",
+        "SteamNetworking005",
+        "SteamUser018",
+        "SteamUtils007"
+      ]
+    },
+    {
+      "sdk": [
+        "1.34"
+      ],
+      "flatApi": "2a4dcb1b025a3a625230d4f126fb5758cc993cb047dbc469d2e89bc6cea15bbe",
+      "interfaces": [
+        "STEAMAPPLIST_INTERFACE_VERSION001",
+        "STEAMAPPS_INTERFACE_VERSION007",
+        "STEAMCONTROLLER_INTERFACE_VERSION",
+        "STEAMHTMLSURFACE_INTERFACE_VERSION_003",
+        "STEAMHTTP_INTERFACE_VERSION002",
+        "STEAMINVENTORY_INTERFACE_V001",
+        "STEAMMUSICREMOTE_INTERFACE_VERSION001",
+        "STEAMMUSIC_INTERFACE_VERSION001",
+        "STEAMREMOTESTORAGE_INTERFACE_VERSION012",
+        "STEAMSCREENSHOTS_INTERFACE_VERSION002",
+        "STEAMUGC_INTERFACE_VERSION007",
+        "STEAMUNIFIEDMESSAGES_INTERFACE_VERSION001",
+        "STEAMUSERSTATS_INTERFACE_VERSION011",
+        "STEAMVIDEO_INTERFACE_V001",
+        "SteamClient017",
+        "SteamFriends015",
+        "SteamGameServer012",
+        "SteamGameServerStats001",
+        "SteamMatchMaking009",
+        "SteamMatchMakingServers002",
+        "SteamNetworking005",
+        "SteamUser018",
+        "SteamUtils007"
+      ]
+    },
+    {
+      "sdk": [
+        "1.35"
+      ],
+      "flatApi": "f4fefc3100a59bd482e34e5201b9b04c435618479aebbca23577f6ee8a9d52cb",
+      "interfaces": [
+        "STEAMAPPLIST_INTERFACE_VERSION001",
+        "STEAMAPPS_INTERFACE_VERSION007",
+        "STEAMHTMLSURFACE_INTERFACE_VERSION_003",
+        "STEAMHTTP_INTERFACE_VERSION002",
+        "STEAMINVENTORY_INTERFACE_V001",
+        "STEAMMUSICREMOTE_INTERFACE_VERSION001",
+        "STEAMMUSIC_INTERFACE_VERSION001",
+        "STEAMREMOTESTORAGE_INTERFACE_VERSION013",
+        "STEAMSCREENSHOTS_INTERFACE_VERSION002",
+        "STEAMUGC_INTERFACE_VERSION007",
+        "STEAMUNIFIEDMESSAGES_INTERFACE_VERSION001",
+        "STEAMUSERSTATS_INTERFACE_VERSION011",
+        "STEAMVIDEO_INTERFACE_V001",
+        "SteamClient017",
+        "SteamController003",
+        "SteamFriends015",
+        "SteamGameServer012",
+        "SteamGameServerStats001",
+        "SteamMatchMaking009",
+        "SteamMatchMakingServers002",
+        "SteamNetworking005",
+        "SteamUser018",
+        "SteamUtils007"
+      ]
+    },
+    {
+      "sdk": [
+        "1.35a"
+      ],
+      "flatApi": "cad80b41bc103733d8a1331ed007acc50fa915a6fd660d3d6447e1cfaec93eb0",
+      "interfaces": [
+        "STEAMAPPLIST_INTERFACE_VERSION001",
+        "STEAMAPPS_INTERFACE_VERSION007",
+        "STEAMHTMLSURFACE_INTERFACE_VERSION_003",
+        "STEAMHTTP_INTERFACE_VERSION002",
+        "STEAMINVENTORY_INTERFACE_V001",
+        "STEAMMUSICREMOTE_INTERFACE_VERSION001",
+        "STEAMMUSIC_INTERFACE_VERSION001",
+        "STEAMREMOTESTORAGE_INTERFACE_VERSION013",
+        "STEAMSCREENSHOTS_INTERFACE_VERSION002",
+        "STEAMUGC_INTERFACE_VERSION007",
+        "STEAMUNIFIEDMESSAGES_INTERFACE_VERSION001",
+        "STEAMUSERSTATS_INTERFACE_VERSION011",
+        "STEAMVIDEO_INTERFACE_V001",
+        "SteamClient017",
+        "SteamController003",
+        "SteamFriends015",
+        "SteamGameServer012",
+        "SteamGameServerStats001",
+        "SteamMatchMaking009",
+        "SteamMatchMakingServers002",
+        "SteamNetworking005",
+        "SteamUser018",
+        "SteamUtils007"
+      ]
+    },
+    {
+      "sdk": [
+        "1.36"
+      ],
+      "flatApi": "5c6962b60dee9098ca68f139b0e5e662162d8869c53528ea521978d1a4c21b36",
+      "interfaces": [
+        "STEAMAPPLIST_INTERFACE_VERSION001",
+        "STEAMAPPS_INTERFACE_VERSION007",
+        "STEAMHTMLSURFACE_INTERFACE_VERSION_003",
+        "STEAMHTTP_INTERFACE_VERSION002",
+        "STEAMINVENTORY_INTERFACE_V001",
+        "STEAMMUSICREMOTE_INTERFACE_VERSION001",
+        "STEAMMUSIC_INTERFACE_VERSION001",
+        "STEAMREMOTESTORAGE_INTERFACE_VERSION013",
+        "STEAMSCREENSHOTS_INTERFACE_VERSION002",
+        "STEAMUGC_INTERFACE_VERSION007",
+        "STEAMUNIFIEDMESSAGES_INTERFACE_VERSION001",
+        "STEAMUSERSTATS_INTERFACE_VERSION011",
+        "STEAMVIDEO_INTERFACE_V001",
+        "SteamClient017",
+        "SteamController003",
+        "SteamFriends015",
+        "SteamGameServer012",
+        "SteamGameServerStats001",
+        "SteamMatchMaking009",
+        "SteamMatchMakingServers002",
+        "SteamNetworking005",
+        "SteamUser018",
+        "SteamUtils007"
+      ]
+    }
+  ]
+}

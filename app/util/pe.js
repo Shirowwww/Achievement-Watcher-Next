@@ -531,7 +531,7 @@ function readExeFileVersion(exePath) {
   }
 }
 
-const MAX_SIGNED_IMAGE_BYTES = 64 * 1024 * 1024;
+const MAX_PE_FILE_BYTES = 64 * 1024 * 1024;
 const SECURITY_DIRECTORY = 4;
 const AUTHENTICODE_DIGESTS = ['sha256', 'sha1', 'md5'];
 
@@ -571,7 +571,7 @@ function authenticodeLayout(buf) {
 */
 function isValveSignedImage(file) {
   try {
-    if (fs.statSync(file).size > MAX_SIGNED_IMAGE_BYTES) return false;
+    if (fs.statSync(file).size > MAX_PE_FILE_BYTES) return false;
     const buf = fs.readFileSync(file);
     const layout = authenticodeLayout(buf);
     if (!layout || !layout.cert || !layout.cert.includes('Valve', 0, 'latin1')) return false;
@@ -585,4 +585,55 @@ function isValveSignedImage(file) {
   }
 }
 
-module.exports = { exeArch, isExecutableImage, detectSteamStub, readExeProductName, readExeFileVersion, readExportName, readImportNames, isValveSignedImage, readSectionNames };
+const MAX_EXPORTS = 8192;
+
+// Every name a DLL exports, sorted; [] when the file is not a PE, exports nothing or is too large.
+function readExportNames(file) {
+  try {
+    if (fs.statSync(file).size > MAX_PE_FILE_BYTES) return [];
+    const buf = fs.readFileSync(file);
+    if (buf.length < 64 || buf.readUInt16LE(0) !== 0x5a4d) return [];
+    const peOff = buf.readUInt32LE(0x3c);
+    if (peOff + 24 > buf.length || buf.readUInt32LE(peOff) !== 0x00004550) return [];
+    const numSections = buf.readUInt16LE(peOff + 6);
+    const opt = peOff + 24;
+    const table = opt + buf.readUInt16LE(peOff + 20);
+    const exportRva = buf.readUInt32LE(opt + (buf.readUInt16LE(opt) === 0x20b ? 112 : 96));
+    const fileOffset = (rva) => {
+      for (let i = 0; i < numSections; i++) {
+        const at = table + i * 40;
+        const va = buf.readUInt32LE(at + 12);
+        const span = Math.max(buf.readUInt32LE(at + 8), buf.readUInt32LE(at + 16));
+        if (rva >= va && rva < va + span) return rva - va + buf.readUInt32LE(at + 20);
+      }
+      return -1;
+    };
+    const dir = exportRva ? fileOffset(exportRva) : -1;
+    if (dir < 0) return [];
+    const count = Math.min(buf.readUInt32LE(dir + 24), MAX_EXPORTS);
+    const namesAt = fileOffset(buf.readUInt32LE(dir + 32));
+    if (namesAt < 0) return [];
+    const names = [];
+    for (let i = 0; i < count; i++) {
+      const at = fileOffset(buf.readUInt32LE(namesAt + i * 4));
+      const end = at < 0 ? -1 : buf.indexOf(0, at);
+      if (end > at) names.push(buf.toString('latin1', at, end));
+    }
+    return names.sort();
+  } catch {
+    return [];
+  }
+}
+
+module.exports = {
+  exeArch,
+  isExecutableImage,
+  detectSteamStub,
+  readExeProductName,
+  readExeFileVersion,
+  readExportName,
+  readExportNames,
+  readImportNames,
+  isValveSignedImage,
+  readSectionNames,
+};

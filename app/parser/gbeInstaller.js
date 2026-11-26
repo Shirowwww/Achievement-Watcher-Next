@@ -18,6 +18,7 @@ const { unwrapTarball } = require('../util/tarball.js');
 const { safeArchiveEntry } = require('../util/archiveEntry.js');
 const unrealLayout = require('../util/unrealLayout.js');
 const crackLoaderDetect = require('../util/crackLoaderDetect.js');
+const steamSdkInterfaces = require('./steamSdkInterfaces.js');
 const { replaceFileSync, clearReadOnly } = require('../util/replaceFile.js');
 
 const RELEASE_API = 'https://api.github.com/repos/Detanup01/gbe_fork/releases/latest';
@@ -478,6 +479,15 @@ function archOfSteamApiFile(file) {
 }
 
 function interfaceSourceFor(dllPath, candidates = []) {
+  const existing = existingInterfaceCandidates(dllPath, candidates);
+  if (existing.length === 0) return { file: '', reason: 'missing-dll' };
+  const original = existing.find(isValveOriginal);
+  if (original) return { file: original, reason: '' };
+  return { file: '', reason: existing.every(emulatorDll) ? 'emulator-dll' : 'unsigned-dll' };
+}
+
+// The files a steam_api dll's original may be, best first, that exist on disk.
+function existingInterfaceCandidates(dllPath, candidates = []) {
   const ordered = [];
   const add = (file) => {
     if (!file) return;
@@ -498,11 +508,7 @@ function interfaceSourceFor(dllPath, candidates = []) {
       add(file);
     }
   }
-  const existing = ordered.filter((file) => fs.existsSync(file));
-  if (existing.length === 0) return { file: '', reason: 'missing-dll' };
-  const original = existing.find(isValveOriginal);
-  if (original) return { file: original, reason: '' };
-  return { file: '', reason: existing.every(emulatorDll) ? 'emulator-dll' : 'unsigned-dll' };
+  return ordered.filter((file) => fs.existsSync(file));
 }
 
 /*
@@ -551,6 +557,24 @@ function sceneIniInterfaces(dirs) {
       }
     }
     if (found.length > 0) return { file, interfaces: found };
+  }
+  return null;
+}
+
+/*
+  With no Valve dll left, the SDK the game was built with, named by the flat API its crack's dll
+  exports (parser/steamSdkInterfaces.js). A GBE build is skipped: it exports every release at once.
+*/
+function writeSdkInterfaces({ dllPath, candidates, steamSettings, log }) {
+  for (const file of existingInterfaceCandidates(dllPath, candidates)) {
+    if (isNativeLib(file) || emulatorDll(file)) continue;
+    const found = steamSdkInterfaces.identify(file);
+    if (!found) continue;
+    fs.mkdirSync(steamSettings, { recursive: true });
+    const dest = path.join(steamSettings, 'steam_interfaces.txt');
+    fs.writeFileSync(dest, `${found.interfaces.join('\n')}\n`);
+    log.log(`[gbe] generated ${dest} from the Steamworks SDK ${found.sdk} that ${path.basename(file)} exports (${found.interfaces.length} interfaces)`);
+    return { generated: true, file: dest, original: file, arch: archOfSteamApiFile(file), sdk: found.sdk };
   }
   return null;
 }
@@ -626,11 +650,15 @@ function ensureTitleSetup({ appid, dirs = [], log = noopLog } = {}) {
 }
 
 // Generate steam_settings/steam_interfaces.txt from the original game DLL, picked by
-// interfaceSourceFor above, then from a scene crack's steam_emu.ini, then from TITLE_SETUPS.
+// interfaceSourceFor above, then from a scene crack's steam_emu.ini, then from the SDK its dll's
+// exports name, then from TITLE_SETUPS.
 async function generateInterfaces({ dllPath, steamSettings, dlls, candidates = [], appid = '', log = noopLog } = {}) {
   if (!dllPath) return { generated: false, reason: 'missing-dll' };
   if (!steamSettings) throw new Error('generateInterfaces: steamSettings path is required');
-  const fallback = () => writeSceneInterfaces({ dllPath, candidates, steamSettings, log }) || writeTitleInterfaces({ appid, dllPath, steamSettings, log });
+  const fallback = () =>
+    writeSceneInterfaces({ dllPath, candidates, steamSettings, log }) ||
+    writeSdkInterfaces({ dllPath, candidates, steamSettings, log }) ||
+    writeTitleInterfaces({ appid, dllPath, steamSettings, log });
   let result;
   try {
     result = await generateFromDll({ dllPath, steamSettings, dlls, candidates, log });

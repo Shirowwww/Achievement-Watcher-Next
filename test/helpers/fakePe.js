@@ -114,9 +114,45 @@ function peWithSections(names) {
   return buffer;
 }
 
+// A dll whose export directory names `exports`, in one '.rdata' section: what pe.readExportNames reads.
+function peWithExports(exports) {
+  const optAt = PE_OFFSET + 24;
+  const tableAt = optAt + 240;
+  const names = exports.map((name) => Buffer.from(`${name}\0`, 'latin1'));
+  const pointersAt = 40;
+  const namesAt = pointersAt + names.length * 4;
+  const rawSize = namesAt + names.reduce((total, name) => total + name.length, 0);
+  const buffer = Buffer.alloc(SECTION_RAW + rawSize);
+  buffer.write('MZ', 0, 'latin1');
+  buffer.writeUInt32LE(PE_OFFSET, 0x3c);
+  buffer.writeUInt32LE(0x00004550, PE_OFFSET);
+  buffer.writeUInt16LE(0x8664, PE_OFFSET + 4);
+  buffer.writeUInt16LE(1, PE_OFFSET + 6);
+  buffer.writeUInt16LE(240, PE_OFFSET + 20);
+  buffer.writeUInt16LE(0x2022, PE_OFFSET + 22);
+  buffer.writeUInt16LE(0x20b, optAt);
+  buffer.writeUInt32LE(16, optAt + 108);
+  buffer.writeUInt32LE(SECTION_RVA, optAt + 112);
+  buffer.writeUInt32LE(rawSize, optAt + 116);
+  buffer.write('.rdata', tableAt, 'latin1');
+  buffer.writeUInt32LE(rawSize, tableAt + 8);
+  buffer.writeUInt32LE(SECTION_RVA, tableAt + 12);
+  buffer.writeUInt32LE(rawSize, tableAt + 16);
+  buffer.writeUInt32LE(SECTION_RAW, tableAt + 20);
+  buffer.writeUInt32LE(names.length, SECTION_RAW + 24);
+  buffer.writeUInt32LE(SECTION_RVA + pointersAt, SECTION_RAW + 32);
+  let nameAt = namesAt;
+  names.forEach((name, index) => {
+    buffer.writeUInt32LE(SECTION_RVA + nameAt, SECTION_RAW + pointersAt + index * 4);
+    name.copy(buffer, SECTION_RAW + nameAt);
+    nameAt += name.length;
+  });
+  return buffer;
+}
+
 function writeSignedPe(file, options) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, signedPe(options));
 }
 
-module.exports = { peBytes, writePe, peWithImports, peWithSections, signedPe, writeSignedPe };
+module.exports = { peBytes, writePe, peWithImports, peWithSections, peWithExports, signedPe, writeSignedPe };

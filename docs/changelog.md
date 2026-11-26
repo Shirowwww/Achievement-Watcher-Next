@@ -173,6 +173,11 @@ renamed in 3.9.0 and the history is kept under one file.
   interface versions, and refuses the switch with an explanation when nothing fits. Game Health also stops
   offering the switch after a short session when the crack already keeps a save AW Next reads; an
   hour with nothing recorded still brings it back.
+- **Games built with the Steamworks SDK 1.32 to 1.36 can switch from their crack to the supported
+  emulator even when Valve's dll is gone.** A crack has to offer the same calls as the dll it
+  replaced, so AW Next recognises the SDK from them and writes that SDK's interface list. D4: Dark
+  Dreams Don't Die, whose RELOADED crack records no achievement, is one of them (SDK 1.33). A crack
+  whose calls match no single SDK is still refused.
 
 ## 3.12.8 - 2026-11-22
 
