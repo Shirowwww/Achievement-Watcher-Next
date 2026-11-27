@@ -95,6 +95,8 @@ test('a profile lists each game with achievements, its unlocks and their dates',
 test('a profile is found from the folder holding it up to the console tree above it', () => {
   const layouts = [
     PROFILE_ID,
+    // A folder named after the profile, holding the file Horizon extracted (27/11/2026).
+    `${PROFILE_ID}/${PROFILE_ID}`,
     `00010000/${PROFILE_ID}`,
     `FFFE07D1/00010000/${PROFILE_ID}`,
     `${PROFILE_ID}/FFFE07D1/00010000/${PROFILE_ID}`,

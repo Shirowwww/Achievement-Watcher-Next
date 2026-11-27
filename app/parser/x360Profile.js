@@ -23,10 +23,12 @@ const MAX_PROFILE_BYTES = 64 * 1024 * 1024;
 
 /*
   Where a profile may sit under a folder in the folder list, from the console's Hdd1 or Content
-  folder down to a folder holding just the file. `ID` is any 16-digit hex name.
+  folder down to a folder holding just the file. `ID` is any 16-digit hex name. A folder named after
+  the profile is otherwise taken for a hex appid save folder, and the file in it never read.
 */
 const LAYOUTS = [
   ['ID'],
+  ['ID', 'ID'],
   ['00010000', 'ID'],
   ['FFFE07D1', '00010000', 'ID'],
   ['ID', 'FFFE07D1', '00010000', 'ID'],
