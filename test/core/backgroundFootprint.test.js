@@ -94,8 +94,7 @@ test('the main-process background scan applies the same suppression', () => {
 
 test('a save that no longer matches its schema logs one aggregate line, not one per achievement', () => {
   // Hundreds of identical lines per game per scan churned the 2 MB parser.log rotation on its own.
-  assert.match(achievementsJs, /let schemaMissCount = 0;/);
-  assert.match(achievementsJs, /schemaMissCount\+\+;/);
+  assert.match(achievementsJs, /const schemaMissCount = missed\.length;/);
   assert.match(achievementsJs, /if \(schemaMissCount > 0\)/);
   assert.doesNotMatch(achievementsJs, /debug\.warn\(`\[\$\{appid\.appid\}\] Achievement not found in game schema data/);
 });

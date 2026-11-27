@@ -188,6 +188,21 @@ renamed in 3.9.0 and the history is kept under one file.
   failed try, no longer passes for a good one, so the right list is made again (or the switch is
   refused). D4: Dark Dreams Don't Die kept crashing for these reasons. Undo also clears what earlier
   switches left there.
+- **A crack a few folders down, or built into the Steam file itself, is recognised.** D4: Dark
+  Dreams Don't Die keeps RELOADED in Binaries\Win64, with no settings file beside it, and Game Health
+  took the folder for a broken emulator setup: a red X, and an offer to install the emulator that
+  stopped the game from starting. It now reads as served by RELOADED. Installing the emulator file
+  and Apply emulator fix in the right-click menu now replace only the Steam files the game ships, as
+  the switch does, and the menu refuses with an explanation when the game could not start afterwards.
+- **Windows 10 laptops get their achievement screenshots, and lose the yellow frame.** When Windows
+  refused the frame-free capture, the backup capture asked Windows 10 to hide its frame, which it
+  cannot do, and no screenshot was taken at all; it now keeps the brief frame instead. A laptop whose
+  list of graphics chips left out the integrated one, which drives the screen, never had the
+  screenshot or the clip recorder moved onto it: AW Next now does, which takes the frame away.
+- **Achievements added by an update or a DLC show up once you earn one.** AW Next checks a game's
+  Steam list for new achievements every three days, and never on the first scan after it starts, so
+  an unlock from a new DLC could stay out of sight until then. When a save holds an achievement the
+  list does not know, the next refresh checks the list again, at most once a day.
 
 ## 3.12.8 - 2026-11-22
 

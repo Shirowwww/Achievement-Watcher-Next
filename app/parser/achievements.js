@@ -3880,7 +3880,10 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       };
     }
 
-    game = await schemaReaderFor(appid)(appid, { option, lang: option.achievement.lang, appids });
+    const readSchema = schemaReaderFor(appid);
+    // Only a list cached from Steam can be re-checked when a save names achievements it lacks.
+    const steamSchemaAppid = readSchema === readSteamSchema ? String(appid.appid) : null;
+    game = await readSchema(appid, { option, lang: option.achievement.lang, appids });
     if (!game) return;
     await borrowSteamCategories(game, appid, option);
 
@@ -4850,19 +4853,17 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         saved = [];
       }
 
-      const schemaIndex = buildAchievementSchemaIndex(game.achievement.list, {
-        includeCrc: saved.some((item) => item.crc),
-      });
+      const includeCrc = saved.some((item) => item.crc);
+      const schemaIndex = buildAchievementSchemaIndex(game.achievement.list, { includeCrc });
 
       // Counted, not logged one by one: a save whose api-names no longer line up with the schema
       // (renamed prefix, deleted achievements, a repack that swapped the emulator layer) misses on
       // every entry, and logging each one writes hundreds of identical lines per game per scan -
       // enough to churn the 2 MB parser.log rotation on its own. The aggregate carries the same signal.
-      let schemaMissCount = 0;
       let badTimeLogged = false;
-      for (const item of saved) {
+      const applySaved = (index, item) => {
         try {
-          let achievement = findAchievementInSchema(schemaIndex, item.entry, item.key);
+          let achievement = findAchievementInSchema(index, item.entry, item.key);
           if (!achievement) throw 'ACH_NOT_FOUND_IN_SCHEMA';
 
           // Epoch seconds from here on (saveState.js); a stamp past milliseconds is a broken save, named once (#212).
@@ -4904,13 +4905,26 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           }
           appliedFromThisSource = true;
         } catch (err) {
-          if (err === 'ACH_NOT_FOUND_IN_SCHEMA') {
-            schemaMissCount++;
-          } else {
-            debug.error(`[${appid.appid}] Unexpected Error: ${err}`);
-          }
+          if (err === 'ACH_NOT_FOUND_IN_SCHEMA') return false;
+          debug.error(`[${appid.appid}] Unexpected Error: ${err}`);
+        }
+        return true;
+      };
+      let missed = saved.filter((item) => !applySaved(schemaIndex, item));
+      // Achievements an update or a DLC added: the save already has them, the cached list does not yet.
+      if (missed.length > 0 && steamSchemaAppid) {
+        const cfg = {
+          appID: steamSchemaAppid,
+          lang: option.achievement.lang,
+          fastStart: option.fastStart === true,
+          disableAutoRefresh: option.achievement.disableAutoRefresh === true,
+        };
+        if ((await steam.recheckForUnknownAchievements(cfg, game.achievement.list)) > 0) {
+          const grownIndex = buildAchievementSchemaIndex(game.achievement.list, { includeCrc });
+          missed = missed.filter((item) => !applySaved(grownIndex, item));
         }
       }
+      const schemaMissCount = missed.length;
       if (schemaMissCount > 0) {
         debug.warn(
           `[${appid.appid}] ${schemaMissCount} saved achievement${schemaMissCount === 1 ? '' : 's'} not found in the game schema - probably deleted or renamed over time`

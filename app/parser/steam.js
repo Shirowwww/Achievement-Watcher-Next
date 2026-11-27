@@ -21,6 +21,9 @@ const searchCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: 10 * 6
 // How long a blank description/achievement list is left alone before Steam is asked again. Declared
 // once: the two places that re-check were free to drift apart.
 const DESC_RECHECK_MS = 3 * 24 * 60 * 60 * 1000;
+// A save naming achievements the cached list lacks re-checks it at most this often (see
+// recheckForUnknownAchievements): a save whose entries were renamed for good misses on every scan.
+const UNKNOWN_RECHECK_MS = 24 * 60 * 60 * 1000;
 const reg = require('../util/reg');
 const { readRegistryString } = reg;
 const steamLibrary = require(path.join(__dirname, 'steamLibrary.js'));
@@ -668,6 +671,48 @@ module.exports.reconcileAchievementList = (list, fresh) => {
     changed = true;
   }
   return { changed: changed || removed.changed, addedCount: added.length, removedCount: removed.count };
+};
+
+/*
+  A save holding achievements the cached list has never heard of is the one sign that an update or a
+  DLC added some: the periodic re-check runs every 3 days and never on a session's first scan, so the
+  unlock would stay hidden until then. Reconciles the cached record (read afresh, so no unlock state
+  reaches the cache) and the game being built. An empty or failed answer is no verdict, so it is not
+  stamped. Returns how many achievements the live list gained.
+*/
+module.exports.recheckForUnknownAchievements = async (cfg, list, { fetchSchema = getSchemaAchievements } = {}) => {
+  if (cfg.disableAutoRefresh || cfg.fastStart || !Array.isArray(list)) return 0;
+  let record;
+  try {
+    record = module.exports.getCachedData(cfg);
+  } catch {
+    return 0;
+  }
+  if (!record || !record.name || !Array.isArray(record.achievement && record.achievement.list)) return 0;
+  const checkedAt = Number(record.unknownCheckedAt);
+  if (checkedAt > 0 && Date.now() - checkedAt < UNKNOWN_RECHECK_MS) return 0;
+  let fresh;
+  try {
+    const answer = await fetchSchema(cfg);
+    if (answer && answer.networkError === true) return 0;
+    fresh = Array.isArray(answer) ? answer : (answer && answer.achievements) || [];
+  } catch (err) {
+    debug.log(`[${cfg.appID}] could not re-check the achievement list for unknown saved achievements: ${err.code || err.message || err}`);
+    return 0;
+  }
+  if (fresh.length === 0) return 0;
+  module.exports.reconcileAchievementList(record.achievement.list, fresh);
+  record.achievement.total = record.achievement.list.length;
+  record.unknownCheckedAt = Date.now();
+  try {
+    const filePath = path.join(cacheRoot, 'steam_cache/schema', cfg.lang, `${cfg.appID}.db`);
+    fs.writeFileSync(filePath, JSON.stringify(record, null, 2));
+  } catch (err) {
+    debug.log(`[${cfg.appID}] could not save the re-checked achievement list: ${err.code || err.message || err}`);
+  }
+  const { addedCount } = module.exports.reconcileAchievementList(list, fresh);
+  if (addedCount) debug.log(`[${cfg.appID}] picked up ${addedCount} new achievement(s) the save already had`);
+  return addedCount;
 };
 
 /*
