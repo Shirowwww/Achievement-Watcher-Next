@@ -101,6 +101,10 @@ renamed in 3.9.0 and the history is kept under one file.
   also hold a second trophy list, for an add-on, was still left out: the game's own list is used now.
   An older DCport folder kept beside the new one, or one that names the game in game_dir.txt, is the
   same game, read from the copy played last.
+- **AW Next comes back on its own after updating itself in Steam's Game Mode.** On a Steam Deck or
+  another SteamOS device, the automatic update closed AW and systemd stopped the new version along
+  with the old one, so AW stayed off until it was opened by hand. systemd now restarts it on the new
+  version.
 - **PS4, PS3 and PS5 games get a real cover on their tile.** The tile used the picture in the game's
   own files, which can be a studio logo on black, as Driveclub's was. It now takes the game's cover
   from SteamGridDB when there is one and keeps that picture as the page background.

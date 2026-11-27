@@ -1,5 +1,6 @@
 'use strict';
 
+const { spawnSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -19,6 +20,13 @@ const { X11_SWITCH } = require('./linuxSession.js');
 const FILE_NAME = 'io.github.shirowwww.achievement.watcher.desktop';
 const UNIT_NAME = 'io.github.shirowwww.achievement.watcher.service';
 const SESSION_DIRS = ['/usr/share/wayland-sessions', '/usr/share/xsessions'];
+const SYSTEMCTL_TIMEOUT_MS = 5000;
+
+// `systemctl --user`, best effort: a session without a user manager has no unit to act on.
+function userSystemctl(args) {
+  const result = spawnSync('systemctl', ['--user', ...args], { stdio: 'ignore', timeout: SYSTEMCTL_TIMEOUT_MS });
+  return result.status === 0;
+}
 
 function configHome({ env = process.env, home = os.homedir() } = {}) {
   return env.XDG_CONFIG_HOME || path.join(home, '.config');
@@ -98,11 +106,45 @@ function serviceUnit(command) {
   ].join('\n');
 }
 
-function writeUnit(unit, command) {
+function readText(file) {
+  try {
+    return fs.readFileSync(file, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+// systemd keeps the unit it loaded: without a reload it would go on starting the AppImage an update deleted.
+function writeUnit(unit, command, systemctl) {
+  const text = serviceUnit(command);
+  const changed = readText(unit.file) !== text;
   fs.mkdirSync(path.dirname(unit.link), { recursive: true });
-  fs.writeFileSync(unit.file, serviceUnit(command));
+  fs.writeFileSync(unit.file, text);
   fs.rmSync(unit.link, { force: true });
   fs.symlinkSync(path.relative(path.dirname(unit.link), unit.file), unit.link);
+  if (changed) systemctl(['daemon-reload']);
+}
+
+function unitCommandFor(appImage, args) {
+  return launchCommand({ env: { APPIMAGE: appImage }, args: [...args, X11_SWITCH], quote: quoteUnitArg });
+}
+
+// This process runs as the unit when its cgroup is the unit's own.
+function runsAsUnit({ cgroup = () => readText('/proc/self/cgroup') } = {}) {
+  return String(cgroup() || '')
+    .split('\n')
+    .some((line) => line.endsWith(`/${UNIT_NAME}`));
+}
+
+/*
+  An AppImage update under the unit. A clean exit ends the unit and kills what is left in it, the
+  relaunch of the new version included, and its ExecStart names the file the update just deleted.
+  So the unit is pointed at the new file and systemd restarts it. False when it could not be asked.
+*/
+function restartUnitWith(appImage, { args = [], unit = gameModeUnit(), systemctl = userSystemctl } = {}) {
+  if (!unit || !appImage) return false;
+  writeUnit(unit, unitCommandFor(appImage, args), systemctl);
+  return systemctl(['--no-block', 'restart', UNIT_NAME]);
 }
 
 /*
@@ -116,12 +158,13 @@ function setEnabled(
     file = autostartFile(),
     command = launchCommand({ args }),
     unit = gameModeUnit(),
-    unitCommand = launchCommand({ args: [...args, X11_SWITCH], quote: quoteUnitArg }),
+    unitCommand = unitCommandFor(process.env.APPIMAGE || process.execPath, args),
+    systemctl = userSystemctl,
   } = {}
 ) {
   if (unit) {
     fs.rmSync(file, { force: true });
-    if (enabled) writeUnit(unit, unitCommand);
+    if (enabled) writeUnit(unit, unitCommand, systemctl);
     else for (const target of [unit.link, unit.file]) fs.rmSync(target, { force: true });
     return true;
   }
@@ -146,4 +189,17 @@ function isEnabled({ file = autostartFile(), unit = gameModeUnit() } = {}) {
   return !/^Hidden\s*=\s*true\s*$/im.test(text) && !/^X-GNOME-Autostart-enabled\s*=\s*false\s*$/im.test(text);
 }
 
-module.exports = { autostartFile, gameModeUnit, quoteExecArg, quoteUnitArg, launchCommand, desktopEntry, serviceUnit, setEnabled, isEnabled };
+module.exports = {
+  UNIT_NAME,
+  autostartFile,
+  gameModeUnit,
+  quoteExecArg,
+  quoteUnitArg,
+  launchCommand,
+  desktopEntry,
+  serviceUnit,
+  setEnabled,
+  isEnabled,
+  runsAsUnit,
+  restartUnitWith,
+};

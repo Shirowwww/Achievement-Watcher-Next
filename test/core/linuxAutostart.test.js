@@ -109,3 +109,80 @@ test('switching it on in Game Mode links the unit instead of the XDG entry', { s
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+function tempUnit() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-unit-'));
+  const unit = { file: path.join(dir, 'systemd', 'user', 'aw.service'), link: path.join(dir, 'systemd', 'user', 'default.target.wants', 'aw.service') };
+  return { dir, unit, file: path.join(dir, 'autostart', 'aw.desktop') };
+}
+
+function recordingSystemctl(answer = true) {
+  const calls = [];
+  const systemctl = (args) => {
+    calls.push(args.join(' '));
+    return answer;
+  };
+  return { calls, systemctl };
+}
+
+// systemd keeps the unit it loaded, so a unit written with a new AppImage path is reloaded, once.
+test('a changed unit is reloaded by systemd, an unchanged one is not', { skip: process.platform === 'win32' && 'Linux-only' }, () => {
+  const { dir, unit, file } = tempUnit();
+  const { calls, systemctl } = recordingSystemctl();
+  try {
+    autostart.setEnabled(true, { file, unit, unitCommand: '/home/deck/AW-20.AppImage --hidden', systemctl });
+    autostart.setEnabled(true, { file, unit, unitCommand: '/home/deck/AW-20.AppImage --hidden', systemctl });
+    autostart.setEnabled(true, { file, unit, unitCommand: '/home/deck/AW-25.AppImage --hidden', systemctl });
+    assert.deepEqual(calls, ['daemon-reload', 'daemon-reload']);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/*
+  An update under the unit (ROG Ally, 27/11/2026): AW's clean exit ended the unit and systemd killed the
+  relaunch with it, and the unit still named the AppImage the update deleted. The unit now names the
+  new file and systemd restarts it.
+*/
+test('after an update the unit names the new AppImage and is restarted by systemd', { skip: process.platform === 'win32' && 'Linux-only' }, () => {
+  const { dir, unit } = tempUnit();
+  const { calls, systemctl } = recordingSystemctl();
+  try {
+    assert.equal(autostart.restartUnitWith('/home/deck/Applications/AW-25.AppImage', { args: ['--hidden'], unit, systemctl }), true);
+    assert.match(fs.readFileSync(unit.file, 'utf8'), /^ExecStart=\/home\/deck\/Applications\/AW-25\.AppImage --hidden --ozone-platform=x11$/m);
+    assert.deepEqual(calls, ['daemon-reload', `--no-block restart ${autostart.UNIT_NAME}`]);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('with no unit, or no systemd answer, the update falls back to its own relaunch', { skip: process.platform === 'win32' && 'Linux-only' }, () => {
+  const none = recordingSystemctl();
+  assert.equal(autostart.restartUnitWith('/home/deck/AW.AppImage', { unit: null, systemctl: none.systemctl }), false);
+  assert.deepEqual(none.calls, []);
+
+  const { dir, unit } = tempUnit();
+  try {
+    assert.equal(autostart.restartUnitWith('/home/deck/AW.AppImage', { unit, systemctl: recordingSystemctl(false).systemctl }), false);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('AW knows it runs as the unit from its own cgroup', () => {
+  const ours = `0::/user.slice/user-1000.slice/user@1000.service/app.slice/${autostart.UNIT_NAME}`;
+  assert.equal(autostart.runsAsUnit({ cgroup: () => `${ours}\n` }), true);
+  assert.equal(autostart.runsAsUnit({ cgroup: () => '0::/user.slice/user-1000.slice/session-2.scope\n' }), false);
+  assert.equal(autostart.runsAsUnit({ cgroup: () => '0::/user.slice/user-1000.slice/user@1000.service/app.slice/other.service' }), false);
+  assert.equal(autostart.runsAsUnit({ cgroup: () => null }), false);
+});
+
+// init.js does not load outside Electron: the order of these steps is what keeps AW running.
+test('an AppImage update asks the unit to restart before relaunching on its own', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'electron', 'init.js'), 'utf8');
+  const start = src.indexOf('function installAppImageUpdate');
+  const body = src.slice(start, src.indexOf('updater.quitAndInstall(true, false)', start));
+  const unitAt = body.indexOf('autostart.runsAsUnit() && autostart.restartUnitWith(next');
+  const relaunchAt = body.indexOf('launchAfterExit(next, { args })');
+  assert.ok(start !== -1 && unitAt !== -1 && relaunchAt > unitAt);
+});

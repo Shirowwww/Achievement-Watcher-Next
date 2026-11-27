@@ -8090,7 +8090,15 @@ try {
     // Emitted by electron-updater only once the file is in place, right before it quits the app.
     // Switches such as --password-store carry over; like the Windows installer, the new version opens its window.
     const args = process.argv.slice(1).filter((arg) => arg !== '--hidden');
-    require('electron').autoUpdater.once('before-quit-for-update', () => launchAfterExit(next, { args }));
+    require('electron').autoUpdater.once('before-quit-for-update', () => {
+      // In Game Mode systemd runs AW as a unit and kills a relaunch from here with it: the unit restarts.
+      const autostart = require('../util/linuxAutostart.js');
+      if (autostart.runsAsUnit() && autostart.restartUnitWith(next, { args: ipc.startupArgs() })) {
+        debug.log(`[updater] the systemd unit restarts AW from ${next}`);
+        return;
+      }
+      launchAfterExit(next, { args });
+    });
     updater.quitAndInstall(true, false);
   }
 

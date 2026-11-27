@@ -209,3 +209,5 @@ module.exports.window = () => {
 };
 
 module.exports.setStartWithWindows = setStartWithWindows;
+// The switches AW starts with at login, which the Game Mode unit restarts it with after an update.
+module.exports.startupArgs = () => getStartupLoginItemOptions(true).args;
