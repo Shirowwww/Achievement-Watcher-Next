@@ -4195,6 +4195,41 @@ function emulatorFixRoots({ gameDir, game, writableAppid, exePath = '' }) {
   return achievements.gbeFixRoots({ gameDir, gameName: game?.name || '', steamSettings: game?.steamSettings || '', writableAppid, exePath, option: app.config });
 }
 
+/*
+  Where the right-click fix puts GBE: over the Steam dlls the release ships, in their folders only, as
+  Game Health's switch does. Planned from the exe alone it seeded the architecture of D4: Dark Dreams
+  Don't Die's 32-bit launcher beside the game's x64 dll. A folder with no Steam dll keeps the exe's
+  plan. Confident exe matches only: an ambiguous one ("sims-4-updater.exe") misplaces every write.
+*/
+function manualFixRuntimePlan({ gameDir, game, emu }) {
+  const exe = exeDetect.detectConfident(gameDir, game?.name || '', { dllPaths: emu.dll });
+  const exePath = (exe && exe.full) || null;
+  const dirs = gbeInstaller.runtimeDllDirs({ gameDir, dllPaths: emu.dll, exePath, steamSettings: emu.steamSettings, fallbackDir: gameDir });
+  const native = exePath ? require(path.join(appPath, 'util/elf.js')).elfArch(exePath) : null;
+  const arch = native || (exePath && require(path.join(appPath, 'util/pe.js')).exeArch(exePath)) || 'x64';
+  const file = native ? gbeInstaller.NATIVE_LIB : (gbeInstaller.ARCH[arch] || gbeInstaller.ARCH.x64).file;
+  const plan = gameHealthRepair.planRuntimeSwitch({ gbeInstaller, plan: { dirs, arch, native: !!native, file, backup: `${file}.bak` }, dllPaths: emu.dll, isAwBuild: isAwGbeBuild });
+  return { ...plan, exe };
+}
+
+// The check Game Health's switch makes first: a game that needs steam_interfaces.txt and gets none
+// closes at launch once a crack's or Valve's dll is replaced. Swapping GBE for GBE changes nothing.
+async function manualFixInterfacesReady({ gameDir, game, writableAppid }) {
+  const emu = goldberg.detectEmulator(gameDir);
+  const plan = manualFixRuntimePlan({ gameDir, game, emu });
+  const replaced = Array.isArray(plan.replace) ? plan.replace.filter((file) => !crackLoaderDetect.isEmulatorDll(file)) : [];
+  if (replaced.length === 0) return { ready: true, reason: '' };
+  return gameHealthRepair.switchInterfacesReady({
+    gbeInstaller,
+    plan,
+    cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'),
+    steamSettings: emu.steamSettings,
+    gameDir,
+    appid: writableAppid || '',
+    log: debug,
+  });
+}
+
 function backupManifestFor(backupDir) {
   const manifest = readJsonFile(path.join(backupDir || '', 'backup.json'), null);
   if (!manifest || !Array.isArray(manifest.files) || !manifest.gameDir) return null;
@@ -7115,6 +7150,23 @@ var app = {
                           ? await apiCheckBypass.ensureBypassDlls({ cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'apiCheckBypass'), log: debug })
                           : null;
 
+                      setGameBoxBusy(self, t('preparing', 'Preparing…', 'Préparation…'));
+                      const readiness = await manualFixInterfacesReady({ gameDir, game, writableAppid });
+                      if (!readiness.ready) {
+                        debug.log(`[${appid}] emulator fix refused: no steam_interfaces.txt can be made (${readiness.reason})`);
+                        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                          type: 'warning',
+                          title: (gbeInstallItem && gbeInstallItem.label) || '',
+                          message: t(
+                            'gh-switch-runtime-refused',
+                            'This game cannot switch emulators safely. It is an older game that needs the list of its Steam interfaces, and the crack replaced the original Steam file that list is read from. The switch would stop the game from starting, so nothing was changed.',
+                            "Ce jeu ne peut pas changer d'émulateur sans risque. C'est un jeu ancien qui a besoin de la liste de ses interfaces Steam, et le crack a remplacé le fichier Steam d'origine d'où elle est lue. Le changement empêcherait le jeu de démarrer, donc rien n'a été modifié."
+                          ),
+                          noLink: true,
+                        });
+                        return;
+                      }
+
                       // Every write below goes into one undo record, which Game Health can take back,
                       // and which puts the game back at once should a later step fail.
                       mutating = true;
@@ -7218,17 +7270,10 @@ var app = {
                       // dll(s) are replaced in place; a folder with neither (fresh install) gets a 64-bit dll by default.
                       setGameBoxBusy(self, t('preparing', 'Preparing…', 'Préparation…'));
                       const emu = goldberg.detectEmulator(gameDir);
-                      // Confident matches only. This exe decides where the dll is written, which exe
-                      // Steamless unpacks and which architecture is installed; an ambiguous match
-                      // ("sims-4-updater.exe" at a folder root) makes all three wrong at once.
-                      const detectedRuntimeExe = exeDetect.detectConfident(gameDir, game?.name || '', { dllPaths: emu.dll });
-                      const dllDirs = gbeInstaller.runtimeDllDirs({
-                        gameDir,
-                        dllPaths: emu.dll,
-                        exePath: detectedRuntimeExe && detectedRuntimeExe.full,
-                        steamSettings: emu.steamSettings,
-                        fallbackDir: gameDir,
-                      });
+                      // The exe also decides which exe Steamless unpacks and which architecture goes in.
+                      const runtimePlan = manualFixRuntimePlan({ gameDir, game, emu });
+                      const detectedRuntimeExe = runtimePlan.exe;
+                      const dllDirs = runtimePlan.dirs;
 
                       // Advanced steam_settings: shells out to generate_emu_config for deeper coverage,
                       // merged without clobbering AW's own files. Optional Steam login pulls anonymous-hidden data; returns a one-line note.
@@ -7348,11 +7393,14 @@ var app = {
                         const missingArch = detectedRuntimeExe && detectedRuntimeExe.full ? pe.exeArch(detectedRuntimeExe.full) : 'x64';
                         // A native Linux game takes libsteam_api.so of its own architecture instead.
                         const nativeArch = detectedRuntimeExe && detectedRuntimeExe.full ? require(path.join(appPath, 'util/elf.js')).elfArch(detectedRuntimeExe.full) : null;
+                        // Over a release's own dlls only those are replaced: nothing is seeded beside them.
+                        const replaceOnly = Array.isArray(runtimePlan.replace) ? runtimePlan.replace : null;
                         const installResult = gbeInstaller.installDlls({
                           dllDirs,
                           dlls,
-                          writeIfMissing: nativeArch ? null : missingArch || 'x64',
-                          nativeArch,
+                          writeIfMissing: nativeArch || replaceOnly ? null : missingArch || 'x64',
+                          nativeArch: replaceOnly ? null : nativeArch,
+                          only: replaceOnly,
                           log: debug,
                         });
                         gbeInstaller.ensureTitleSetup({ appid: writableAppid, dirs: dllDirs, log: debug });

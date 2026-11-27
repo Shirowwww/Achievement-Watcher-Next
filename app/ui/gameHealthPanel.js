@@ -2165,10 +2165,9 @@ async function runGameHealthAction(appid, action, button) {
       /* an unreadable header just means the 64-bit default is used */
     }
     const installPlan = gameHealthRepair.planRuntimeInstall({ gbeInstaller, gameDir: game.gameDir, exePath: exe || null, steamSettings, arch, native: !!nativeArch });
-    // A switch replaces only the Steam dlls the release ships, whatever the exe's architecture.
-    const plan = switching
-      ? gameHealthRepair.planRuntimeSwitch({ gbeInstaller, plan: installPlan, dllPaths: goldberg.detectEmulator(game.gameDir).dll, isAwBuild: isAwGbeBuild })
-      : installPlan;
+    // Either way only the Steam dlls the release ships are replaced, whatever the exe's architecture;
+    // a folder with none keeps the install plan.
+    const plan = gameHealthRepair.planRuntimeSwitch({ gbeInstaller, plan: installPlan, dllPaths: goldberg.detectEmulator(game.gameDir).dll, isAwBuild: isAwGbeBuild });
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
       title: t('gh-confirm-runtime-title', 'Install the emulator file?', 'Installer le fichier d’émulateur ?'),

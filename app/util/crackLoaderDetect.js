@@ -9,6 +9,7 @@ const path = require('path');
 const unrealLayout = require('./unrealLayout.js');
 const unityLayout = require('./unityLayout.js');
 const pe = require('./pe.js');
+const dirCache = require('./dirCache.js');
 const { canonicalSteamAppid } = require('./steamAppid.js');
 
 /*
@@ -157,6 +158,23 @@ function loaderForEntries(entries, dir) {
       const replacedBy = loader.replaceable ? foreignSteamApiName(present, dir) : '';
       return { name: loader.name, replaceable: loader.replaceable === true, dir, markers: found, ...(replacedBy ? { replacedBy } : {}) };
     }
+  }
+  return embeddedRuntime(entries, dir);
+}
+
+/*
+  A crack can be the steam_api dll itself, with no ini beside it: RELOADED builds Valve's exports
+  into its own dll and adds .RLD0-2 sections (D4: Dark Dreams Don't Die). Told by those section
+  names, read from the header alone. Its runtime is the dll, so a switch sets nothing aside.
+*/
+const EMBEDDED_RUNTIMES = [{ name: 'RELOADED', section: /^\.RLD\d*$/i }];
+
+function embeddedRuntime(entries, dir) {
+  for (const name of entries) {
+    if (!STEAM_API_DLLS.includes(name.toLowerCase())) continue;
+    const sections = pe.readSectionNames(path.join(dir, name));
+    const family = EMBEDDED_RUNTIMES.find((entry) => sections.some((section) => entry.section.test(section)));
+    if (family) return { name: family.name, replaceable: true, dir, markers: [] };
   }
   return null;
 }
@@ -435,7 +453,35 @@ function detectWorkingCrackLoader(gameDir, { subfolders = true } = {}) {
     const loader = loaderForEntries(engineEntries, dllDir);
     if (loader) return loader;
   }
-  return subfolders ? coldClientSubfolder(gameDir, dirents, engineDirs) : null;
+  if (!subfolders) return null;
+  return coldClientSubfolder(gameDir, dirents, engineDirs) || steamApiFolderLoader(gameDir);
+}
+
+/*
+  A crack beside a steam_api dll further down than the engine folders: an Unreal Engine 3 game keeps
+  both in Binaries/Win64 (D4: Dark Dreams Don't Die). Breadth first and bounded like goldberg's own
+  dll walk, read through the scan's listing memo so a scan pays for those folders once. ColdClient
+  down there stays coldClientSubfolder's call: a pack of a collection runs its own (Jackbox).
+*/
+const DLL_FOLDER_DEPTH = 4;
+const DLL_FOLDER_MAX_DIRS = 400;
+
+function steamApiFolderLoader(gameDir) {
+  const queue = [{ dir: gameDir, depth: 0 }];
+  for (let visited = 0; queue.length > 0 && visited < DLL_FOLDER_MAX_DIRS; visited++) {
+    const { dir, depth } = queue.shift();
+    const entries = dirCache.readdir(dir, { track: false }) || [];
+    const names = entries.map((entry) => entry.name);
+    if (depth > 0 && names.some((name) => STEAM_API_DLLS.includes(name.toLowerCase()))) {
+      const loader = loaderForEntries(names, dir);
+      if (loader && loader.name !== 'ColdClient') return loader;
+    }
+    if (depth >= DLL_FOLDER_DEPTH) continue;
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name.toLowerCase() !== 'steam_settings') queue.push({ dir: path.join(dir, entry.name), depth: depth + 1 });
+    }
+  }
+  return null;
 }
 
 function hasWorkingCrackLoader(gameDir) {
