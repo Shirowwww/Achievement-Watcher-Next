@@ -116,17 +116,20 @@ function infoGameId(file) {
   file in name order that holds an id, its rootGameId first (MachineInfo.cxx). Cyberpunk 2077 lists
   Phantom Liberty's file before its own.
 */
-function findGogAppId(gameDir) {
-  let names = [];
+function infoFileNames(gameDir) {
   try {
-    names = fs
+    return fs
       .readdirSync(gameDir, { withFileTypes: true })
       .filter((entry) => entry.isFile() && INFO_FILE.test(entry.name))
       .map((entry) => entry.name)
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   } catch {
-    return null;
+    return [];
   }
+}
+
+function findGogAppId(gameDir) {
+  const names = infoFileNames(gameDir);
   for (const name of names) {
     const id = infoGameId(path.join(gameDir, name));
     if (id) return id;
@@ -379,6 +382,38 @@ function mergeDataFolders({ buildDir, localAppData, gogAppId }) {
   return { copied, skipped, appRoot };
 }
 
+// The DLC of this game installed in its folder: each has its own goggame-<id>.info naming the game.
+function installedDlcIds(gameDir, gogAppId) {
+  const base = String(gogAppId);
+  return infoFileNames(gameDir)
+    .map((name) => ({ name, id: name.match(INFO_FILE)[1] }))
+    .filter(({ name, id }) => id !== base && infoGameId(path.join(gameDir, name)) === base)
+    .map(({ id }) => id);
+}
+
+/*
+  UniverseLAN answers a DLC that DLC.ini does not switch on as not owned, and writes each id a game
+  asks for there as false (IniData.cxx): Cyberpunk 2077 then called every Phantom Liberty save
+  damaged. The DLC installed in the folder are switched on; any other id keeps what the file says.
+*/
+function enableInstalledDlc({ gameDir, gogAppId, appRoot }) {
+  const enabled = installedDlcIds(gameDir, gogAppId);
+  if (enabled.length === 0) return { enabled };
+  const file = path.join(appRoot, 'UniverseLANData', 'DLC.ini');
+  let text = '';
+  try {
+    text = fs.readFileSync(file, 'utf8');
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+  }
+  const doc = emuIni.parseIni(text);
+  const body = (emuIni.getIniSection(doc, 'DLC') || { body: [] }).body;
+  emuIni.upsertIniSection(doc, 'DLC', emuIni.upsertIniKeys(body, Object.fromEntries(enabled.map((id) => [id, 'true']))));
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, emuIni.stringifyIni(doc));
+  return { enabled };
+}
+
 // Backs up the original dll to <name>.BAK (once - a pre-existing .BAK is assumed to already hold the
 // real original) then copies the matched build's dll + server exe beside it.
 function installBuildFiles({ galaxyDll, buildDir }) {
@@ -420,7 +455,9 @@ function repairInstallation({ gameDir, builds, compatTable, localAppData, log = 
   const plans = [];
   const unmatched = [];
   for (const dll of dlls) {
-    const sdkVersion = String((builds && builds.sdkVersionOf && builds.sdkVersionOf(dll.file)) || '').trim();
+    // Applied again, the dll in place is UniverseLAN's own: the original kept in .BAK holds the SDK version.
+    const original = fs.existsSync(`${dll.file}.BAK`) ? `${dll.file}.BAK` : dll.file;
+    const sdkVersion = String((builds && builds.sdkVersionOf && builds.sdkVersionOf(original)) || '').trim();
     const picked = sdkVersion ? matchBuild({ builds: builds.list, compatTable, sdkVersion }) : null;
     if (!picked) {
       unmatched.push({ dll: dll.file, sdkVersion });
@@ -452,7 +489,9 @@ function repairInstallation({ gameDir, builds, compatTable, localAppData, log = 
     }
     const ini = writeUniverseLanIniIfMissing({ buildDir: plans[0].build.dir, localAppData });
     const data = mergeDataFolders({ buildDir: plans[0].build.dir, localAppData, gogAppId });
-    return { gameDir, gogAppId, installed, ini, data, unmatched, backupDir: snapshot && snapshot.backupDir };
+    const dlc = enableInstalledDlc({ gameDir, gogAppId, appRoot: data.appRoot });
+    if (dlc.enabled.length) log.log(`[gog-universelan] DLC switched on for ${gogAppId}: ${dlc.enabled.join(', ')}`);
+    return { gameDir, gogAppId, installed, ini, data, dlc, unmatched, backupDir: snapshot && snapshot.backupDir };
   } catch (error) {
     if (snapshot) {
       try {

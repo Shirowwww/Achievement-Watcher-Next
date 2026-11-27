@@ -500,12 +500,13 @@ function getAchievements(data) {
   return [...read.unlocked].map(([id, earned_time]) => ({ id, achieved: true, earned_time }));
 }
 
-// The disc's own art (PIC1/PIC0, ICON0), the trophy set's icon when the disc has none.
+// The disc's own art (PIC1/PIC0, ICON0), the trophy set's icon when the disc has none. Like a PS4
+// dump's, it only stands in for the tile until SteamGridDB's cover replaces it.
 function gameArt(gameRoot, container, iconDir) {
   const art = (name) => (gameRoot && isRegularFile(path.join(gameRoot, name)) ? schema.toFileUrl(path.join(gameRoot, name)) : '');
   const background = art('PIC1.PNG') || art('PIC0.PNG');
   const icon = art('ICON0.PNG') || schema.writeIcon(path.join(iconDir, 'icon0.png'), container.icon0);
-  return { header: background || icon, headerStandIn: !background, background, overlay: !!background, icon };
+  return { header: background || icon, headerStandIn: true, background, overlay: !!background, icon };
 }
 
 async function getGameData(data, lang = 'english') {
@@ -532,4 +533,4 @@ module.exports.isProgressName = (name) => {
 };
 // A port is listed by this source; one without its game yet is not a game for the unconfigured scan.
 module.exports.isPortFolder = (dir) => hasEvidence(String(dir || ''));
-module.exports._internal = { launchContract, projectInputs, gameRootFor, trophySets };
+module.exports._internal = { launchContract, projectInputs, gameRootFor, trophySets, gameArt };

@@ -6,6 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const gogUniverseLan = require('../../app/parser/gogUniverseLan.js');
+const emuIni = require('../../app/util/emuIni.js');
 
 function tmpDir(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gog-universelan-'));
@@ -278,6 +279,64 @@ test('repairInstallation installs a matched build, writes the ini, merges data a
   assert.ok(fs.existsSync(path.join(gameDir, 'UniverseLANServer64.exe')));
   assert.ok(fs.existsSync(path.join(localAppData, 'UniverseLAN', 'UniverseLAN.ini')));
   assert.ok(fs.existsSync(path.join(localAppData, 'UniverseLAN', '1207658930', 'UniverseLANData', 'Achievements.ini')));
+});
+
+/*
+  UniverseLAN answers a DLC that DLC.ini does not switch on as not owned, so Cyberpunk 2077 called every
+  Phantom Liberty save damaged once its Galaxy services were back (Discord 27/11/2026). The DLC whose
+  goggame-<id>.info is in the folder are switched on; any other id keeps what the file says.
+*/
+function cyberpunkRepair(t, existingDlcIni) {
+  const root = tmpDir(t);
+  const gameDir = cyberpunkRoot(t);
+  fs.writeFileSync(path.join(gameDir, 'Galaxy64.dll'), 'original galaxy sdk dll');
+  const buildDir = path.join(root, 'UniverseLAN-1.152.6-Build-626-x64_x86');
+  fs.mkdirSync(path.join(buildDir, 'UniverseLANData'), { recursive: true });
+  fs.writeFileSync(path.join(buildDir, 'Galaxy64.dll'), 'universelan galaxy64 replacement');
+  fs.writeFileSync(path.join(buildDir, 'UniverseLANData', 'DLC.ini'), '[DLC]\n0 = 1 ; basegame\n');
+  const localAppData = path.join(root, 'LocalAppData');
+  const dlcIni = path.join(localAppData, 'UniverseLAN', '1423049311', 'UniverseLANData', 'DLC.ini');
+  if (existingDlcIni) {
+    fs.mkdirSync(path.dirname(dlcIni), { recursive: true });
+    fs.writeFileSync(dlcIni, existingDlcIni);
+  }
+  const builds = { list: [{ name: path.basename(buildDir), dir: buildDir }], sdkVersionOf: () => '1.152.5.0' };
+  const result = gogUniverseLan.repairInstallation({ gameDir, builds, compatTable: [{ release: '1.152.6', sdkVersions: ['1.152.5.0'] }], localAppData });
+  return { result, dlc: emuIni.readIniSectionValues(emuIni.parseIni(fs.readFileSync(dlcIni, 'utf8')), 'DLC') };
+}
+
+test('repairInstallation switches on the DLC installed in the folder on a first setup', (t) => {
+  const { result, dlc } = cyberpunkRepair(t, null);
+  assert.deepEqual(result.dlc.enabled, ['1256837418', '1597316373']);
+  assert.equal(dlc['1256837418'], 'true');
+  assert.equal(dlc['1597316373'], 'true');
+  assert.equal(dlc['1423049311'], undefined, 'the base game is not one of its DLC');
+  assert.equal(dlc['0'], '1 ; basegame');
+});
+
+test('repairInstallation applied again matches the original dll kept in .BAK, not the installed shim', (t) => {
+  const root = tmpDir(t);
+  const gameDir = path.join(root, 'game');
+  fs.mkdirSync(gameDir, { recursive: true });
+  fs.writeFileSync(path.join(gameDir, 'goggame-1207658930.info'), '{}');
+  fs.writeFileSync(path.join(gameDir, 'Galaxy64.dll'), 'universelan galaxy64 replacement');
+  fs.writeFileSync(path.join(gameDir, 'Galaxy64.dll.BAK'), 'original galaxy sdk dll');
+  const buildDir = path.join(root, 'UniverseLAN-1.152.6-Build-626-x64_x86');
+  fs.mkdirSync(buildDir, { recursive: true });
+  fs.writeFileSync(path.join(buildDir, 'Galaxy64.dll'), 'universelan galaxy64 replacement');
+  const versions = { 'Galaxy64.dll': '0.0.0.1', 'Galaxy64.dll.BAK': '1.152.5.0' };
+  const builds = { list: [{ name: path.basename(buildDir), dir: buildDir }], sdkVersionOf: (file) => versions[path.basename(file)] };
+  const localAppData = path.join(root, 'LocalAppData');
+  const result = gogUniverseLan.repairInstallation({ gameDir, builds, compatTable: [{ release: '1.152.6', sdkVersions: ['1.152.5.0'] }], localAppData });
+  assert.equal(result.installed.length, 1);
+  assert.equal(fs.readFileSync(path.join(gameDir, 'Galaxy64.dll.BAK'), 'utf8'), 'original galaxy sdk dll');
+});
+
+test('repairInstallation switches on a DLC the game already asked for, and leaves the other ids alone', (t) => {
+  const { dlc } = cyberpunkRepair(t, '[DLC]\n0 = 1 ; basegame\n1256837418 = false\n2000000001 = false\n');
+  assert.equal(dlc['1256837418'], 'true');
+  assert.equal(dlc['1597316373'], 'true');
+  assert.equal(dlc['2000000001'], 'false');
 });
 
 /*

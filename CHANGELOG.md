@@ -59,7 +59,9 @@ renamed in 3.9.0 and the history is kept under one file.
   without applying the fix again. When UniverseLAN has no build for the game's Galaxy version, the fix
   now says which version is missing and leaves the game untouched, instead of saying it was applied.
   A Galaxy file whose version carries GOG's build number, as in Cyberpunk 2077's GOG copy, now finds
-  its UniverseLAN build.
+  its UniverseLAN build. The fix also switches on the DLC installed with the game, which UniverseLAN
+  reported as not owned: Cyberpunk 2077 called every Phantom Liberty save damaged. Applying it again
+  to a game already fixed works too.
 - **Imported SAN themes glow and size their text as in SAN.** The glow of a theme imported from Steam
   Achievement Notifier was cut off at the edge of the notification, leaving a hard rectangle with
   filled corners instead of a soft halo. At a size other than 100%, its text was also drawn slightly
@@ -92,6 +94,9 @@ renamed in 3.9.0 and the history is kept under one file.
   also hold a second trophy list, for an add-on, was still left out: the game's own list is used now.
   An older DCport folder kept beside the new one, or one that names the game in game_dir.txt, is the
   same game, read from the copy played last.
+- **PS4, PS3 and PS5 games get a real cover on their tile.** The tile used the picture in the game's
+  own files, which can be a studio logo on black, as Driveclub's was. It now takes the game's cover
+  from SteamGridDB when there is one and keeps that picture as the page background.
 - **The platform filter lists Steam once (#228).** Games with no achievements, such as unknown
   folders or a Ubisoft game with none found, were each listed under another "Steam". They now sit
   under their own platform, and unknown folders under PC.

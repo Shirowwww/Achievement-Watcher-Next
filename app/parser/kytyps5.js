@@ -724,8 +724,8 @@ function gameArt(gameDir) {
   const icon = fileUrl(path.join(gameDir, 'sce_sys', 'icon0.png'));
   return {
     header: background || icon,
-    // The square icon only stands in until SteamGridDB's landscape art replaces it.
-    headerStandIn: !background,
+    // Both only stand in until SteamGridDB's landscape art replaces them: key art can be a studio logo.
+    headerStandIn: true,
     background,
     // Raw key art, not a pre-darkened Steam page background.
     overlay: !!background,
@@ -862,4 +862,4 @@ module.exports.getGameData = getGameData;
 module.exports.getAchievements = getAchievements;
 module.exports.iconDirFor = iconDirFor;
 module.exports.activeUserId = activeUserId;
-module.exports._internal = { parseSettingsList, gameDirsFromSettings, settingsValues, userSettingsFromText, readUcp, readPackage, tickToUnixSeconds, parseUnlocks, findGames, trophyKey };
+module.exports._internal = { parseSettingsList, gameDirsFromSettings, settingsValues, userSettingsFromText, readUcp, readPackage, tickToUnixSeconds, parseUnlocks, findGames, trophyKey, gameArt };

@@ -158,8 +158,9 @@ function gameArt(info, container, iconDir) {
   const art = (name) => (dumpDir && isRegularFile(path.join(dumpDir, 'sce_sys', name)) ? toFileUrl(path.join(dumpDir, 'sce_sys', name)) : '');
   const background = art('pic1.png') || art('pic0.png');
   const icon = art('icon0.png') || writeIcon(path.join(iconDir, 'icon0.png'), container.icon0);
-  // The square icon only stands in for a header until SteamGridDB's landscape art replaces it.
-  return { header: background || icon, headerStandIn: !background, background, overlay: !!background, icon };
+  // Both only stand in for the tile until SteamGridDB's cover replaces them: a dump background can be
+  // a studio logo on black (Driveclub, #226). The background stays the page's.
+  return { header: background || icon, headerStandIn: true, background, overlay: !!background, icon };
 }
 
 function textsById(document) {
@@ -225,4 +226,4 @@ function gameDataOf(info, container, lang, iconDirFor, artFor) {
   };
 }
 
-module.exports = { setLogger, trophySets, dumpIdentity, readTrophyList, trophyKey, recoveredNpcommid, setTitle, getGameData, gameDataOf, writeIcon, toFileUrl };
+module.exports = { setLogger, trophySets, dumpIdentity, readTrophyList, trophyKey, recoveredNpcommid, setTitle, getGameData, gameDataOf, gameArt, writeIcon, toFileUrl };
