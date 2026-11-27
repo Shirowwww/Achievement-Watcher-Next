@@ -1294,6 +1294,15 @@ async function ghRewriteAchievementSchema(appid, game) {
   let summary;
   try {
     setGameHealthProgress({ phase: 'fetch' });
+    // The cached list may predate a DLC, and the emulator only knows what is written here.
+    await steamParser.refreshListBeforeWrite(
+      {
+        appID: writableAppid,
+        lang: schemaLanguage.get(appid) || app.config?.achievement?.lang,
+        disableAutoRefresh: app.config?.achievement?.disableAutoRefresh === true,
+      },
+      game.achievement && game.achievement.list
+    );
     const reference = await ghSchemaReference.load({
       appid: writableAppid,
       cacheDir: getUserDataPath(),

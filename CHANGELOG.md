@@ -195,7 +195,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Achievements added by an update or a DLC show up once you earn one.** AW Next checks a game's
   Steam list for new achievements every three days, and never on the first scan after it starts, so
   an unlock from a new DLC could stay out of sight until then. When a save holds an achievement the
-  list does not know, the next refresh checks the list again, at most once a day.
+  list does not know, the next refresh checks the list again, at most once a day. The in-game
+  notification does the same, so that unlock now pops up instead of being skipped for good, and
+  applying the emulator fix or repairing its files gets the latest list from Steam first, so the
+  emulator knows about the new achievements too.
 
 ## 3.12.8 - 2026-11-22
 

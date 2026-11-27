@@ -11,7 +11,28 @@ const {
   requiredCount,
   requiredUnlockedCount,
   platinumLastOrder,
+  newUnknownUnlocks,
 } = require('../util/achievementIndex.js');
+
+// A DLC unlock the cached list lacks makes the Watchdog re-check that list; one already in the
+// baseline does not, or every save write of that game would wait on Steam.
+test('only an unlock the schema lacks and the baseline never recorded counts as new and unknown', () => {
+  const index = buildSchemaIndex([{ name: 'Base' }]);
+  const previous = buildPreviousAchievementIndex([{ name: 'OldUnknown', Achieved: true }, { name: 'Pending', Achieved: false }]);
+  const read = [
+    { name: 'base', Achieved: true },
+    { name: 'DLC_1', Achieved: true },
+    { name: 'OldUnknown', Achieved: true },
+    { name: 'Pending', Achieved: true },
+    { name: 'Locked', Achieved: false },
+  ];
+
+  assert.deepEqual(
+    newUnknownUnlocks(read, index, previous).map((a) => a.name),
+    ['DLC_1', 'Pending']
+  );
+  assert.deepEqual(newUnknownUnlocks(null, index, previous), []);
+});
 
 // On PlayStation the platinum pops after the trophy that earns it (#215): a game's own "every
 // achievement" one written in the same save as the last regular unlock pops after it, whatever the

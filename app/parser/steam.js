@@ -21,9 +21,6 @@ const searchCircuit = createNetworkCircuit({ failureLimit: 2, cooldownMs: 10 * 6
 // How long a blank description/achievement list is left alone before Steam is asked again. Declared
 // once: the two places that re-check were free to drift apart.
 const DESC_RECHECK_MS = 3 * 24 * 60 * 60 * 1000;
-// A save naming achievements the cached list lacks re-checks it at most this often (see
-// recheckForUnknownAchievements): a save whose entries were renamed for good misses on every scan.
-const UNKNOWN_RECHECK_MS = 24 * 60 * 60 * 1000;
 const reg = require('../util/reg');
 const { readRegistryString } = reg;
 const steamLibrary = require(path.join(__dirname, 'steamLibrary.js'));
@@ -48,6 +45,7 @@ const { isImageBuffer, usableCachedImage } = require(path.join(appPath, 'util/im
 const { userDataDir } = require(path.join(appPath, 'util/userDataPath.js'));
 const { mergeTranslatedAchievements } = require('./achievementTranslations.js');
 const steamSchemaFetch = require(path.join(appPath, 'util/steamSchemaFetch.js'));
+const achievementListRecheck = require(path.join(appPath, 'util/achievementListRecheck.js'));
 
 let steamUsersList;
 let appidListMap = new Map();
@@ -623,119 +621,36 @@ module.exports.forgetUnresolved = (appID) => {
   }
 };
 
-// Merges a fresh fetch into the cached list (matched by apiName): patches blank fields, takes Steam's
-// sets and archive flags, and appends achievements missing from `list`. Mutates in place; never
-// drops an entry, so a short/failed fetch can't delete unlocked history (one Steam dropped is marked).
-module.exports.reconcileAchievementList = (list, fresh) => {
-  if (!Array.isArray(list) || !Array.isArray(fresh) || fresh.length === 0) return { changed: false, addedCount: 0 };
-  let changed = false;
-  const freshByName = new Map(fresh.filter((a) => a && a.name != null).map((a) => [String(a.name).toUpperCase(), a]));
-  for (const ach of list) {
-    const f = freshByName.get(String(ach.name).toUpperCase());
-    if (!f) continue;
-    if ((!ach.description || String(ach.description).trim() === '') && f.description) {
-      ach.description = f.description;
-      changed = true;
-    }
-    if ((!ach.displayName || String(ach.displayName).trim() === '') && f.displayName) {
-      ach.displayName = f.displayName;
-      changed = true;
-    }
-    if (ach.hidden == null && f.hidden != null) {
-      ach.hidden = f.hidden;
-      changed = true;
-    }
-    // Steam's own sets and archive flags (only Steam's schema sources carry `archived`) win.
-    if (typeof f.archived === 'boolean' && !!ach.archived !== f.archived) {
-      ach.archived = f.archived;
-      changed = true;
-    }
-    if (f.category && ach.category !== f.category) {
-      ach.category = f.category;
-      changed = true;
-    }
-  }
-  // Before the new ones are appended: they would count as shared names.
-  const removed = markRemoved(list, fresh, freshByName);
-  const knownNames = new Set(list.filter((a) => a && a.name != null).map((a) => String(a.name).toUpperCase()));
-  const added = [];
-  for (const achievement of fresh) {
-    if (!achievement || achievement.name == null) continue;
-    const key = String(achievement.name).toUpperCase();
-    if (knownNames.has(key)) continue;
-    knownNames.add(key);
-    added.push(achievement);
-  }
-  if (added.length) {
-    list.push(...added);
-    changed = true;
-  }
-  return { changed: changed || removed.changed, addedCount: added.length, removedCount: removed.count };
-};
+// Shared with the Watchdog, which reads the same cached list (see app/util/achievementListRecheck.js).
+module.exports.reconcileAchievementList = achievementListRecheck.reconcileAchievementList;
 
 /*
   A save holding achievements the cached list has never heard of is the one sign that an update or a
   DLC added some: the periodic re-check runs every 3 days and never on a session's first scan, so the
-  unlock would stay hidden until then. Reconciles the cached record (read afresh, so no unlock state
-  reaches the cache) and the game being built. An empty or failed answer is no verdict, so it is not
-  stamped. Returns how many achievements the live list gained.
+  unlock would stay hidden until then. See recheckCachedList; returns how many the live list gained.
 */
 module.exports.recheckForUnknownAchievements = async (cfg, list, { fetchSchema = getSchemaAchievements } = {}) => {
-  if (cfg.disableAutoRefresh || cfg.fastStart || !Array.isArray(list)) return 0;
-  let record;
-  try {
-    record = module.exports.getCachedData(cfg);
-  } catch {
-    return 0;
-  }
-  if (!record || !record.name || !Array.isArray(record.achievement && record.achievement.list)) return 0;
-  const checkedAt = Number(record.unknownCheckedAt);
-  if (checkedAt > 0 && Date.now() - checkedAt < UNKNOWN_RECHECK_MS) return 0;
-  let fresh;
-  try {
-    const answer = await fetchSchema(cfg);
-    if (answer && answer.networkError === true) return 0;
-    fresh = Array.isArray(answer) ? answer : (answer && answer.achievements) || [];
-  } catch (err) {
-    debug.log(`[${cfg.appID}] could not re-check the achievement list for unknown saved achievements: ${err.code || err.message || err}`);
-    return 0;
-  }
-  if (fresh.length === 0) return 0;
-  module.exports.reconcileAchievementList(record.achievement.list, fresh);
-  record.achievement.total = record.achievement.list.length;
-  record.unknownCheckedAt = Date.now();
-  try {
-    const filePath = path.join(cacheRoot, 'steam_cache/schema', cfg.lang, `${cfg.appID}.db`);
-    fs.writeFileSync(filePath, JSON.stringify(record, null, 2));
-  } catch (err) {
-    debug.log(`[${cfg.appID}] could not save the re-checked achievement list: ${err.code || err.message || err}`);
-  }
-  const { addedCount } = module.exports.reconcileAchievementList(list, fresh);
-  if (addedCount) debug.log(`[${cfg.appID}] picked up ${addedCount} new achievement(s) the save already had`);
-  return addedCount;
+  if (cfg.fastStart) return 0;
+  return recheckSteamList(cfg, list, fetchSchema, false);
 };
 
 /*
-  An achievement Steam's own list no longer has is marked removed, never dropped: a real unlock of it
-  stays on the page, outside every count. Only Steam's own schema (each entry carries its archive
-  flag) can say so; SteamHunters may lag. A list sharing under half the cached names is another game's.
+  Rewriting a game's achievements.json (the emulator fix, a repair, Game Health) asks Steam for the
+  list first, whenever it was last checked: the cached one may predate a DLC, and the emulator never
+  learns of an achievement that file lacks. Returns how many the list being written gained.
 */
-function markRemoved(list, fresh, freshByName) {
-  let changed = false;
-  let count = 0;
-  const fromSteam = fresh.every((achievement) => achievement && typeof achievement.archived === 'boolean');
-  const cached = list.filter((achievement) => achievement && achievement.name != null);
-  const shared = cached.filter((achievement) => freshByName.has(String(achievement.name).toUpperCase())).length;
-  if (!fromSteam || shared * 2 < cached.length) return { changed, count };
-  for (const achievement of cached) {
-    const gone = !freshByName.has(String(achievement.name).toUpperCase());
-    if (gone) count += 1;
-    if (gone === Boolean(achievement.removed)) continue;
-    if (gone) achievement.removed = true;
-    else delete achievement.removed;
-    changed = true;
-  }
-  return { changed, count };
+module.exports.refreshListBeforeWrite = async (cfg, list, { fetchSchema = getSchemaAchievements } = {}) => recheckSteamList(cfg, list, fetchSchema, true);
+
+function recheckSteamList(cfg, list, fetchSchema, force) {
+  if (cfg.disableAutoRefresh || !cacheRoot || !/^[0-9]+$/.test(String(cfg.appID))) return Promise.resolve(0);
+  if (!steamLanguages.some((language) => language.api === cfg.lang)) return Promise.resolve(0);
+  return achievementListRecheck.recheckCachedList({
+    filePath: path.join(cacheRoot, 'steam_cache/schema', cfg.lang, `${cfg.appID}.db`),
+    list,
+    fetchSchema: () => fetchSchema(cfg),
+    log: (line) => debug.log(`[${cfg.appID}] ${line}`),
+    force,
+  });
 }
 
 module.exports.getGameData = async (cfg) => {

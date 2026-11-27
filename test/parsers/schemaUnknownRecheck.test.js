@@ -155,3 +155,48 @@ test('a save unlock of an achievement the cached list lacked is shown once the l
   assert.equal(Boolean(dlc.Achieved), true, 'with the unlock the save already holds');
   assert.equal(game.achievement.unlocked, 2);
 });
+
+// The emulator fix and every repair write achievements.json from the cached list. One that predates a
+// DLC left the emulator without those achievements, whatever the user re-applied.
+test('rewriting the emulator files asks Steam for the list first, even when it was checked today', async () => {
+  const cache = cachedSchema({ unknownCheckedAt: Date.now() });
+  const { calls, fetchSchema } = fetcher([{ ...BASE }, { ...DLC }]);
+  const live = [{ ...BASE, Achieved: true }];
+
+  assert.equal(await steam.refreshListBeforeWrite({ appID: '620', lang: 'english' }, live, { fetchSchema }), 1);
+  assert.deepEqual(calls, ['620']);
+  assert.deepEqual(
+    live.map((entry) => entry.name),
+    ['ACH_1', 'DLC_1']
+  );
+  assert.deepEqual(
+    cache.read().achievement.list.map((entry) => entry.name),
+    ['ACH_1', 'DLC_1']
+  );
+  assert.equal(cache.read().achievement.list[0].Achieved, undefined, 'no unlock state reaches the cache');
+});
+
+test('rewriting asks nothing for a user who turned updates off, an id that is not a Steam appid or an unknown language', async () => {
+  cachedSchema();
+  const { calls, fetchSchema } = fetcher([{ ...BASE }, { ...DLC }]);
+  assert.equal(await steam.refreshListBeforeWrite({ appID: '620', lang: 'english', disableAutoRefresh: true }, [{ ...BASE }], { fetchSchema }), 0);
+  assert.equal(await steam.refreshListBeforeWrite({ appID: 'socialclub-gta', lang: 'english' }, [{ ...BASE }], { fetchSchema }), 0);
+  assert.equal(await steam.refreshListBeforeWrite({ appID: '620', lang: 'klingon' }, [{ ...BASE }], { fetchSchema }), 0);
+  assert.deepEqual(calls, []);
+});
+
+// app.js and the Game Health panel run in the renderer only; what matters is that the list is
+// refreshed before each writer reads it.
+test('the fix, the fix-all pass and the Game Health rewrite refresh the list before writing', () => {
+  const read = (...parts) => fs.readFileSync(path.join(__dirname, '..', '..', 'app', ...parts), 'utf8');
+  const before = (src, first, then, from) => {
+    const at = src.indexOf(first, from);
+    const next = src.indexOf(then, at);
+    assert.ok(from !== -1 && at !== -1 && next > at, `${first} must come before ${then}`);
+  };
+  const appJs = read('app.js');
+  before(appJs, 'steamParser.refreshListBeforeWrite(', 'goldberg.repair({', appJs.indexOf('const repairGoldbergSetup = async'));
+  before(appJs, 'steamParser.refreshListBeforeWrite(', 'achievements.autoApplyEmulatorFix({', appJs.indexOf('const detectedEmu = goldberg.detectEmulator(game.gameDir);'));
+  const panel = read('ui', 'gameHealthPanel.js');
+  before(panel, 'steamParser.refreshListBeforeWrite(', 'gameHealthRepair.rewriteAchievementSchema({', panel.indexOf('async function ghRewriteAchievementSchema'));
+});

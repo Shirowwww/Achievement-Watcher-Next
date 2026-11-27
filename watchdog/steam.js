@@ -17,6 +17,7 @@ const steamSchemaFetch = require(sharedAppModulePath('util/steamSchemaFetch.js')
 const { apiNamesFile } = require(sharedAppModulePath('util/dataLayout.js'));
 const steamLang = require(sharedAppModulePath('locale/steam.json'));
 const { mergeTranslatedAchievements } = require(sharedAppModulePath('parser/achievementTranslations.js'));
+const achievementListRecheck = require(sharedAppModulePath('util/achievementListRecheck.js'));
 
 // Plain-HTTP fetches for the keyless schema chain (official Steam endpoint, then SteamHunters'
 // public JSON API). SteamHunters serves its JSON to browser-like clients, so keep a real UA.
@@ -73,6 +74,22 @@ module.exports.loadSteamData = async (appID, lang, binary = null) => {
   } catch (err) {
     throw `Could not load Steam data for ${appID} - ${lang}: ${err}`;
   }
+};
+
+/*
+  An unlock the cached list lacks: a DLC or an update added achievements since the library cached it.
+  Re-checks the file the library reads too and grows `list`, the one being notified from. Steam appids
+  only: the library also caches an Epic exclusive's schema here, under its Epic id.
+*/
+module.exports.recheckForUnknownUnlocks = async (appID, lang, list, { fetchSchema = getOfficialSchemaKeyless } = {}) => {
+  const id = String(appID || '');
+  if (!/^[0-9]{1,10}$/.test(id) || !steamLang.some((language) => language.api === lang)) return 0;
+  return achievementListRecheck.recheckCachedList({
+    filePath: path.join(userDataDir(), 'steam_cache/schema', lang, `${id}.db`),
+    list,
+    fetchSchema: () => fetchSchema(id, lang),
+    log: (line) => debug.log(`[watchdog] [${id}] ${line}`),
+  });
 };
 
 async function fetchJson(url, options) {

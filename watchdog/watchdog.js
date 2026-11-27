@@ -232,6 +232,7 @@ const {
   requiredCount,
   requiredUnlockedCount,
   platinumLastOrder,
+  newUnknownUnlocks,
 } = require('./util/achievementIndex.js');
 const { createIndexedGameLookup } = require(sharedAppModulePath('util/indexedGameLookup.js'));
 const { runXboxPoll, matchesActiveXboxPoll, xboxTitleForGame, startPollLoop, stopPollLoop, finishPollLoop } = require('./util/xboxPolling.js');
@@ -1366,9 +1367,16 @@ var app = {
             const liveFirstRun = isNewAppidFolder && preUnlocked.length <= NEW_FOLDER_NOTIFY_MAX;
             const seedOnly = (!Array.isArray(cache) || cache.length === 0) && preUnlocked.length > 1 && !liveFirstRun;
             const seedNotifyLimit = 3;
-            const schemaIndex = buildSchemaIndex(game.achievement.list, {
-              includeCrc: achievements.some((achievement) => achievement && achievement.crc),
-            });
+            const includeCrc = achievements.some((achievement) => achievement && achievement.crc);
+            const previousIndex = buildPreviousAchievementIndex(cache);
+            let schemaIndex = buildSchemaIndex(game.achievement.list, { includeCrc });
+            // A DLC or an update added an unlock the cached list lacks: re-check that list first, or the
+            // unlock is dropped as ACH_NOT_FOUND_IN_SCHEMA and recorded, so never notified.
+            const steamListId = /^[0-9]+$/.test(appID) ? appID : game.steamappid;
+            if (!self.options.achievement.disableAutoRefresh && newUnknownUnlocks(achievements, schemaIndex, previousIndex).length > 0) {
+              if ((await steam.recheckForUnknownUnlocks(steamListId, self.options.achievement.lang, game.achievement.list)) > 0)
+                schemaIndex = buildSchemaIndex(game.achievement.list, { includeCrc });
+            }
             const seedNotifyNames = seedOnly ? seedPreviewNames(preUnlocked, schemaIndex, seedNotifyLimit) : new Set();
             if (seedOnly)
               debug.log(
@@ -1384,7 +1392,6 @@ var app = {
               categoryOf: (achievement) => achievement.category || psnTrophyLink.linkedGroup(self.options, psnLink, achievement.name),
             });
             const platinumTotal = requiredCount(game.achievement.list, platinumInScope);
-            const previousIndex = buildPreviousAchievementIndex(cache);
             const platinumPrevUnlocked = requiredUnlockedCount(cache, schemaIndex, platinumInScope);
             let platinumNewUnlock = false;
             let platinumIcon = null;

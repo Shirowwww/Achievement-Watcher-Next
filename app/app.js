@@ -6236,8 +6236,17 @@ var app = {
                 : [];
             // A silent run (showDialog false) asks nothing and so keeps the game's own account.
             const replaceIdentity = interactive && conflicts.length > 0 && ghAskReplaceIdentity(conflicts);
-            const run = () =>
-              goldberg.repair({
+            const run = async () => {
+              // The cached list may predate a DLC, and the emulator only knows what is written here.
+              await steamParser.refreshListBeforeWrite(
+                {
+                  appID: writableAppid,
+                  lang: schemaLanguage.get(appid) || app.config?.achievement?.lang,
+                  disableAutoRefresh: app.config?.achievement?.disableAutoRefresh === true,
+                },
+                game?.achievement?.list
+              );
+              return goldberg.repair({
                 steamSettings: target,
                 appid: writableAppid,
                 schema: game,
@@ -6252,6 +6261,7 @@ var app = {
                 ...goldberg.userIdentity(app.config, schemaLanguage.get(appid) || app.config?.achievement?.lang),
                 replaceIdentity,
               });
+            };
             // Inside the emulator fix, that flow's own record already covers these files.
             if (!journal) return run();
             return journaledRepair(game?.appid ?? appid, 'repair', () => repairJournal.gbeRoots({ settingsDirs: [target], files: launchAppIdFiles(gameDir) }), run);
@@ -10852,6 +10862,15 @@ var app = {
                 list: game.achievement && Array.isArray(game.achievement.list) ? game.achievement.list.map((a) => ({ ...a })) : [],
               },
             };
+            // Written into every folder below: a cached list that predates a DLC would leave it out.
+            await steamParser.refreshListBeforeWrite(
+              {
+                appID: game.appid,
+                lang: schemaLanguage.get(game.appid) || (app.config.achievement && app.config.achievement.lang),
+                disableAutoRefresh: app.config.achievement?.disableAutoRefresh === true,
+              },
+              schema.achievement.list
+            );
             const setup = await achievements.autoApplyEmulatorFix({
               gameDir: game.gameDir,
               gameName: game.name,

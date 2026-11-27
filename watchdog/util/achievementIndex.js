@@ -94,6 +94,16 @@ function platinumLastOrder(entries, schemaIndex, lastNames) {
   return [...order.filter((i) => !isLast(list[i])), ...order.filter((i) => isLast(list[i]))];
 }
 
+// Unlocks the schema does not know that the baseline had not recorded as unlocked yet: a DLC or an
+// update added them. An unknown entry already in the baseline is old news and asks for nothing.
+function newUnknownUnlocks(entries, schemaIndex, previousIndex) {
+  return (Array.isArray(entries) ? entries : []).filter((entry) => {
+    if (!entry || !entry.Achieved || findSchemaAchievement(schemaIndex, entry)) return false;
+    const previous = previousIndex.byName.get(entry.name);
+    return !(previous && previous.Achieved);
+  });
+}
+
 module.exports = {
   buildSchemaIndex,
   findSchemaAchievement,
@@ -102,4 +112,5 @@ module.exports = {
   requiredCount,
   requiredUnlockedCount,
   platinumLastOrder,
+  newUnknownUnlocks,
 };
