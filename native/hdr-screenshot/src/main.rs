@@ -503,12 +503,18 @@ fn capture_duplication(mut canvas: Canvas, primary: Monitor, mode: CaptureMode, 
     Err("Desktop Duplication returned no frame".into())
 }
 
+// Windows 10 refuses a borderless request outright (the fallback then took no shot at all), so it
+// keeps its border there: a brief yellow frame beats no screenshot.
+fn border_settings(borderless_supported: bool) -> DrawBorderSettings {
+    if borderless_supported { DrawBorderSettings::WithoutBorder } else { DrawBorderSettings::Default }
+}
+
 fn capture_graphics(canvas: Canvas, primary: Monitor, mode: CaptureMode, white_scale: f32) -> Result<Canvas, AnyError> {
     let canvas = Arc::new(Mutex::new(canvas));
     let settings = Settings::new(
         primary,
         CursorCaptureSettings::WithoutCursor,
-        DrawBorderSettings::WithoutBorder,
+        border_settings(GraphicsCaptureApi::is_border_settings_supported().unwrap_or(false)),
         SecondaryWindowSettings::Default,
         MinimumUpdateIntervalSettings::Default,
         DirtyRegionSettings::Default,
@@ -615,6 +621,13 @@ mod tests {
         assert!(!refused_for_gpu(&busy), "a display too many recorders duplicate is not a GPU question");
         assert!(!refused_for_gpu(&DuplicationError::OutputNotFound.into()));
         assert!(!refused_for_gpu(&"Desktop Duplication returned no frame".into()));
+    }
+
+    #[test]
+    fn graphics_capture_asks_for_no_border_only_where_windows_allows_it() {
+        // Windows 10 refuses the request outright, which left the fallback with no shot at all.
+        assert_eq!(border_settings(true), DrawBorderSettings::WithoutBorder);
+        assert_eq!(border_settings(false), DrawBorderSettings::Default);
     }
 
     #[test]

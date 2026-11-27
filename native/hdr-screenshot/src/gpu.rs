@@ -35,9 +35,13 @@ pub fn pci_ids(device_id: &str) -> Option<Ids> {
 
 // The choice that lands on `gpu` among the hardware GPUs (ids, integrated): power saving is the one
 // built into the processor, high performance the discrete one. None when that would be a guess,
-// such as two discrete GPUs, where high performance may name the other.
+// such as two discrete GPUs, where high performance may name the other. DXCore can leave the
+// integrated GPU out (an Intel UHD beside an RTX 3060, 27/11/2026): a screen GPU it does not list,
+// beside discrete ones only, is that integrated one.
 pub fn preference_for(gpu: Ids, gpus: &[(Ids, bool)]) -> Option<u32> {
-    let &(_, integrated) = gpus.iter().find(|(ids, _)| *ids == gpu)?;
+    let Some(&(_, integrated)) = gpus.iter().find(|(ids, _)| *ids == gpu) else {
+        return (!gpus.is_empty() && gpus.iter().all(|&(_, other)| !other)).then_some(POWER_SAVING);
+    };
     let others = gpus.iter().filter(|(ids, _)| *ids != gpu);
     if integrated {
         others.clone().any(|&(_, other)| !other).then_some(POWER_SAVING)
@@ -179,11 +183,14 @@ pub fn follow_display(device: &ID3D11Device, display: &[u16], who: &str, log: im
         return false;
     }
     let gpus = hardware_gpus();
+    let listed: Vec<String> = gpus.iter().map(|&(ids, integrated)| format!("{}{}", ids_text(ids), if integrated { " integrated" } else { "" })).collect();
     let Some(preference) = preference_for(gpu, &gpus) else {
-        let listed: Vec<String> = gpus.iter().map(|&(ids, integrated)| format!("{}{}", ids_text(ids), if integrated { " integrated" } else { "" })).collect();
         log(&format!("gpu: no Windows choice lands on the screen's GPU {} (GPUs: {})", ids_text(gpu), listed.join(", ")));
         return false;
     };
+    if !gpus.iter().any(|&(ids, _)| ids == gpu) {
+        log(&format!("gpu: DXCore does not list the screen's GPU {} (GPUs: {}), taken for the integrated one", ids_text(gpu), listed.join(", ")));
+    }
     let Ok(exe) = std::env::current_exe() else {
         log(&format!("gpu: the {who}'s own path could not be read"));
         return false;
@@ -231,7 +238,15 @@ mod tests {
     fn no_choice_is_stored_when_it_would_be_a_guess() {
         assert_eq!(preference_for(NVIDIA, &[(NVIDIA, false)]), None, "one GPU: nothing to choose");
         assert_eq!(preference_for(NVIDIA, &[(NVIDIA, false), (AMD, false)]), None, "two discrete GPUs");
-        assert_eq!(preference_for(INTEL, &[(NVIDIA, false)]), None, "a GPU DXCore does not list");
+        assert_eq!(preference_for(INTEL, &[(AMD, true), (NVIDIA, false)]), None, "a third GPU DXCore does not list");
+        assert_eq!(preference_for(INTEL, &[]), None, "no DXCore at all");
+    }
+
+    #[test]
+    fn a_screen_gpu_dxcore_leaves_out_beside_discrete_ones_asks_for_power_saving() {
+        // A player's laptop (27/11/2026): DXCore listed the RTX 3060 alone, the panel hangs off the
+        // Intel UHD, and Power saving picked in Settings did land on it.
+        assert_eq!(preference_for((0x8086, 0x9bc4), &[((0x10de, 0x2520), false)]), Some(POWER_SAVING));
     }
 
     #[test]
