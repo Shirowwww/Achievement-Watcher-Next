@@ -360,6 +360,8 @@ test('the emulator folder allowlist is separate from the game-library one', () =
   // missing it; the two lists must not be merged back together.
   assert.ok(saveRoots.EMULATOR_LIBRARY_FOLDER_NAMES.includes('Emulators'));
   assert.ok(saveRoots.EMULATOR_LIBRARY_FOLDER_NAMES.includes('Emulation'));
+  // A folder named after the emulator, holding its versioned install (C:\RPCS3, Discord 28/11/2026).
+  for (const name of ['RPCS3', 'shadPS4', 'Xenia']) assert.ok(saveRoots.EMULATOR_LIBRARY_FOLDER_NAMES.includes(name), name);
   for (const name of saveRoots.EMULATOR_LIBRARY_FOLDER_NAMES) {
     assert.ok(!saveRoots.GAME_LIBRARY_FOLDER_NAMES.includes(name), `${name} is in both lists`);
   }

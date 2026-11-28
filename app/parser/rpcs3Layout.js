@@ -152,25 +152,55 @@ function trophyRootsUnder(devHdd0) {
   return roots;
 }
 
+function subfolders(dir) {
+  try {
+    return fs
+      .readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => path.join(dir, entry.name));
+  } catch {
+    return [];
+  }
+}
+
+// The folder holding a portable install one level down (C:\RPCS3 with rpcs3-v0.0.37-...\rpcs3.exe).
+function nestedInstalls(dir) {
+  return dir ? subfolders(dir).filter((sub) => fs.existsSync(path.join(sub, 'rpcs3.exe'))) : [];
+}
+
+// A profile folder (home/<user>) or its trophy folder added on its own, checked against real content.
+function profileTrophyRoots(dir) {
+  if (!dir) return [];
+  const name = path.basename(dir);
+  const trophy = path.join(dir, 'trophy');
+  if (/^\d+$/.test(name) && isDirectory(trophy)) return [{ user: name, path: trophy }];
+  const holdsTrophySet = subfolders(dir).some((sub) => fs.existsSync(path.join(sub, 'TROPCONF.SFM')));
+  if (name.toLowerCase() === 'trophy' && holdsTrophySet) return [{ user: path.basename(path.dirname(dir)), path: dir }];
+  return [];
+}
+
 /*
   Every <dev_hdd0>/home/<user>/trophy folder that exists, for one watched folder. Users are the
   numeric profile folders RPCS3 creates; anything else in home/ is not a profile.
 
-  Two anchors, because a relocated virtual disk is a folder the user can reasonably add on its own:
-  the dev_hdd0 the configuration resolves to, and the watched folder itself when it already looks
-  like a dev_hdd0 (it holds home/). Neither is a guess - both are checked against a real profile.
+  The anchors are the folders a user can reasonably add: the dev_hdd0 the configuration resolves
+  to, the watched folder itself when it already looks like a dev_hdd0 (it holds home/), the folder
+  above a portable install, and a profile or trophy folder. None is a guess - each is checked
+  against a real profile.
 */
 function trophyRoots(emulatorRoot, options = {}) {
   const roots = [];
   const seen = new Set();
-  for (const devHdd0 of [resolveDevHdd0Root(emulatorRoot, options), normalize(emulatorRoot)]) {
-    for (const root of trophyRootsUnder(devHdd0)) {
-      const key = root.path.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      roots.push(root);
-    }
-  }
+  const add = (root) => {
+    const key = root.path.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    roots.push(root);
+  };
+  const dir = normalize(emulatorRoot);
+  const devHdd0s = [resolveDevHdd0Root(emulatorRoot, options), dir, ...nestedInstalls(dir).map((install) => resolveDevHdd0Root(install, options))];
+  for (const devHdd0 of devHdd0s) trophyRootsUnder(devHdd0).forEach(add);
+  profileTrophyRoots(dir).forEach(add);
   return roots;
 }
 

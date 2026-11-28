@@ -38,6 +38,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **RPCS3 trophies are found from the folders people actually add.** The folder holding a portable
+  RPCS3 (such as C:\RPCS3 with the versioned rpcs3 folder inside), a profile folder
+  (dev_hdd0\home\00000001) and its trophy folder now all find the games; before, only the emulator's
+  own folder or dev_hdd0 did, and the others were accepted with nothing in them. Smart Find also
+  looks in folders named RPCS3, shadPS4 or Xenia.
 - **Achievement screenshots are taken again on PCs where Windows refuses screen duplication.** On some
   laptops with two graphics chips, Windows refused the method AW Next uses for screenshots when it ran
   on the chip that does not drive the screen, so every souvenir failed and game folders stayed empty.

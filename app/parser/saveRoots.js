@@ -333,6 +333,10 @@ const EMULATOR_LIBRARY_FOLDER_NAMES = [
   'Эмуляторы',
   'エミュレータ',
   '模拟器',
+  // A folder named after the emulator itself, holding its versioned portable install.
+  'RPCS3',
+  'shadPS4',
+  'Xenia',
 ];
 
 // The same shape as discoverLibraryRoots(), for emulator folders: every fixed drive and the user

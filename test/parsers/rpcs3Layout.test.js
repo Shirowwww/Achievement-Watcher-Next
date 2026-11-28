@@ -113,6 +113,31 @@ test('a vfs.yml that declares no dev_hdd0 mapping is honoured as "no mapping", n
   assert.equal(layout.resolveDevHdd0Root(emulator, { env: {} }), path.join(emulator, 'dev_hdd0'));
 });
 
+/*
+  A portable RPCS3 kept in C:\RPCS3\rpcs3-v0.0.37-...\ was added as C:\RPCS3, then as its profile
+  folder home\00000001, and neither found a trophy (Discord 28/11/2026). The folder above an install,
+  a profile folder and its trophy folder are read too; a trophy folder alone needs a real trophy set.
+*/
+test('the folder above a portable install, a profile folder and its trophy folder all find the trophies', () => {
+  const parent = tmpdir('aw-rpcs3-parent-');
+  const install = path.join(parent, 'rpcs3-v0.0.37-18022-9c93ec0b_win64_msvc');
+  fs.mkdirSync(install, { recursive: true });
+  fs.writeFileSync(path.join(install, 'rpcs3.exe'), '', 'utf8');
+  fs.mkdirSync(path.join(parent, 'rusty-psn-egui-windows'), { recursive: true });
+  makeTrophies(path.join(install, 'dev_hdd0'), '00000001', ['NPWR00801_00']);
+  const profile = path.join(install, 'dev_hdd0', 'home', '00000001');
+  const trophy = path.join(profile, 'trophy');
+  fs.writeFileSync(path.join(trophy, 'NPWR00801_00', 'TROPCONF.SFM'), '', 'utf8');
+
+  for (const dir of [parent, profile, trophy]) {
+    assert.deepEqual(layout.trophyRoots(dir, { env: {} }), [{ user: '00000001', path: trophy }], dir);
+  }
+
+  const looseTrophy = path.join(tmpdir('aw-rpcs3-loose-'), 'trophy');
+  fs.mkdirSync(path.join(looseTrophy, 'notes'), { recursive: true });
+  assert.deepEqual(layout.trophyRoots(looseTrophy, { env: {} }), []);
+});
+
 test('the RPCS3 scan reads a relocated disk and refuses folders that are neither', async () => {
   const emulator = tmpdir('aw-rpcs3-scan-');
   const disk = tmpdir('aw-rpcs3-scan-disk-');
