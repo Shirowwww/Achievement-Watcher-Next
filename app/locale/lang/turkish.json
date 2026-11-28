@@ -2298,6 +2298,8 @@
     "rename-game": "Yeniden adlandır…",
     "rename-game-prompt": "Bu oyun için gösterilecek ad. Özgün ada ({name}) dönmek için boş bırak.",
     "rename-game-reset": "Özgün adı geri yükle",
+    "sort-title": "Şu adla sırala…",
+    "sort-title-prompt": "Bu oyunun kitaplıkta sıralanacağı ad. Görüntülenen ada göre sıralamak için boş bırak.",
     "rename-game-failed": "Yeni ad kaydedilemedi.",
     "edit-playtime": "Oynama süresini düzenle…",
     "edit-playtime-invalid": "AW Next bu oynama süresini okuyamıyor.",

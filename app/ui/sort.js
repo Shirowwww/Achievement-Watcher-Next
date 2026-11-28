@@ -125,7 +125,8 @@ function snapshotGameSortValues(li, options) {
       if (!options.alpha) value.appid = gameBox.data('appid');
     }
     if (options.percent) value.percent = row.find('.progressBar').data('percent');
-    value.title = row.find('.info .title').text();
+    const title = row.find('.info .title');
+    value.title = title.attr('data-sort-title') || title.text();
     values.set(this, value);
   });
   return values;

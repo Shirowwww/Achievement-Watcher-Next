@@ -134,6 +134,10 @@ sont enregistrés. La recherche trouve toujours le jeu par son nom d'origine. La
 survit aux nouveaux scans et fait partie de la sauvegarde du profil. La recherche des jaquettes et la reconnaissance des jeux utilisent le nom
 d'origine.
 
+**Réglages du jeu → Trier comme…** définit le nom sous lequel la bibliothèque trie un jeu, sans changer le nom
+affiché : « The Witcher 3 » rangé à la lettre W, ou une série gardée ensemble. Laissez le champ vide pour le trier
+de nouveau par son nom. Il est conservé dans `cfg/sortTitles.json`.
+
 **Paramètres → Général → Titres des jeux dans ma langue**, activé par défaut, affiche les jeux Steam sous le
 titre que Steam leur donne dans la langue de vos succès (la langue propre du jeu quand il en a une).
 Les jaquettes suivent la même langue. Le catalogue local de Steam répond pour les jeux que votre client Steam connaît ;

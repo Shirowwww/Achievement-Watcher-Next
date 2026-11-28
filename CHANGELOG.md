@@ -21,6 +21,9 @@ renamed in 3.9.0 and the history is kept under one file.
   folder under Settings > Folders, or let Smart find spot it from its `recomplauncher.json`. The
   trophy list comes from the copy of the game you gave the port, a `PS3_GAME` folder or a decrypted
   `.iso` read where it is, and the trophies it unlocks are announced as you play, with their dates.
+- **Sort a game under another name (#56).** Game settings > Sort as…, in a game's right-click menu,
+  files "The Witcher 3" under W, or keeps a series together, without changing the name it shows.
+  Leave the field empty to sort it by its name again.
 
 ### Improved
 

@@ -33,7 +33,7 @@ function buildHarness() {
       ];
       window.runSortFixture = (options) => {
         $('#games').html(window.sortFixture.map((game) =>
-          '<li data-id="' + game.id + '"><div class="game-box" data-appid="' + game.appid + '" data-installed="' + game.installed + '" data-lastplayed="' + game.lastplayed + '" data-time="' + game.time + '"></div><div class="info"><span class="title">' + game.title + '</span></div><span class="progressBar" data-percent="' + game.percent + '"></span></li>'
+          '<li data-id="' + game.id + '"><div class="game-box" data-appid="' + game.appid + '" data-installed="' + game.installed + '" data-lastplayed="' + game.lastplayed + '" data-time="' + game.time + '"></div><div class="info"><span class="title"' + (game.sortTitle ? ' data-sort-title="' + game.sortTitle + '"' : '') + '>' + game.title + '</span></div><span class="progressBar" data-percent="' + game.percent + '"></span></li>'
         ).join(''));
         window.sort($('#games'), options);
         return $('#games > li').map(function () { return this.dataset.id; }).get();
@@ -106,6 +106,36 @@ test('game sort breaks ties by name so a series stays together', { concurrency: 
       assert.deepEqual(result.percentAscending, ['half', 're2', 're3', 'zelda']);
       assert.deepEqual(result.timeDescending, ['re2', 're3', 'zelda', 'half']);
       assert.deepEqual(result.playedDescending, ['re2', 're3', 'zelda', 'half']);
+    } finally {
+      fs.rmSync(harnessDir, { recursive: true, force: true });
+    }
+  });
+});
+
+// #56: a sort title set by the user replaces the shown name in every name comparison.
+test('game sort reads the sort title when a game has one', { concurrency: 1, timeout: 180000 }, async (t) => {
+  await inContext(t, async (context) => {
+    const harnessDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-sort-title-harness-'));
+    const harness = path.join(harnessDir, 'sort-title.html');
+    fs.writeFileSync(harness, buildHarness());
+
+    try {
+      const page = await context.newPage();
+      await page.goto(pathToFileURL(harness).href);
+      const result = await page.evaluate(() => {
+        window.sortFixture = [
+          { id: 'zelda', appid: 1, installed: 1, title: 'Zelda', lastplayed: 7, time: 7, percent: 50 },
+          { id: 'witcher', appid: 2, installed: 1, title: 'The Witcher 3', sortTitle: 'Witcher 3', lastplayed: 7, time: 7, percent: 50 },
+          { id: 'valheim', appid: 3, installed: 1, title: 'Valheim', lastplayed: 7, time: 7, percent: 50 },
+        ];
+        return {
+          alphaAscending: window.runSortFixture({ alpha: true, direction: 'asc' }),
+          percentTie: window.runSortFixture({ percent: true, direction: 'desc' }),
+        };
+      });
+
+      assert.deepEqual(result.alphaAscending, ['valheim', 'witcher', 'zelda']);
+      assert.deepEqual(result.percentTie, ['valheim', 'witcher', 'zelda']);
     } finally {
       fs.rmSync(harnessDir, { recursive: true, force: true });
     }

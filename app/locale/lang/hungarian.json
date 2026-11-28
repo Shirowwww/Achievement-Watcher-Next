@@ -2298,6 +2298,8 @@
     "rename-game": "Átnevezés…",
     "rename-game-prompt": "A játékhoz megjelenítendő név. Hagyd üresen, ha vissza szeretnél térni az eredeti névhez ({name}).",
     "rename-game-reset": "Az eredeti név visszaállítása",
+    "sort-title": "Rendezés mint…",
+    "sort-title-prompt": "Az a név, amely alatt a játék a könyvtárban rendezve lesz. Hagyd üresen, ha a megjelenített név szerint szeretnéd rendezni.",
     "rename-game-failed": "Az új nevet nem sikerült elmenteni.",
     "edit-playtime": "Játékidő szerkesztése…",
     "edit-playtime-invalid": "Ezt a játékidőt az AW Next nem tudja beolvasni.",

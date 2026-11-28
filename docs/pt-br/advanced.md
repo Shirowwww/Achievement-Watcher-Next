@@ -134,6 +134,10 @@ são salvos. A busca ainda encontra o jogo pelo nome original. Deixe o campo vaz
 sobrevive a novas varreduras e faz parte de um backup do perfil. As buscas de capa e a associação de jogos usam o nome
 original.
 
+**Configurações do jogo → Ordenar como…** define o nome pelo qual a biblioteca ordena um jogo, sem mudar o nome
+exibido: "The Witcher 3" na letra W, ou uma série que fica junta. Deixe o campo vazio para ordenar de novo pelo
+nome. Ele é guardado em `cfg/sortTitles.json`.
+
 **Configurações → Geral → Títulos dos jogos no meu idioma**, ativado por padrão, mostra os jogos da Steam sob o
 título que a Steam dá a eles no idioma das suas conquistas (o idioma do próprio jogo quando ele tem um).
 As capas seguem o mesmo idioma. O catálogo local da Steam responde pelos jogos que o seu cliente Steam conhece;

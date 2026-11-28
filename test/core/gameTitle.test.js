@@ -34,6 +34,21 @@ test('a rename is stored on disk and wins over every resolved name', (t) => {
   assert.deepEqual(stored, { 'steam:1687950': 'P5R' });
 });
 
+// #56: a title to sort under, apart from the one shown (Steam and GOG both have one).
+test('a sort title is stored apart from the rename and never changes the name shown', (t) => {
+  const dir = profile(t);
+  const witcher = { appid: '292030', source: 'Steam (Player)', name: 'The Witcher 3: Wild Hunt' };
+  assert.equal(gameTitle.sortTitle(witcher), '');
+
+  gameTitle.setSortTitle(witcher, '  Witcher 3  ');
+  assert.equal(gameTitle.sortTitle(witcher), 'Witcher 3');
+  assert.equal(gameTitle.displayTitle(witcher), 'The Witcher 3: Wild Hunt');
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(dir, 'cfg', 'sortTitles.json'), 'utf8')), { 'steam:292030': 'Witcher 3' });
+
+  gameTitle.setSortTitle(witcher, '');
+  assert.equal(gameTitle.sortTitle(witcher), '');
+});
+
 test('an empty rename removes the override and the name falls back', (t) => {
   profile(t);
   gameTitle.setCustomTitle(persona, 'P5R');

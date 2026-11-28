@@ -129,6 +129,10 @@ are saved to. Search still finds the game by its original name. Leave the field 
 survives rescans and is part of a profile backup. Cover lookups and game matching use the original
 name.
 
+**Game settings → Sort as…** sets the name the library sorts a game under, without changing the name it
+shows: "The Witcher 3" under W, or a series kept together. Leave the field empty to sort it by its name
+again. It is kept in `cfg/sortTitles.json`.
+
 **Settings → General → Game titles in my language**, on by default, shows Steam games under the
 title Steam gives them in your achievement language (the game's own language when it has one).
 Covers follow the same language. Steam's local catalogue answers for games your Steam client knows;

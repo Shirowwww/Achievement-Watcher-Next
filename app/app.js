@@ -1747,6 +1747,7 @@ function paintGameTitle(game) {
       .find('.info .title')
       .attr('title', title)
       .attr('data-original-title', title !== game.name ? game.name || '' : null)
+      .attr('data-sort-title', gameTitle.sortTitle(game) || null)
       .find('.library-scroll-content')
       .text(title);
     box.find('.play-button, .achievement-button, .config-button').each(function () {
@@ -1787,9 +1788,9 @@ async function refreshLocalizedTitles(games) {
 }
 
 // An empty name clears the rename. No rescan: the title is painted, never part of a lookup.
-function renameGame(game, name) {
+function renameGame(game, name, store = gameTitle.setCustomTitle) {
   try {
-    gameTitle.setCustomTitle(game, name);
+    store(game, name);
   } catch (err) {
     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'error',
@@ -5402,6 +5403,7 @@ var app = {
             const stopBuild = perfTrace.start('tile:build');
             game.displayName = gameDisplayTitle(game);
             const tileTitle = gameTitleOf(game);
+            const tileSortTitle = gameTitle.sortTitle(game);
             const hasAchievements = Number(game.achievement.total) > 0;
             let progress = hasAchievements ? Math.round((100 * game.achievement.unlocked) / game.achievement.total) : 0;
             const progressLabel = !hasAchievements
@@ -5485,7 +5487,7 @@ var app = {
                     <div class="info-head">
                       <div class="title library-scroll-text" title="${escapeHtml(tileTitle)}"${
                         tileTitle !== game.name && game.name ? ` data-original-title="${escapeHtml(game.name)}"` : ''
-                      }><span class="library-scroll-content">${escapeHtml(tileTitle)}</span></div>
+                      }${tileSortTitle ? ` data-sort-title="${escapeHtml(tileSortTitle)}"` : ''}><span class="library-scroll-content">${escapeHtml(tileTitle)}</span></div>
                       <div class="game-meta">
                         ${statusBadgeHtml(game)}
                         ${
@@ -6449,6 +6451,30 @@ var app = {
                 })
               );
             }
+            // #56: the name the library sorts it under, "Witcher 3" for "The Witcher 3".
+            identityItems.push(
+              new MenuItem({
+                label: t('sort-title', 'Sort as…', 'Trier comme…'),
+                async click() {
+                  const typed = await promptText(
+                    t(
+                      'sort-title-prompt',
+                      'Name to sort this game under in the library. Leave it empty to sort it by the name shown.',
+                      'Nom sous lequel trier ce jeu dans la bibliothèque. Laisse le champ vide pour le trier par le nom affiché.'
+                    ),
+                    gameTitle.sortTitle(ctxGame),
+                    'text',
+                    {
+                      allowEmpty: true,
+                      maxLength: gameTitle.MAX_TITLE_LENGTH,
+                      title: t('sort-title', 'Sort as…', 'Trier comme…'),
+                      icon: 'fa-sort-alpha-down',
+                    }
+                  );
+                  if (typed !== null) renameGame(ctxGame, typed, gameTitle.setSortTitle);
+                },
+              })
+            );
           }
           // Manual override for which emulator family this game's tools target, for a Ubisoft title
           // that trips the on-disk heuristic the wrong way. Hidden for legit Steam/GOG/Epic and console records, where neither fix applies.

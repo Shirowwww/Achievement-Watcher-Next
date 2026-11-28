@@ -11,6 +11,7 @@ const path = require('path');
 const { SOURCE_LABEL } = require('./sourceIdentity.js');
 
 const CUSTOM_FILE = path.join('cfg', 'gameTitles.json');
+const SORT_FILE = path.join('cfg', 'sortTitles.json');
 const LOCALIZED_FILE = path.join('steam_cache', 'localizedTitles.json');
 const SCHEMA_LANGUAGE_FILE = path.join('cfg', 'schemaLanguage.json');
 const MAX_TITLE_LENGTH = 200;
@@ -119,16 +120,30 @@ function customTitle(game) {
   return matches.length === 1 ? cleanTitle(map[matches[0]]) : '';
 }
 
-// An empty name clears the rename.
-function setCustomTitle(game, name) {
+// An empty name clears the entry.
+function storeTitle(rel, game, name) {
   const key = titleKey(game);
   if (!key) throw new Error('gameTitle: a game needs an appid');
-  const map = { ...readMap(CUSTOM_FILE, { strict: true }) };
+  const map = { ...readMap(rel, { strict: true }) };
   const title = cleanTitle(name);
   if (title) map[key] = title;
   else delete map[key];
-  writeMap(CUSTOM_FILE, map);
+  writeMap(rel, map);
   return title;
+}
+
+function setCustomTitle(game, name) {
+  return storeTitle(CUSTOM_FILE, game, name);
+}
+
+// The name the library sorts the game under, when the user gave one (#56). It is never shown.
+function sortTitle(game) {
+  const key = titleKey(game);
+  return key ? cleanTitle(readMap(SORT_FILE)[key]) : '';
+}
+
+function setSortTitle(game, name) {
+  return storeTitle(SORT_FILE, game, name);
 }
 
 // The game's own Steam language when one is set for its achievements, the global one otherwise.
@@ -203,6 +218,8 @@ module.exports = {
   cleanTitle,
   customTitle,
   setCustomTitle,
+  sortTitle,
+  setSortTitle,
   localizedTitle,
   displayTitle,
   staleLocalizedAppids,

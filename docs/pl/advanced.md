@@ -134,6 +134,10 @@ Wyszukiwanie nadal znajduje grę po jej oryginalnej nazwie. Zostaw pole puste al
 przetrwa ponowne skanowania i wchodzi w skład kopii zapasowej profilu. Wyszukiwanie okładek i dopasowywanie gier używają oryginalnej
 nazwy.
 
+**Ustawienia gry → Sortuj jako…** ustawia nazwę, według której biblioteka sortuje grę, bez zmiany nazwy, pod którą
+jest pokazywana: „The Witcher 3” pod literą W albo seria trzymana razem. Zostaw pole puste, aby znowu sortować
+według jej nazwy. Nazwa jest przechowywana w `cfg/sortTitles.json`.
+
 **Ustawienia → Ogólne → Tytuły gier w moim języku**, domyślnie włączone, pokazuje gry Steam pod
 tytułem, jaki Steam im nadaje w języku twoich osiągnięć (we własnym języku gry, gdy ją ma).
 Okładki podążają za tym samym językiem. Lokalny katalog Steam odpowiada dla gier, które zna twój klient Steam;

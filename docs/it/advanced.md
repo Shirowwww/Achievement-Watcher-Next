@@ -134,6 +134,10 @@ vengono salvati. La ricerca trova comunque il gioco con il suo nome originale. L
 sopravvive alle nuove scansioni e fa parte di un backup del profilo. La ricerca delle copertine e l'abbinamento dei giochi usano il nome
 originale.
 
+**Impostazioni di gioco → Ordina come…** imposta il nome con cui la libreria ordina un gioco, senza cambiare il nome
+mostrato: "The Witcher 3" sotto la W, oppure una serie che resta unita. Lascia vuoto il campo per ordinarlo di nuovo
+con il suo nome. È conservato in `cfg/sortTitles.json`.
+
 **Impostazioni → Generale → Titoli dei giochi nella mia lingua**, attivo per impostazione predefinita, mostra i giochi Steam con il
 titolo che Steam dà loro nella lingua degli obiettivi (la lingua propria del gioco quando ne ha una).
 Anche le copertine seguono la stessa lingua. Il catalogo locale di Steam risponde per i giochi che il tuo client Steam conosce;

@@ -2298,6 +2298,8 @@
     "rename-game": "Premenovať…",
     "rename-game-prompt": "Názov, ktorý sa má pri tejto hre zobraziť. Nechaj prázdne pre návrat k pôvodnému názvu ({name}).",
     "rename-game-reset": "Obnoviť pôvodný názov",
+    "sort-title": "Zoradiť ako…",
+    "sort-title-prompt": "Názov, pod ktorým sa má táto hra v knižnici zoradiť. Nechaj prázdne pre zoradenie podľa zobrazeného názvu.",
     "rename-game-failed": "Nový názov sa nepodarilo uložiť.",
     "edit-playtime": "Upraviť čas hrania…",
     "edit-playtime-invalid": "Tento čas hrania AW Next nedokáže prečítať.",

@@ -134,6 +134,10 @@ gespeichert werden. Die Suche findet das Spiel weiterhin über seinen ursprüngl
 neue Scans übersteht und Teil einer Profilsicherung ist. Cover-Abfragen und die Spielzuordnung nutzen den ursprünglichen
 Namen.
 
+**Spieleinstellungen → Sortieren als…** legt den Namen fest, unter dem die Bibliothek ein Spiel einsortiert, ohne
+den angezeigten Namen zu ändern: „The Witcher 3“ unter W, oder eine Reihe, die zusammenbleibt. Lasse das Feld leer,
+um wieder nach seinem Namen zu sortieren. Er wird in `cfg/sortTitles.json` gehalten.
+
 **Einstellungen → Allgemein → Spieletitel in meiner Sprache**, standardmäßig an, zeigt Steam-Spiele unter dem
 Titel, den Steam ihnen in deiner Erfolgssprache gibt (der eigenen Sprache des Spiels, wenn es eine hat).
 Cover folgen derselben Sprache. Der lokale Katalog von Steam antwortet für Spiele, die dein Steam-Client kennt;

@@ -2298,6 +2298,8 @@
     "rename-game": "重新命名…",
     "rename-game-prompt": "此遊戲要顯示的名稱。留空則還原為原名稱（{name}）。",
     "rename-game-reset": "還原原名稱",
+    "sort-title": "排序為…",
+    "sort-title-prompt": "此遊戲在遊戲庫中用於排序的名稱。留空則依顯示的名稱排序。",
     "rename-game-failed": "無法儲存新名稱。",
     "edit-playtime": "編輯遊玩時數…",
     "edit-playtime-invalid": "AW Next 無法讀取這個遊玩時數。",

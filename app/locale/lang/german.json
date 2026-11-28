@@ -2298,6 +2298,8 @@
     "rename-game": "Umbenennen…",
     "rename-game-prompt": "Name, der für dieses Spiel angezeigt werden soll. Leer lassen, um zum ursprünglichen Namen ({name}) zurückzukehren.",
     "rename-game-reset": "Ursprünglichen Namen wiederherstellen",
+    "sort-title": "Sortieren als…",
+    "sort-title-prompt": "Name, unter dem dieses Spiel in der Bibliothek sortiert wird. Leer lassen, um nach dem angezeigten Namen zu sortieren.",
     "rename-game-failed": "Der neue Name konnte nicht gespeichert werden.",
     "edit-playtime": "Spielzeit bearbeiten…",
     "edit-playtime-invalid": "Diese Spielzeit kann AW Next nicht lesen.",

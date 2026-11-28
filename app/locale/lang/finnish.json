@@ -2298,6 +2298,8 @@
     "rename-game": "Nimeä uudelleen…",
     "rename-game-prompt": "Tälle pelille näytettävä nimi. Jätä tyhjäksi palataksesi alkuperäiseen nimeen ({name}).",
     "rename-game-reset": "Palauta alkuperäinen nimi",
+    "sort-title": "Lajittele nimellä…",
+    "sort-title-prompt": "Nimi, jolla tämä peli lajitellaan kirjastossa. Jätä tyhjäksi lajitellaksesi näytetyn nimen mukaan.",
     "rename-game-failed": "Uuden nimen tallentaminen epäonnistui.",
     "edit-playtime": "Muokkaa peliaikaa…",
     "edit-playtime-invalid": "AW Next ei osaa lukea tätä peliaikaa.",

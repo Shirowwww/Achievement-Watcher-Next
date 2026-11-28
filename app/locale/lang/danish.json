@@ -2298,6 +2298,8 @@
     "rename-game": "Omdøb…",
     "rename-game-prompt": "Navn der skal vises for dette spil. Lad feltet være tomt for at gå tilbage til det oprindelige navn ({name}).",
     "rename-game-reset": "Gendan det oprindelige navn",
+    "sort-title": "Sortér som…",
+    "sort-title-prompt": "Navn som dette spil skal sorteres under i biblioteket. Lad feltet være tomt for at sortere efter det viste navn.",
     "rename-game-failed": "Det nye navn kunne ikke gemmes.",
     "edit-playtime": "Rediger spilletid…",
     "edit-playtime-invalid": "Det er ikke en spilletid, som AW Next kan læse.",

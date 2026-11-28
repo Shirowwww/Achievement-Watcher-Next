@@ -2298,6 +2298,8 @@
     "rename-game": "이름 바꾸기…",
     "rename-game-prompt": "이 게임에 표시할 이름입니다. 비워 두면 원래 이름({name})으로 돌아갑니다.",
     "rename-game-reset": "원래 이름으로 복원",
+    "sort-title": "다음 이름으로 정렬…",
+    "sort-title-prompt": "라이브러리에서 이 게임을 정렬할 때 사용할 이름입니다. 비워 두면 표시된 이름으로 정렬합니다.",
     "rename-game-failed": "새 이름을 저장할 수 없습니다.",
     "edit-playtime": "플레이 시간 편집…",
     "edit-playtime-invalid": "AW Next에서 읽을 수 없는 플레이 시간입니다.",

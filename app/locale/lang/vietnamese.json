@@ -2298,6 +2298,8 @@
     "rename-game": "Đổi tên…",
     "rename-game-prompt": "Tên hiển thị cho game này. Để trống để quay về tên gốc ({name}).",
     "rename-game-reset": "Khôi phục tên gốc",
+    "sort-title": "Sắp xếp như…",
+    "sort-title-prompt": "Tên dùng để sắp xếp game này trong thư viện. Để trống để sắp xếp theo tên đang hiển thị.",
     "rename-game-failed": "Không thể lưu tên mới.",
     "edit-playtime": "Sửa thời gian chơi…",
     "edit-playtime-invalid": "AW Next không đọc được thời gian chơi này.",

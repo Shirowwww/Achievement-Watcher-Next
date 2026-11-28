@@ -2298,6 +2298,8 @@
     "rename-game": "名前を変更…",
     "rename-game-prompt": "このゲームに表示する名前。空にすると元の名前 ({name}) に戻ります。",
     "rename-game-reset": "元の名前に戻す",
+    "sort-title": "次の名前で並べ替え…",
+    "sort-title-prompt": "ライブラリでこのゲームを並べ替えるときに使う名前。空にすると表示されている名前で並べ替えます。",
     "rename-game-failed": "新しい名前を保存できませんでした。",
     "edit-playtime": "プレイ時間を編集…",
     "edit-playtime-invalid": "この形式のプレイ時間は AW Next では読み取れません。",

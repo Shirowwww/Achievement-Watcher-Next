@@ -2298,6 +2298,8 @@
     "rename-game": "Ganti nama…",
     "rename-game-prompt": "Nama yang ditampilkan untuk game ini. Kosongkan untuk kembali ke nama asli ({name}).",
     "rename-game-reset": "Pulihkan nama asli",
+    "sort-title": "Urutkan sebagai…",
+    "sort-title-prompt": "Nama untuk mengurutkan game ini di pustaka. Kosongkan untuk mengurutkan berdasarkan nama yang ditampilkan.",
     "rename-game-failed": "Tidak dapat menyimpan nama baru.",
     "edit-playtime": "Ubah waktu bermain…",
     "edit-playtime-invalid": "Ini bukan waktu bermain yang dapat dibaca AW Next.",

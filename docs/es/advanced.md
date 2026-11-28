@@ -134,6 +134,10 @@ y los clips. La búsqueda sigue encontrando el juego por su nombre original. Dej
 sobrevive a los reescaneos y forma parte de una copia de seguridad del perfil. Las búsquedas de portadas y el emparejamiento de juegos usan el nombre
 original.
 
+**Ajustes del juego → Ordenar como…** fija el nombre con el que la biblioteca ordena un juego, sin cambiar el nombre
+que muestra: «The Witcher 3» en la W, o una saga que se mantiene junta. Deja el campo vacío para volver a ordenarlo
+por su nombre. Se guarda en `cfg/sortTitles.json`.
+
 **Ajustes → General → Títulos de juegos en mi idioma**, activado por defecto, muestra los juegos de Steam con el
 título que Steam les da en el idioma de tus logros (el idioma propio del juego cuando lo tiene).
 Las portadas siguen el mismo idioma. El catálogo local de Steam responde por los juegos que tu cliente de Steam conoce;
