@@ -332,6 +332,35 @@ test('repairInstallation applied again matches the original dll kept in .BAK, no
   assert.equal(fs.readFileSync(path.join(gameDir, 'Galaxy64.dll.BAK'), 'utf8'), 'original galaxy sdk dll');
 });
 
+/*
+  Applied again while UniverseLANServer64.exe still ran, the copy over it failed with EBUSY and the
+  whole fix rolled back (Discord 28/11/2026). A file already identical to the build's is left in place;
+  a read-only copy stands in for the locked one.
+*/
+test('repairInstallation applied again leaves files that already match the build untouched', (t) => {
+  const root = tmpDir(t);
+  const gameDir = path.join(root, 'game');
+  fs.mkdirSync(gameDir, { recursive: true });
+  fs.writeFileSync(path.join(gameDir, 'goggame-1207658930.info'), '{}');
+  fs.writeFileSync(path.join(gameDir, 'Galaxy64.dll'), 'universelan galaxy64 replacement');
+  fs.writeFileSync(path.join(gameDir, 'Galaxy64.dll.BAK'), 'original galaxy sdk dll');
+  const server = path.join(gameDir, 'UniverseLANServer64.exe');
+  fs.writeFileSync(server, 'server');
+  fs.chmodSync(server, 0o444);
+  const buildDir = path.join(root, 'UniverseLAN-1.152.6-Build-626-x64_x86');
+  fs.mkdirSync(buildDir, { recursive: true });
+  fs.writeFileSync(path.join(buildDir, 'Galaxy64.dll'), 'universelan galaxy64 replacement');
+  fs.writeFileSync(path.join(buildDir, 'UniverseLANServer64.exe'), 'server');
+  const versions = { 'Galaxy64.dll': '0.0.0.1', 'Galaxy64.dll.BAK': '1.152.5.0' };
+  const builds = { list: [{ name: path.basename(buildDir), dir: buildDir }], sdkVersionOf: (file) => versions[path.basename(file)] };
+  const localAppData = path.join(root, 'LocalAppData');
+
+  const result = gogUniverseLan.repairInstallation({ gameDir, builds, compatTable: [{ release: '1.152.6', sdkVersions: ['1.152.5.0'] }], localAppData });
+
+  assert.deepEqual(result.installed[0].wrote, ['Galaxy64.dll', 'UniverseLANServer64.exe']);
+  assert.equal(fs.readFileSync(server, 'utf8'), 'server');
+});
+
 test('repairInstallation switches on a DLC the game already asked for, and leaves the other ids alone', (t) => {
   const { dlc } = cyberpunkRepair(t, '[DLC]\n0 = 1 ; basegame\n1256837418 = false\n2000000001 = false\n');
   assert.equal(dlc['1256837418'], 'true');

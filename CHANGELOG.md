@@ -62,7 +62,7 @@ renamed in 3.9.0 and the history is kept under one file.
   A Galaxy file whose version carries GOG's build number, as in Cyberpunk 2077's GOG copy, now finds
   its UniverseLAN build. The fix also switches on the DLC installed with the game, which UniverseLAN
   reported as not owned: Cyberpunk 2077 called every Phantom Liberty save damaged. Applying it again
-  to a game already fixed works too.
+  to a game already fixed works too, even while UniverseLAN's server is still running.
 - **Imported SAN themes glow and size their text as in SAN.** The glow of a theme imported from Steam
   Achievement Notifier was cut off at the edge of the notification, leaving a hard rectangle with
   filled corners instead of a soft halo. At a size other than 100%, its text was also drawn slightly

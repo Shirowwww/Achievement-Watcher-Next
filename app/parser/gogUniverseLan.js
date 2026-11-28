@@ -414,8 +414,19 @@ function enableInstalledDlc({ gameDir, gogAppId, appRoot }) {
   return { enabled };
 }
 
-// Backs up the original dll to <name>.BAK (once - a pre-existing .BAK is assumed to already hold the
-// real original) then copies the matched build's dll + server exe beside it.
+function sameContent(a, b) {
+  try {
+    return fs.statSync(a).size === fs.statSync(b).size && fs.readFileSync(a).equals(fs.readFileSync(b));
+  } catch {
+    return false;
+  }
+}
+
+/*
+  Backs up the original dll to <name>.BAK (once - a pre-existing .BAK is assumed to already hold the
+  real original) then copies the matched build's dll + server exe beside it. A file already identical
+  is left alone: applied again, UniverseLANServer64.exe may still be running and cannot be overwritten.
+*/
 function installBuildFiles({ galaxyDll, buildDir }) {
   const dir = path.dirname(galaxyDll.file);
   const name = path.basename(galaxyDll.file);
@@ -425,15 +436,18 @@ function installBuildFiles({ galaxyDll, buildDir }) {
   const dllSrc = path.join(buildDir, name);
   const wrote = [];
   if (fs.existsSync(dllSrc)) {
-    const temp = `${galaxyDll.file}.${process.pid}.tmp`;
-    fs.copyFileSync(dllSrc, temp);
-    replaceFileSync(temp, galaxyDll.file);
+    if (!sameContent(dllSrc, galaxyDll.file)) {
+      const temp = `${galaxyDll.file}.${process.pid}.tmp`;
+      fs.copyFileSync(dllSrc, temp);
+      replaceFileSync(temp, galaxyDll.file);
+    }
     wrote.push(name);
   }
   const serverName = SERVER_NAMES[galaxyDll.arch];
   const serverSrc = path.join(buildDir, serverName);
+  const serverDest = path.join(dir, serverName);
   if (fs.existsSync(serverSrc)) {
-    fs.copyFileSync(serverSrc, path.join(dir, serverName));
+    if (!sameContent(serverSrc, serverDest)) fs.copyFileSync(serverSrc, serverDest);
     wrote.push(serverName);
   }
   return { dir, wrote, backup: bak };
